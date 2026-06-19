@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASGate - لوحة تحكم M المبيعات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --nav-purple: #2e1065; 
+            --nav-active: #a78bfa;
+            --bg-color: #f4f7f9;
+            --border-color: #e2e8f0;
+            --white: #ffffff;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-yellow: #facc15;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f97316;
+            --input-bg: #f8fafc;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body { 
+            background-color: var(--bg-color); 
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; 
+            line-height: 1.4; 
+            font-size: 14px; 
+            font-weight: 400;
+            color: #1e293b;
+        }
+
+        .navbar { 
+            background-color: var(--nav-purple); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 20px; 
+            margin: 10px; 
+            border-radius: 15px; 
+            height: 45px; 
+            position: sticky; 
+            top: 10px; 
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar a { 
+            color: white; 
+            text-decoration: none; 
+            padding: 0 15px; 
+            font-weight: 700; 
+            font-size: 13px; 
+            border-radius: 8px; 
+            transition: 0.3s; 
+            line-height: 32px; 
+            height: 32px; 
+            display: inline-block;
+        }
+        .navbar a.active { background-color: var(--nav-active); color: var(--nav-purple); }
+        .navbar a:hover:not(.active) { background-color: rgba(167, 139, 250, 0.3); }
+
+        .employee-info-bar {
+            margin: 15px 20px; 
+            min-height: 45px; 
+            background-color: var(--white);
+            border: 1px solid var(--border-color); 
+            border-radius: 20px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            padding: 10px 25px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+        .info-content { display: flex; gap: 35px; align-items: center; flex-wrap: wrap; justify-content: center; }
+        .info-item { font-size: 12px; color: var(--nav-purple); font-weight: 700; }
+        .info-item span { color: #64748b; font-weight: 400; margin-right: 5px; }
+
+        .container { padding: 5px 20px 20px 20px; }
+        
+        .dashboard-grid { 
+            display: flex; 
+            flex-direction: row;
+            gap: 20px; 
+            align-items: stretch; 
+            width: 100%; 
+        }
+        
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                flex-direction: column;
+            }
+            .right-section, .left-section {
+                flex: 1 1 100% !important;
+            }
+            .charts-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        .right-section { flex: 38; min-width: 300px; }
+        .left-section { flex: 62; display: flex; flex-direction: column; gap: 15px; min-width: 350px; }
+
+        .content-box { 
+            background: var(--white); 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        h3 { 
+            font-size: 14px; 
+            margin: 0; 
+            color: var(--nav-purple); 
+            font-weight: 800; 
+            border-right: 4px solid var(--accent-blue); 
+            padding-right: 8px; 
+            margin-bottom: 20px; 
+        }
+
+        .yearly-table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .yearly-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 12px; 
+        }
+        .yearly-table th, .yearly-table td { 
+            border: 1px solid var(--border-color); 
+            padding: 6px 4px; 
+            height: 35px; 
+            text-align: center; 
+            font-weight: bold; 
+            color: #475569;
+        }
+        .yearly-table th { background: #f8fafc; color: var(--nav-purple); font-weight: 800; }
+        .thick-border { border-left: 3px solid var(--nav-purple) !important; }
+
+        .filters-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 10px; 
+        }
+        .filter-card { 
+            background: white; 
+            padding: 8px 12px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px; 
+        }
+        .filter-card label { font-size: 10px; font-weight: 800; color: var(--nav-purple); }
+        .filter-input { 
+            width: 100%; 
+            border: 1px solid var(--border-color); 
+            background: var(--input-bg); 
+            font-family: 'Cairo'; 
+            font-size: 11px; 
+            padding: 6px; 
+            border-radius: 6px; 
+            outline: none; 
+        }
+
+        .stats-cards { 
+            display: flex; 
+            gap: 10px; 
+            width: 100%; 
+            align-items: center; 
+            flex-wrap: wrap;
+        }
+        .stat-card { 
+            flex: 1; 
+            min-width: 110px;
+            height: 60px; 
+            padding: 8px 12px; 
+            border-radius: 10px; 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .stat-card .label-text { font-size: 11px; font-weight: bold; opacity: 0.9; text-align: center; }
+        .stat-card .value-text { font-size: 15px; font-weight: 800; }
+
+        .bg-blue { background-color: var(--accent-blue); }
+        .bg-green { background-color: var(--accent-green); }
+        .bg-yellow { background-color: var(--accent-yellow); color: #854d0e; }
+        .bg-purple { background-color: var(--accent-purple); }
+        .bg-orange { background-color: var(--accent-orange); }
+
+        .charts-row { 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            flex-grow: 1; 
+            gap: 15px; 
+        }
+        .chart-item-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            flex: 1; 
+            min-width: 150px;
+        }
+        .chart-container-reduced { position: relative; width: 100%; max-width: 180px; aspect-ratio: 1; }
+        .gauge-container-reduced { position: relative; width: 100%; max-width: 150px; height: 90px; margin-top: 10px; }
+        
+        .chart-percentage { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            font-size: 20px; 
+            font-weight: 800; 
+            color: var(--nav-purple); 
+        }
+        .gauge-value { 
+            position: absolute; 
+            bottom: 5px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 16px; 
+            font-weight: 900; 
+            color: var(--nav-purple);
+        }
+        .chart-label { font-size: 13px; font-weight: 800; color: #475569; margin-top: 8px; text-align: center; }
+
+        .staff-performance-section { margin-top: 20px; width: 100%; min-height: 380px; }
+        .staff-chart-wrapper {
+            flex-grow: 1; 
+            position: relative; 
+            margin-top: 10px; 
+            width: 100%;
+            overflow-x: auto;
+        }
+        .staff-chart-container {
+            min-width: 600px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="active">الرئيسية</a>
+    <a href="visits.html">الزيارات</a>
+    <a href="opportunities.html">الفرص البيعية</a>
+    <a href="customers.html">العملاء</a>
+    <a href="sales.html">المبيعات</a>
+</nav>
+
+<div class="employee-info-bar">
+    <div class="info-content">
+        <div class="info-item">الموظف: <span>محمد المنصور</span></div>
+        <div class="info-item">الرقم: <span>ASG-2026</span></div>
+        <div class="info-item">المشروع: <span>ASGate</span></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="dashboard-grid">
+        <!-- القسم الأيمن: سجل الأهداف -->
+        <div class="right-section">
+            <div class="content-box">
+                <h3>📅 سجل الأهداف والزيارات (2026)</h3>
+                <div class="yearly-table-wrapper">
+                    <table class="yearly-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 24%;">الشهر</th>
+                                <th>هدف</th>
+                                <th>تم</th>
+                                <th class="thick-border">معلق</th>
+                                <th style="background:#eff6ff">زيارة</th>
+                                <th style="background:#f0fdf4">ناجحة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- القسم الأيسر: الفلاتر والكروت والمخططات -->
+        <div class="left-section">
+            <div class="filters-grid">
+                <div class="filter-card">
+                    <label>الشهر</label>
+                    <select class="filter-input" id="monthFilter">
+                        <option value="الكل">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label>المنطقة</label>
+                    <select class="filter-input">
+                        <option value="الكل">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label>المشرف</label>
+                    <select class="filter-input">
+                        <option value="الكل">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label>المندوب</label>
+                    <select class="filter-input">
+                        <option value="الكل">الكل</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="stats-cards">
+                <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
+                <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
+                <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
+                <div class="stat-card bg-purple"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
+                <div class="stat-card bg-orange"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
+            </div>
+
+            <div class="content-box">
+                <h3>📈 تحليل الأداء الإجمالي</h3>
+                <div class="charts-row">
+                    <div class="chart-item-wrapper">
+                        <div class="chart-container-reduced">
+                            <canvas id="achievedChart"></canvas>
+                            <div class="chart-percentage">82%</div>
+                        </div>
+                        <div class="chart-label">المحقق</div>
+                    </div>
+                    <div class="chart-item-wrapper">
+                        <div class="gauge-container-reduced">
+                            <canvas id="gaugeChart"></canvas>
+                            <div class="gauge-value">200%</div>
+                        </div>
+                        <div class="chart-label">مؤشر الإنجاز</div>
+                    </div>
+                    <div class="chart-item-wrapper">
+                        <div class="chart-container-reduced">
+                            <canvas id="pendingChart"></canvas>
+                            <div class="chart-percentage">18%</div>
+                        </div>
+                        <div class="chart-label">المعلق</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم أداء فريق المبيعات -->
+    <div class="content-box staff-performance-section">
+        <h3>👥 أداء فريق المبيعات (30 موظفاً)</h3>
+        <div class="staff-chart-wrapper">
+            <div class="staff-chart-container">
+                <canvas id="staffChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateLiveStats() {
+        const opps = JSON.parse(localStorage.getItem('asgate_opportunities_v21') || '[]');
+        const visits = JSON.parse(localStorage.getItem('asgate_visits_data_v21') || '[]');
+        const salesLogs = JSON.parse(localStorage.getItem('asgate_general_sales_logs') || '[]');
+        
+        document.getElementById('oppCount').innerText = opps.length;
+        document.getElementById('visitCount').innerText = visits.length;
+
+        if(salesLogs.length > 0) {
+            const totalSales = salesLogs.reduce((sum, log) => sum + Number(log.amount || 0), 0);
+            if(totalSales > 0) {
+                document.getElementById('salesValue').innerText = totalSales.toLocaleString();
+            }
+        }
+    }
+
+    const months = ["يناير", "فبراير", "مارس", "ابريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+    const tbody = document.getElementById('monthsBody');
+    const monthFilter = document.getElementById('monthFilter');
+
+    months.forEach((m, i) => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.innerText = m;
+        monthFilter.appendChild(opt);
+
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${m}</td><td>15k</td><td>${i===0?'14.2k':'-'}</td><td class="thick-border">${i===0?'790':'-'}</td><td style="color:#3b82f6">${i===0?'45':'-'}</td><td style="color:#22c55e">${i===0?'12':'-'}</td>`;
+    });
+
+    new Chart(document.getElementById('achievedChart'), {
+        type: 'doughnut',
+        data: { datasets: [{ data: [82, 18], backgroundColor: ['#22c55e', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
+        options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
+    new Chart(gaugeCtx, {
+        type: 'doughnut',
+        data: { datasets: [{ data: [25, 25, 25, 25], backgroundColor: ['#ef4444', '#fbbf24', '#4ade80', '#15803d'], borderWidth: 0, circumference: 180, rotation: 270 }] },
+        options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    new Chart(document.getElementById('pendingChart'), {
+        type: 'doughnut',
+        data: { datasets: [{ data: [18, 82], backgroundColor: ['#facc15', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
+        options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    const ctxStaff = document.getElementById('staffChart').getContext('2d');
+    new Chart(ctxStaff, {
+        type: 'bar',
+        data: {
+            labels: Array.from({length: 30}, (_, i) => `م ${i + 1}`),
+            datasets: [
+                { label: 'المحقق', data: Array.from({length: 30}, () => Math.floor(Math.random() * 5000) + 25000), backgroundColor: '#22c55e', borderRadius: 4 },
+                { label: 'المعلق', data: Array.from({length: 30}, () => Math.floor(Math.random() * 3000) + 1000), backgroundColor: '#facc15', borderRadius: 4 }
+            ]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: {
+                legend: { labels: { font: { family: 'Cairo', size: 11 } } }
+            },
+            scales: { 
+                x: { grid: { display: false }, ticks: { font: { family: 'Cairo', size: 10 } } },
+                y: { ticks: { font: { family: 'Cairo', size: 10 } } }
+            } 
+        }
+    });
+
+    window.onload = updateLiveStats;
+</script>
+</body>
+</html>
