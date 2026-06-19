@@ -2,6 +2,7 @@ let currentActivePreview = null;
 let currentAttachmentName = null; 
 const LOGS_KEY = 'asgate_general_sales_logs';
 const CUSTOMERS_STORAGE_KEY = 'asgate_customers_v2_final'; 
+const VISITS_LOGS_KEY = 'asgate_general_visits_logs'; // مفتاح سجل نشاطات الزيارات
 let saveTimeout;
 
 // تشغيل دالة التهيئة عند اكتمال تحميل الصفحة
@@ -12,12 +13,19 @@ function getTimeFormatted() { const d = new Date(); return String(d.getHours()).
 
 function initPage() {
     initStatsVisibility();
-    loadSalesFromStorage();
+    
+    // التحقق من الصفحة الحالية لتشغيل الدالة المناسبة
+    if (document.getElementById('salesBody')) {
+        loadSalesFromStorage();
+    } else if (document.getElementById('visitsBody')) {
+        loadVisitsFromStorage();
+    }
 }
 
 function toggleStatsVisibility() {
     const container = document.getElementById('statsContainer');
     const btn = document.getElementById('eyeToggleBtn');
+    if (!container || !btn) return;
     const isHidden = container.classList.toggle('blur-active');
     
     if (isHidden) {
@@ -30,23 +38,32 @@ function toggleStatsVisibility() {
 }
 
 function initStatsVisibility() {
+    const container = document.getElementById('statsContainer');
+    const btn = document.getElementById('eyeToggleBtn');
+    if (!container || !btn) return;
+    
     const isHidden = localStorage.getItem('asgate_sales_stats_hidden') === 'true';
     if (isHidden) {
-        document.getElementById('statsContainer').classList.add('blur-active');
-        document.getElementById('eyeToggleBtn').innerHTML = '<i class="fas fa-eye-slash"></i>';
+        container.classList.add('blur-active');
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
     }
 }
 
 function debouncedSave() {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
-        autoSave();
+        if (document.getElementById('salesBody')) {
+            autoSave();
+        } else if (document.getElementById('visitsBody')) {
+            autoSaveVisits();
+        }
     }, 500);
 }
 
 function toggleGeneralLogHeight() {
     const section = document.getElementById('generalActivityLogSection');
     const btn = document.getElementById('toggleGeneralLogBtn');
+    if (!section || !btn) return;
     if (section.classList.contains('expanded')) {
         section.classList.remove('expanded');
         btn.innerHTML = '<i class="fas fa-expand-alt"></i>';
@@ -74,6 +91,7 @@ function generateCustomOrderId() {
 }
 
 function updateHeaderStats() {
+    if (!document.getElementById('salesBody')) return;
     const saved = JSON.parse(localStorage.getItem('asgate_sales_db') || '[]');
     const currentMonthStr = getTodayFormatted().substring(0, 7);
     
@@ -116,6 +134,7 @@ function calculateOrderSums(orderId) {
 
 function renderTableRow(obj) {
     const tbody = document.getElementById('salesBody');
+    if (!tbody) return;
     const sums = calculateOrderSums(obj.id);
     const row = tbody.insertRow(-1);
     row.className = 'main-row';
@@ -146,8 +165,8 @@ function renderTableRow(obj) {
 }
 
 function getStatusClass(status) {
-    if(status === 'مكتمل') return 'status-complete';
-    if(status === 'فقدان') return 'status-lost-badge';
+    if(status === 'مكتمل' || status === 'ناجحة') return 'status-complete';
+    if(status === 'فقدان' || status === 'غير ناجحة') return 'status-lost-badge';
     return 'status-pending';
 }
 
@@ -168,6 +187,7 @@ function handleStatusChange(el, orderId, company) {
 
 function updateDateField(inputElement) {
     const row = inputElement.closest('tr');
+    if (!row) return;
     const modField = row.querySelector('.last-mod-field');
     if (modField) modField.value = getTodayFormatted();
 }
@@ -182,6 +202,7 @@ function logEdit(fieldName, el, comp, id) {
 
 function autoSave() {
     const rows = document.querySelectorAll('#salesBody .main-row');
+    if (rows.length === 0 && !document.getElementById('salesBody')) return;
     const salesData = Array.from(rows).map(r => ({
         id: r.cells[1].innerText.replace('#', '').trim(),
         type: r.cells[2].querySelector('input').value,
@@ -199,7 +220,7 @@ function autoSave() {
 
 // Modal Orders Functions
 function openOrderModal() { document.getElementById('orderModal').style.display = 'flex'; }
-function closeOrderModal() { document.getElementById('orderModal').style.display = 'none'; document.getElementById('mSearchField').value = ''; document.getElementById('mType').value = ''; }
+function closeOrderModal() { document.getElementById('orderModal').style.display = 'none'; document.getElementById('mSearchField').value = ''; if(document.getElementById('mType')) document.getElementById('mType').value = ''; }
 
 function searchCustomerInModal(el) {
     const query = el.value.toLowerCase().trim();
@@ -253,8 +274,10 @@ function handleFileSelect(input) {
 
 function removeAttachment() {
     currentAttachmentName = null;
-    document.getElementById('modalFileAttachment').value = '';
-    document.getElementById('filePreviewContainer').style.display = 'none';
+    const fileInput = document.getElementById('modalFileAttachment');
+    if(fileInput) fileInput.value = '';
+    const previewContainer = document.getElementById('filePreviewContainer');
+    if(previewContainer) previewContainer.style.display = 'none';
 }
 
 function openNote(el) {
@@ -279,7 +302,13 @@ function saveNote() {
             finalNoteText += (txt ? '\n' : '') + `📁 مرفق: ${currentAttachmentName}`;
         }
 
-        arr.push({ user: currentActivePreview.closest('tr').cells[11].querySelector('input').value || "النظام", date: getTodayFormatted(), time: getTimeFormatted(), text: finalNoteText });
+        // جلب اسم المسؤول بناء على مكانه في الجدول (مبيعات أو زيارات)
+        const row = currentActivePreview.closest('tr');
+        let ownerName = "النظام";
+        const ownerInput = row.querySelector('.owner-field') || row.cells[row.cells.length - 1].querySelector('input');
+        if (ownerInput) ownerName = ownerInput.value;
+
+        arr.push({ user: ownerName, date: getTodayFormatted(), time: getTimeFormatted(), text: finalNoteText });
         currentActivePreview.setAttribute('data-full-notes', JSON.stringify(arr));
         currentActivePreview.innerText = finalNoteText.split('\n')[0]; 
         updateDateField(currentActivePreview);
@@ -297,7 +326,8 @@ function closeNote() {
 // Table & Logs Functions
 function filterSalesTable() {
     const q = document.getElementById('globalSearch').value.toLowerCase();
-    document.querySelectorAll('#salesBody .main-row').forEach(row => {
+    const bodyId = document.getElementById('salesBody') ? '#salesBody .main-row' : '#visitsBody .main-row';
+    document.querySelectorAll(bodyId).forEach(row => {
         const rowText = row.innerText.toLowerCase();
         const inputsText = Array.from(row.querySelectorAll('input, select')).map(i => i.value.toLowerCase()).join(' ');
         row.style.display = (rowText.includes(q) || inputsText.includes(q)) ? "table-row" : "none";
@@ -311,11 +341,22 @@ async function handleBulkAction(action) {
     const selected = document.querySelectorAll('.select-check:checked');
     if (selected.length === 0) { Swal.fire({icon: 'info', text: 'يرجى تحديد صف واحد على الأقل', confirmButtonColor: '#3b82f6'}); return; }
     
+    const isSales = !!document.getElementById('salesBody');
+    
     if (action === 'حذف') {
-        const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: "سيتم حذف الطلبات المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'احذف', cancelButtonText: 'إلغاء' });
+        const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: isSales ? "سيتم حذف الطلبات المحددة نهائياً!" : "سيتم حذف الزيارات المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'احذف', cancelButtonText: 'إلغاء' });
         if (result.isConfirmed) {
-            selected.forEach(chk => { const row = chk.closest('tr'); addGeneralLog('إجراء', '', '', row.cells[4].querySelector('input').value, 'تم حذف الطلب'); row.remove(); });
-            autoSave(); Swal.fire({icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1500});
+            selected.forEach(chk => { 
+                const row = chk.closest('tr'); 
+                const compName = row.cells[isSales ? 4 : 1].querySelector('input').value;
+                if(isSales) {
+                    addGeneralLog('إجراء', '', '', compName, 'تم حذف الطلب'); 
+                } else {
+                    addVisitsLog('إجراء', '', '', compName, 'تم حذف الزيارة');
+                }
+                row.remove(); 
+            });
+            debouncedSave(); Swal.fire({icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1500});
         }
     } else {
         Swal.fire({icon: 'success', title: 'تم', text: `تم تنفيذ إجراء [${action}] على ${selected.length} صف`, showConfirmButton: false, timer: 1500});
@@ -332,8 +373,10 @@ function addGeneralLog(field, old, newVal, comp, actionText) {
 }
 
 function renderGeneralLogs() {
+    const container = document.getElementById('activityLogs');
+    if (!container) return;
     const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
-    document.getElementById('activityLogs').innerHTML = logs.map(l => `<div class="activity-item">${l}</div>`).join('');
+    container.innerHTML = logs.map(l => `<div class="activity-item">${l}</div>`).join('');
 }
 
 function loadSalesFromStorage() {
@@ -344,4 +387,169 @@ function loadSalesFromStorage() {
     renderGeneralLogs();
 }
 
-window.onclick = e => { if (!e.target.matches('.btn-bulk-trigger') && !e.target.matches('.fa-chevron-down')) document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show')); };
+// إغلاق القوائم المنسدلة عند الضغط في أي مكان خارجها
+window.onclick = e => { 
+    if (!e.target.matches('.btn-bulk-trigger') && !e.target.matches('.fa-chevron-down')) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show')); 
+    }
+};
+
+
+/* ==========================================================================
+   أكواد مخصصة لصفحة الزيارات الجديدة (Visits Dashboard)
+   ========================================================================== */
+
+function loadVisitsFromStorage() {
+    const saved = JSON.parse(localStorage.getItem('asgate_visits_db') || '[]');
+    document.getElementById('visitsBody').innerHTML = "";
+    saved.forEach(item => renderVisitRow(item));
+    updateVisitsStats();
+    renderVisitsLogs();
+}
+
+function renderVisitRow(obj) {
+    const tbody = document.getElementById('visitsBody');
+    if (!tbody) return;
+    const row = tbody.insertRow(-1);
+    row.className = 'main-row';
+    row.id = `visit-${obj.id}`;
+    
+    if (obj.status === "غير ناجحة") row.classList.add('lost-row');
+    
+    row.innerHTML = `
+        <td><input type="checkbox" class="select-check"></td>
+        <td><input type="text" class="excel-input" value="${obj.comp || ''}" data-old="${obj.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('الشركة', this, '${obj.comp}', '${obj.id}')"></td>
+        <td><input type="text" class="excel-input" value="${obj.address || ''}" data-old="${obj.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('العنوان', this, '${obj.comp}', '${obj.id}')"></td>
+        <td><input type="text" class="excel-input" value="${obj.manager || ''}" data-old="${obj.manager || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('المدير', this, '${obj.comp}', '${obj.id}')"></td>
+        <td>
+            <div class="phone-cell-container">
+                <a href="https://wa.me/${obj.phone || ''}" target="_blank" class="whatsapp-icon-btn" title="مراسلة واتساب"><i class="fab fa-whatsapp"></i></a>
+                <input type="text" class="excel-input" value="${obj.phone || ''}" data-old="${obj.phone || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('الجوال', this, '${obj.comp}', '${obj.id}')" style="direction:ltr; text-align:center;">
+            </div>
+        </td>
+        <td><input type="text" class="excel-input" value="${obj.email || ''}" data-old="${obj.email || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('البريد', this, '${obj.comp}', '${obj.id}')"></td>
+        <td><input type="text" class="excel-input" value="${obj.cr || ''}" data-old="${obj.cr || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('السجل', this, '${obj.comp}', '${obj.id}')"></td>
+        <td><input type="text" class="excel-input readonly-input" value="${obj.date || ''}" readonly></td>
+        <td><input type="text" class="excel-input" value="${obj.service || ''}" data-old="${obj.service || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('الخدمة', this, '${obj.comp}', '${obj.id}')"></td>
+        <td><input type="number" class="excel-input visit-val-input" value="${obj.val || '0'}" data-old="${obj.val || '0'}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('القيمة الكترونية', this, '${obj.comp}', '${obj.id}')"></td>
+        <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${(obj.notes || '[]').replace(/'/g, "&apos;")}' title="عرض الملاحظات">${getLastNoteOnly(obj.notes || "[]")}</div></td>
+        <td>
+            <select class="excel-input status-select ${getStatusClass(obj.status)}" data-old="${obj.status || 'معلق'}" onchange="handleVisitStatusChange(this, '${obj.id}', '${obj.comp}')">
+                <option value="معلق" ${obj.status === 'معلق' ? 'selected' : ''}>معلق</option>
+                <option value="ناجحة" ${obj.status === 'ناجحة' ? 'selected' : ''}>ناجحة</option>
+                <option value="غير ناجحة" ${obj.status === 'غير ناجحة' ? 'selected' : ''}>غير ناجحة</option>
+            </select>
+        </td>
+        <td><input type="text" class="excel-input readonly-input last-mod-field" value="${obj.lastModifiedDate || '---'}" readonly></td>
+        <td><input type="text" class="excel-input owner-field" value="${obj.owner || 'أحمد'}" data-old="${obj.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateDateField(this); debouncedSave();" onblur="logVisitEdit('المنفذ', this, '${obj.comp}', '${obj.id}')"></td>
+    `;
+}
+
+function handleVisitStatusChange(el, visitId, company) {
+    const val = el.value; const oldVal = el.dataset.old;
+    const row = el.closest('tr');
+    el.className = `excel-input status-select ${getStatusClass(val)}`;
+    
+    if (val === "غير ناجحة") row.classList.add('lost-row');
+    else row.classList.remove('lost-row');
+    
+    addVisitsLog('الحالة', oldVal, val, company, `تغيير حالة الزيارة`);
+    updateDateField(el);
+    el.dataset.old = val;
+    debouncedSave();
+}
+
+function logVisitEdit(fieldName, el, comp, id) {
+    const newVal = el.value; const oldVal = el.dataset.old;
+    if(newVal !== oldVal) {
+        addVisitsLog(fieldName, oldVal, newVal, comp, `تعديل ${fieldName}`);
+        el.dataset.old = newVal;
+    }
+}
+
+function autoSaveVisits() {
+    const rows = document.querySelectorAll('#visitsBody .main-row');
+    if (rows.length === 0 && !document.getElementById('visitsBody')) return;
+    const visitsData = Array.from(rows).map((r, index) => ({
+        id: r.id.replace('visit-', '').trim() || 'v_' + Date.now() + '_' + index,
+        comp: r.cells[1].querySelector('input').value,
+        address: r.cells[2].querySelector('input').value,
+        manager: r.cells[3].querySelector('input').value,
+        phone: r.cells[4].querySelector('input').value,
+        email: r.cells[5].querySelector('input').value,
+        cr: r.cells[6].querySelector('input').value,
+        date: r.cells[7].querySelector('input').value,
+        service: r.cells[8].querySelector('input').value,
+        val: r.cells[9].querySelector('input').value,
+        notes: r.cells[10].querySelector('.notes-preview').getAttribute('data-full-notes'),
+        status: r.cells[11].querySelector('select').value,
+        lastModifiedDate: r.cells[12].querySelector('input').value === '---' ? '' : r.cells[12].querySelector('input').value,
+        owner: r.cells[13].querySelector('input').value
+    }));
+    localStorage.setItem('asgate_visits_db', JSON.stringify(visitsData));
+    updateVisitsStats();
+}
+
+function addVisitRowFromModal() {
+    const comp = document.getElementById('mComp').value;
+    if (!comp) { Swal.fire({icon: 'warning', title: 'خطأ', text: 'يرجى اختيار شركة من نتائج البحث', confirmButtonColor: '#3b82f6'}); return; }
+    
+    const data = {
+        id: 'v_' + Date.now(),
+        comp: comp,
+        address: '-',
+        manager: '-',
+        phone: '-',
+        email: '-',
+        cr: document.getElementById('mCr').value || '-',
+        date: getTodayFormatted(),
+        service: '-',
+        val: '0',
+        status: "معلق", notes: "[]", lastModifiedDate: getTodayFormatted(), owner: "أحمد"
+    };
+    
+    let saved = JSON.parse(localStorage.getItem('asgate_visits_db') || '[]');
+    saved.unshift(data);
+    localStorage.setItem('asgate_visits_db', JSON.stringify(saved));
+    addVisitsLog('إجراء', '', '', comp, `تم تسجيل زيارة جديدة لشركة`);
+    loadVisitsFromStorage();
+    closeOrderModal();
+    Swal.fire({icon: 'success', title: 'تم', text: 'تم تسجيل الزيارة بنجاح', showConfirmButton: false, timer: 1500});
+}
+
+function updateVisitsStats() {
+    if (!document.getElementById('visitsBody')) return;
+    const saved = JSON.parse(localStorage.getItem('asgate_visits_db') || '[]');
+    const currentMonthStr = getTodayFormatted().substring(0, 7);
+    
+    let totalVisits = saved.length;
+    let monthVisits = 0;
+    
+    saved.forEach(item => {
+        if (item.date && item.date.startsWith(currentMonthStr)) {
+            monthVisits++;
+        }
+    });
+    
+    const totalCountEl = document.getElementById('visit-count-total');
+    const monthCountEl = document.getElementById('visit-month-count');
+    
+    if(totalCountEl) totalCountEl.innerText = totalVisits;
+    if(monthCountEl) monthCountEl.innerText = monthVisits;
+}
+
+function addVisitsLog(field, old, newVal, comp, actionText) {
+    const logs = JSON.parse(localStorage.getItem(VISITS_LOGS_KEY) || '[]');
+    const d = new Date(); const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const fullLogHTML = `<span style="color: #94a3b8; font-size: 9px;"><i class="fas fa-clock"></i> ${days[d.getDay()]} ${getTodayFormatted()} ${getTimeFormatted()}</span> &nbsp;|&nbsp; <span style="color: #1e293b; font-weight: 700;">${actionText} ( ${comp} )</span>`;
+    logs.unshift(fullLogHTML);
+    localStorage.setItem(VISITS_LOGS_KEY, JSON.stringify(logs.slice(0, 100)));
+    renderVisitsLogs();
+}
+
+function renderVisitsLogs() {
+    const container = document.getElementById('activityLogs');
+    if (!container || !document.getElementById('visitsBody')) return;
+    const logs = JSON.parse(localStorage.getItem(VISITS_LOGS_KEY) || '[]');
+    container.innerHTML = logs.map(l => `<div class="activity-item">${l}</div>`).join('');
+}
