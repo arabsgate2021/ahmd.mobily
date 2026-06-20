@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="visits.css">
 </head>
 <body onload="loadSavedData()">
+
 <div class="dashboard-container">
     <nav class="navbar">
         <a href="index.html">الرئيسية</a>
@@ -23,7 +24,7 @@
             <div class="search-wrapper">
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="filterTable()">
             </div>
-            
+
             <div class="stats-bar">
                 <div class="stat-item">إجمالي الزيارات: <span id="stat-total" class="stat-val">0</span></div>
                 <div class="stat-item">زيارات الشهر: <span id="stat-month" class="stat-val">0</span></div>
@@ -31,7 +32,7 @@
                 <div class="stat-item">ناجحة: <span id="stat-success" class="stat-val">0</span></div>
             </div>
         </div>
-        
+
         <div class="table-wrapper">
             <table>
                 <thead>
