@@ -6,7 +6,328 @@
   <title>ASGate - الرئيسية</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root{
+      --nav-purple:#2e1065;
+      --nav-active:#a78bfa;
+      --bg-color:#f4f7f9;
+      --border-color:#e2e8f0;
+      --white:#ffffff;
+      --accent-blue:#3b82f6;
+      --accent-green:#22c55e;
+      --accent-yellow:#facc15;
+      --accent-purple:#8b5cf6;
+      --accent-orange:#f97316;
+      --input-bg:#f8fafc;
+    }
+    *{box-sizing:border-box;}
+    body{
+      background-color:var(--bg-color);
+      font-family:'Cairo',sans-serif;
+      margin:0;
+      line-height:1.2;
+      font-size:14px;
+      font-weight:300;
+      overflow-x:hidden;
+    }
+    .navbar{
+      background-color:var(--nav-purple);
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:0 20px;
+      margin:10px;
+      border-radius:15px;
+      height:37px;
+      position:sticky;
+      top:10px;
+      z-index:1000;
+      box-shadow:0 4px 6px rgba(0,0,0,0.1);
+      overflow-x:auto;
+      white-space:nowrap;
+    }
+    .navbar a{
+      color:white;
+      text-decoration:none;
+      padding:0 15px;
+      font-weight:700;
+      font-size:12px;
+      border-radius:8px;
+      transition:0.3s;
+      line-height:26px;
+      height:26px;
+      display:inline-block;
+      flex:0 0 auto;
+    }
+    .navbar a.active{
+      background-color:var(--nav-active);
+      color:var(--nav-purple);
+    }
+    .navbar a:hover:not(.active){
+      background-color:rgba(167,139,250,0.3);
+    }
+    .employee-info-bar{
+      margin:10px 20px;
+      height:35px;
+      background-color:var(--white);
+      border:1px solid var(--border-color);
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 25px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+    .info-content{
+      display:flex;
+      gap:35px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .info-item{
+      font-size:11px;
+      color:var(--nav-purple);
+      font-weight:700;
+    }
+    .info-item span{
+      color:#64748b;
+      font-weight:300;
+      margin-right:5px;
+    }
+    .container{
+      padding:5px 20px 20px 20px;
+    }
+    .content-box{
+      background:var(--white);
+      padding:15px;
+      border-radius:12px;
+      border:1px solid var(--border-color);
+      box-shadow:0 2px 4px rgba(0,0,0,0.05);
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .content-box h3{
+      font-size:13px;
+      margin:0 0 15px 0;
+      color:var(--nav-purple);
+      font-weight:800;
+      border-right:4px solid var(--accent-blue);
+      padding-right:8px;
+      flex:0 0 auto;
+    }
+    .filters-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-bottom:15px;
+    }
+    .filter-card{
+      background:white;
+      padding:8px 12px;
+      border-radius:12px;
+      border:1px solid var(--border-color);
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .filter-card label{
+      font-size:9px;
+      font-weight:800;
+      color:var(--nav-purple);
+    }
+    .filter-input{
+      width:100%;
+      border:none;
+      background:var(--input-bg);
+      font-family:'Cairo',sans-serif;
+      font-size:10px;
+      padding:4px;
+      border-radius:6px;
+      outline:none;
+    }
+    .stats-cards{
+      display:flex;
+      gap:8px;
+      width:100%;
+      align-items:stretch;
+      flex-wrap:wrap;
+      margin-bottom:15px;
+    }
+    .stat-card{
+      flex:1;
+      min-width:120px;
+      height:52px;
+      padding:5px 12px;
+      border-radius:10px;
+      color:white;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      box-sizing:border-box;
+    }
+    .stat-card .label-text{
+      font-size:10px;
+      font-weight:bold;
+      opacity:0.9;
+    }
+    .stat-card .value-text{
+      font-size:13.5px;
+      font-weight:800;
+    }
+    .bg-blue{background-color:var(--accent-blue);}
+    .bg-green{background-color:var(--accent-green);}
+    .bg-yellow{background-color:var(--accent-yellow);color:#854d0e;}
+    .bg-purple{background-color:var(--accent-purple);}
+    .bg-orange{background-color:var(--accent-orange);}
+    .table-box{
+      margin-bottom:15px;
+    }
+    .table-scroll{
+      width:100%;
+      overflow:auto;
+      max-height:420px;
+    }
+    .yearly-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:10.5px;
+      table-layout:fixed;
+    }
+    .yearly-table th,
+    .yearly-table td{
+      border:0.5px solid var(--border-color);
+      padding:4px;
+      height:30px;
+      text-align:center;
+      font-weight:bold;
+      color:#475569;
+    }
+    .yearly-table th{
+      background:#f8fafc;
+      color:var(--nav-purple);
+      font-weight:800;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    .thick-border{
+      border-left:3px solid var(--nav-purple) !important;
+    }
+    .charts-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .chart-item-wrapper{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      flex:1;
+      min-width:180px;
+    }
+    .chart-container-reduced{
+      position:relative;
+      width:min(205px,100%);
+      height:205px;
+    }
+    .gauge-container-reduced{
+      position:relative;
+      width:125px;
+      height:72px;
+      margin-top:10px;
+    }
+    .chart-percentage{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      font-size:24px;
+      font-weight:800;
+      color:var(--nav-purple);
+    }
+    .gauge-value{
+      position:absolute;
+      bottom:-5px;
+      left:50%;
+      transform:translateX(-50%);
+      font-size:15px;
+      font-weight:900;
+    }
+    .chart-label{
+      font-size:12px;
+      font-weight:800;
+      color:#475569;
+      margin-top:5px;
+      text-align:center;
+    }
+    .gauge-label{
+      margin-top:25px;
+    }
+    .staff-performance-section{
+      margin-top:15px;
+      width:100%;
+      min-height:380px;
+    }
+    .staff-chart-wrap{
+      position:relative;
+      width:100%;
+      height:320px;
+    }
+    .staff-chart-wrap canvas{
+      width:100% !important;
+      height:100% !important;
+    }
+    @media (max-width:1100px){
+      .filters-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+      .charts-row{
+        flex-direction:column;
+      }
+      .chart-item-wrapper{
+        width:100%;
+      }
+    }
+    @media (max-width:700px){
+      .filters-grid{
+        grid-template-columns:1fr;
+      }
+      .navbar{
+        flex-wrap:wrap;
+        height:auto;
+        padding:10px;
+      }
+      .navbar a{
+        margin:3px 0;
+      }
+      .employee-info-bar{
+        height:auto;
+        padding:10px;
+      }
+      .stats-cards{
+        flex-direction:column;
+      }
+      .stat-card{
+        width:100%;
+        min-width:0;
+      }
+      .chart-container-reduced{
+        width:180px;
+        height:180px;
+      }
+      .staff-performance-section{
+        min-height:300px;
+      }
+      .staff-chart-wrap{
+        height:260px;
+      }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -26,83 +347,201 @@
   </div>
 
   <div class="container">
-    <div class="dashboard-grid">
-      <div class="right-section">
-        <div class="content-box table-box">
-          <h3>📅 سجل الأهداف والزيارات (2026)</h3>
-          <div class="table-scroll">
-            <table class="yearly-table">
-              <thead>
-                <tr>
-                  <th style="width:22%;">الشهر</th>
-                  <th>هدف</th>
-                  <th>تم</th>
-                  <th class="thick-border">معلق</th>
-                  <th style="background:#eff6ff;">زيارة</th>
-                  <th style="background:#f0fdf4;">ناجحة</th>
-                </tr>
-              </thead>
-              <tbody id="monthsBody"></tbody>
-            </table>
+    <div class="content-box table-box">
+      <h3>📅 سجل الأهداف والزيارات (2026)</h3>
+      <div class="table-scroll">
+        <table class="yearly-table">
+          <thead>
+            <tr>
+              <th style="width:22%;">الشهر</th>
+              <th>هدف</th>
+              <th>تم</th>
+              <th class="thick-border">معلق</th>
+              <th style="background:#eff6ff;">زيارة</th>
+              <th style="background:#f0fdf4;">ناجحة</th>
+            </tr>
+          </thead>
+          <tbody id="monthsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="filters-grid">
+      <div class="filter-card"><label>الشهر</label><select class="filter-input"><option>الكل</option></select></div>
+      <div class="filter-card"><label>المنطقة</label><select class="filter-input"><option>الكل</option></select></div>
+      <div class="filter-card"><label>المشرف</label><select class="filter-input"><option>الكل</option></select></div>
+      <div class="filter-card"><label>المندوب</label><select class="filter-input"><option>الكل</option></select></div>
+    </div>
+
+    <div class="stats-cards">
+      <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
+      <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
+      <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
+      <div class="stat-card bg-purple"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
+      <div class="stat-card bg-orange"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
+    </div>
+
+    <div class="content-box">
+      <h3>📈 تحليل الأداء الإجمالي</h3>
+      <div class="charts-row">
+        <div class="chart-item-wrapper">
+          <div class="chart-container-reduced">
+            <canvas id="achievedChart"></canvas>
+            <div class="chart-percentage">82%</div>
           </div>
+          <div class="chart-label">المحقق</div>
+        </div>
+
+        <div class="chart-item-wrapper">
+          <div class="gauge-container-reduced">
+            <canvas id="gaugeChart"></canvas>
+            <div class="gauge-value">200%</div>
+          </div>
+          <div class="chart-label gauge-label">مؤشر الإنجاز</div>
+        </div>
+
+        <div class="chart-item-wrapper">
+          <div class="chart-container-reduced">
+            <canvas id="pendingChart"></canvas>
+            <div class="chart-percentage">18%</div>
+          </div>
+          <div class="chart-label">المعلق</div>
         </div>
       </div>
+    </div>
 
-      <div class="left-section">
-        <div class="filters-grid">
-          <div class="filter-card"><label>الشهر</label><select class="filter-input"><option>الكل</option></select></div>
-          <div class="filter-card"><label>المنطقة</label><select class="filter-input"><option>الكل</option></select></div>
-          <div class="filter-card"><label>المشرف</label><select class="filter-input"><option>الكل</option></select></div>
-          <div class="filter-card"><label>المندوب</label><select class="filter-input"><option>الكل</option></select></div>
-        </div>
-
-        <div class="stats-cards">
-          <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
-          <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
-          <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
-          <div class="stat-card bg-purple"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
-          <div class="stat-card bg-orange"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
-        </div>
-
-        <div class="content-box chart-box">
-          <h3>📈 تحليل الأداء الإجمالي</h3>
-          <div class="charts-row">
-            <div class="chart-item-wrapper">
-              <div class="chart-container-reduced">
-                <canvas id="achievedChart"></canvas>
-                <div class="chart-percentage">82%</div>
-              </div>
-              <div class="chart-label">المحقق</div>
-            </div>
-
-            <div class="chart-item-wrapper gauge-item">
-              <div class="gauge-container-reduced">
-                <canvas id="gaugeChart"></canvas>
-                <div class="gauge-value">200%</div>
-              </div>
-              <div class="chart-label gauge-label">مؤشر الإنجاز</div>
-            </div>
-
-            <div class="chart-item-wrapper">
-              <div class="chart-container-reduced">
-                <canvas id="pendingChart"></canvas>
-                <div class="chart-percentage">18%</div>
-              </div>
-              <div class="chart-label">المعلق</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="content-box staff-performance-section">
-          <h3>👥 أداء فريق المبيعات (30 موظفاً)</h3>
-          <div class="staff-chart-wrap">
-            <canvas id="staffChart"></canvas>
-          </div>
-        </div>
+    <div class="content-box staff-performance-section">
+      <h3>👥 أداء فريق المبيعات (30 موظفاً)</h3>
+      <div class="staff-chart-wrap">
+        <canvas id="staffChart"></canvas>
       </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    function updateLiveStats() {
+      const opps = JSON.parse(localStorage.getItem('asgate_opportunities_v21')) || [];
+      const visits = JSON.parse(localStorage.getItem('asgate_visits_data_v21')) || [];
+
+      document.getElementById('oppCount').innerText = opps.length;
+      document.getElementById('visitCount').innerText = visits.length;
+
+      const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      const tbody = document.getElementById('monthsBody');
+      tbody.innerHTML = '';
+
+      months.forEach((m, i) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${m}</td>
+          <td>15k</td>
+          <td>${i === 0 ? '14.2k' : '-'}</td>
+          <td class="thick-border">${i === 0 ? '790' : '-'}</td>
+          <td style="color:#3b82f6;">${i === 0 ? '45' : '-'}</td>
+          <td style="color:#22c55e;">${i === 0 ? '12' : '-'}</td>
+        `;
+      });
+
+      const destroyIfExists = (key) => {
+        if (window[key] && typeof window[key].destroy === 'function') window[key].destroy();
+      };
+
+      const achieved = document.getElementById('achievedChart');
+      destroyIfExists('achievedChartInstance');
+      window.achievedChartInstance = new Chart(achieved.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [82, 18],
+            backgroundColor: ['#22c55e', '#f1f5f9'],
+            borderWidth: 0,
+            borderRadius: 10
+          }]
+        },
+        options: {
+          cutout: '85%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      const gauge = document.getElementById('gaugeChart');
+      destroyIfExists('gaugeChartInstance');
+      window.gaugeChartInstance = new Chart(gauge.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [25, 25, 25, 25],
+            backgroundColor: ['#ef4444', '#fbbf24', '#4ade80', '#15803d'],
+            borderWidth: 0,
+            circumference: 180,
+            rotation: 270
+          }]
+        },
+        options: {
+          cutout: '90%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      const pending = document.getElementById('pendingChart');
+      destroyIfExists('pendingChartInstance');
+      window.pendingChartInstance = new Chart(pending.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [18, 82],
+            backgroundColor: ['#facc15', '#f1f5f9'],
+            borderWidth: 0,
+            borderRadius: 10
+          }]
+        },
+        options: {
+          cutout: '85%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      const staff = document.getElementById('staffChart');
+      destroyIfExists('staffChartInstance');
+      window.staffChartInstance = new Chart(staff.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: Array.from({ length: 30 }, (_, i) => i + 1),
+          datasets: [
+            {
+              label: 'المبيعات',
+              data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 5000) + 25000),
+              backgroundColor: '#22c55e'
+            },
+            {
+              label: 'الفرص',
+              data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 3000) + 1000),
+              backgroundColor: '#facc15'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { family: 'Cairo', size: 9 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    window.addEventListener('load', updateLiveStats);
+  </script>
 </body>
 </html>
