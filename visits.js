@@ -699,41 +699,6 @@ function renderRow(
                 class="toggle-arrow"
                 onclick="toggleSubTable('${rowId}')">
 
-                <i class="fas fa-caret-left"></i>
-
-            </span>
-        </td>
-
-        <td>
-            <input
-                type="text"
-                class="excel-input"
-                value="${v.comp || ''}"
-                data-old="${v.comp || ''}"
-
-                onfocus="
-                    this.dataset.old=this.value
-                "
-
-                onkeyup="
-                    updateEditDateField(
-                        this.closest('tr')
-                    );
-                    debouncedSaveAllData();
-                "
-
-                onblur="
-                    addToActivityLog(
-                        'الشركة',
-                        this.dataset.old,
-                        this.value,
-                        this.value
-                    );
-
-                    this.dataset.old =
-                        this.value;
-                ">
-        </td>
             mainRow.innerHTML = `
             <td class="col-select"><input type="checkbox" class="select-check"><span class="toggle-arrow" onclick="toggleSubTable('${rowId}')"><i class="fas fa-caret-left"></i></span></td>
             <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
