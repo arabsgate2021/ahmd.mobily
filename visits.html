@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASGate - سجل الزيارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="visits.css">
+</head>
+<body onload="loadSavedData()">
+<div class="dashboard-container">
+    <nav class="navbar">
+        <a href="index.html">الرئيسية</a>
+        <a href="visits.html" class="active">الزيارات</a>
+        <a href="opportunities.html">الفرص البيعية</a>
+        <a href="customers.html">العملاء</a>
+        <a href="sales.html">المبيعات</a>
+    </nav>
+
+    <div class="main-content">
+        <div class="action-bar">
+            <button class="btn-top btn-add" onclick="insertNewRow()">+ إضافة زيارة جديدة</button>
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="filterTable()">
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-item">إجمالي الزيارات: <span id="stat-total" class="stat-val">0</span></div>
+                <div class="stat-item">زيارات الشهر: <span id="stat-month" class="stat-val">0</span></div>
+                <div class="stat-item">زيارات اليوم: <span id="stat-today" class="stat-val">0</span></div>
+                <div class="stat-item">ناجحة: <span id="stat-success" class="stat-val">0</span></div>
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-select"><input type="checkbox" onclick="toggleAllCheckboxes(this)"></th>
+                        <th class="col-company">الشركة</th>
+                        <th class="col-manager">المسؤول</th>
+                        <th class="col-mobile">الموبايل</th>
+                        <th class="col-email">الإيميل</th>
+                        <th class="col-record">السجل</th>
+                        <th class="col-date">تاريخ الزيارة</th>
+                        <th class="col-service">الخدمة الحالية</th>
+                        <th class="col-notes">ملاحظات الزيارة</th>
+                        <th class="col-status">الحالة</th>
+                        <th class="col-edit">آخر تعديل</th>
+                        <th class="col-action" style="position: relative; overflow: visible;">
+                            <button class="header-dots-btn" onclick="toggleDropdown(event, this)">إجراء •••</button>
+                            <div class="dropdown-menu">
+                                <button onclick="handleBulkAction('تحويل المحدد')">تحويل المحدد</button>
+                                <button onclick="handleBulkAction('تصدير المحدد')">تصدير المحدد</button>
+                                <button onclick="handleBulkAction('طباعة المحدد')">طباعة المحدد</button>
+                                <button class="del-btn" onclick="handleBulkAction('حذف المحدد')">حذف المحدد</button>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="activity-log-section">
+            <div class="activity-log-title">📋 سجل النشاط</div>
+            <div id="activityList" class="activity-list"></div>
+        </div>
+    </div>
+</div>
+
+<div id="noteModal" class="modal">
+    <div class="modal-content">
+        <div style="font-weight: 800; color: #2e1065; margin-bottom: 12px; text-align: right;">سجل متابعة الزيارة والنتائج</div>
+        <div id="historyLog" class="history-log"></div>
+        <textarea id="modalTextArea" class="note-area" placeholder="أدخل تفاصيل الملاحظة هنا..."></textarea>
+        <div style="display:flex; justify-content: flex-end; gap:8px; margin-top:10px;">
+            <button onclick="closeNote()" style="background:#94a3b8; border:none; color:white; padding:8px 18px; border-radius:8px; cursor:pointer; font-family:Cairo; font-size:12px;">تراجع</button>
+            <button onclick="saveNote()" style="background:#22c55e; border:none; color:white; padding:8px 18px; border-radius:8px; cursor:pointer; font-family:Cairo; font-size:12px; font-weight:bold;">حفظ الملاحظة</button>
+        </div>
+    </div>
+</div>
+
+<script src="visits.js"></script>
+</body>
+</html>
