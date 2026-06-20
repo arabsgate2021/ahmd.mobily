@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASGate - إدارة العملاء</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css\">\n    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -25,13 +26,13 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="filterCustomersTable()">
             </div>
             
-            <div class="stats-bar-visit" id="statsContainer" style="margin-right: auto; display: flex; gap: 15px; align-items: center;">
+            <div class="stats-bar-visit" id="statsContainer">
                 <div class="stat-item">إجمالي العملاء: <span class="stat-val style-total-val" id="stat-total">0</span></div>
                 <div class="stat-divider">|</div>
                 <div class="stat-item">عملاء الشهر: <span class="stat-val style-month-val" id="stat-month">0</span></div>
                 <div class="stat-divider">|</div>
                 <div class="stat-item">عملاء اليوم: <span class="stat-val" id="stat-today">0</span></div>
-                <button class="btn-eye-toggle" id="eyeToggleBtn" onclick="toggleStatsVisibility()" style="border:none; background:none; cursor:pointer; padding:0 5px;"><i class="fas fa-eye"></i></button>
+                <button class="btn-eye-toggle" id="eyeToggleBtn" onclick="toggleStatsVisibility()"><i class="fas fa-eye"></i></button>
             </div>
 
             <div class="bulk-action-wrapper">
