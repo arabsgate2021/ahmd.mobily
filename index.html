@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <nav class="navbar">
     <a href="index.html" class="active">الرئيسية</a>
     <a href="visits.html">الزيارات</a>
@@ -29,78 +28,44 @@
   <div class="container">
     <div class="dashboard-grid">
       <div class="right-section">
-        <div class="content-box">
+        <div class="content-box table-box">
           <h3>📅 سجل الأهداف والزيارات (2026)</h3>
-          <table class="yearly-table">
-            <thead>
-              <tr>
-                <th style="width:22%;">الشهر</th>
-                <th>هدف</th>
-                <th>تم</th>
-                <th class="thick-border">معلق</th>
-                <th style="background:#eff6ff;">زيارة</th>
-                <th style="background:#f0fdf4;">ناجحة</th>
-              </tr>
-            </thead>
-            <tbody id="monthsBody"></tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="yearly-table">
+              <thead>
+                <tr>
+                  <th style="width:22%;">الشهر</th>
+                  <th>هدف</th>
+                  <th>تم</th>
+                  <th class="thick-border">معلق</th>
+                  <th style="background:#eff6ff;">زيارة</th>
+                  <th style="background:#f0fdf4;">ناجحة</th>
+                </tr>
+              </thead>
+              <tbody id="monthsBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <div class="left-section">
         <div class="filters-grid">
-          <div class="filter-card">
-            <label>الشهر</label>
-            <select class="filter-input">
-              <option>الكل</option>
-            </select>
-          </div>
-          <div class="filter-card">
-            <label>المنطقة</label>
-            <select class="filter-input">
-              <option>الكل</option>
-            </select>
-          </div>
-          <div class="filter-card">
-            <label>المشرف</label>
-            <select class="filter-input">
-              <option>الكل</option>
-            </select>
-          </div>
-          <div class="filter-card">
-            <label>المندوب</label>
-            <select class="filter-input">
-              <option>الكل</option>
-            </select>
-          </div>
+          <div class="filter-card"><label>الشهر</label><select class="filter-input"><option>الكل</option></select></div>
+          <div class="filter-card"><label>المنطقة</label><select class="filter-input"><option>الكل</option></select></div>
+          <div class="filter-card"><label>المشرف</label><select class="filter-input"><option>الكل</option></select></div>
+          <div class="filter-card"><label>المندوب</label><select class="filter-input"><option>الكل</option></select></div>
         </div>
 
         <div class="stats-cards">
-          <div class="stat-card bg-blue">
-            <div class="label-text">الهدف السنوي</div>
-            <div class="value-text">180,000</div>
-          </div>
-          <div class="stat-card bg-green">
-            <div class="label-text">المبيعات</div>
-            <div class="value-text" id="salesValue">14,210</div>
-          </div>
-          <div class="stat-card bg-yellow">
-            <div class="label-text">المعلق</div>
-            <div class="value-text">790</div>
-          </div>
-          <div class="stat-card bg-purple" style="flex:0.6;">
-            <div class="label-text">الزيارات</div>
-            <div class="value-text" id="visitCount">0</div>
-          </div>
-          <div class="stat-card bg-orange" style="flex:0.6;">
-            <div class="label-text">الفرص</div>
-            <div class="value-text" id="oppCount">0</div>
-          </div>
+          <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
+          <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
+          <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
+          <div class="stat-card bg-purple"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
+          <div class="stat-card bg-orange"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
         </div>
 
-        <div class="content-box">
+        <div class="content-box chart-box">
           <h3>📈 تحليل الأداء الإجمالي</h3>
-
           <div class="charts-row">
             <div class="chart-item-wrapper">
               <div class="chart-container-reduced">
@@ -110,12 +75,12 @@
               <div class="chart-label">المحقق</div>
             </div>
 
-            <div class="chart-item-wrapper" style="flex:0.6;">
+            <div class="chart-item-wrapper gauge-item">
               <div class="gauge-container-reduced">
                 <canvas id="gaugeChart"></canvas>
                 <div class="gauge-value">200%</div>
               </div>
-              <div class="chart-label" style="margin-top:25px;">مؤشر الإنجاز</div>
+              <div class="chart-label gauge-label">مؤشر الإنجاز</div>
             </div>
 
             <div class="chart-item-wrapper">
