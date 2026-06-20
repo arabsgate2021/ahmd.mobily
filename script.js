@@ -6,7 +6,7 @@ let currentActivePreview = null;
 let currentAttachmentName = null; 
 let saveTimeout;
 
-// مفاتيح التخزين الثابتة (Storage Keys)
+// مفاتيح التخزين الثابتة (Storage Keys) مطابق لملفاتك الأصلية
 const SALES_DB_KEY = 'asgate_sales_db';
 const VISITS_DB_KEY = 'asgate_visits_db';
 const CUSTOMERS_STORAGE_KEY = 'asgate_customers_v2_final'; 
@@ -25,7 +25,7 @@ function getTimeFormatted() { const d = new Date(); return String(d.getHours()).
 function initPage() {
     initStatsVisibility();
     
-    // التحقق من الصفحة الحالية لتشغيل الدوال المناسبة بناءً على الـ ID الموجود في الـ tbody
+    // الفحص الذكي لجدول الصفحة المفتوحة حالياً لتشغيل الدالة المناسبة دون تداخل
     if (document.getElementById('salesBody')) {
         loadSalesFromStorage();
     } else if (document.getElementById('visitsBody')) {
@@ -88,10 +88,10 @@ function renderSalesRow(obj) {
     row.innerHTML = `
         <td><input type="checkbox" class="select-check"></td>
         <td><a href="#" class="order-link">#${obj.id}</a></td>
-        <td><input type="text" class="excel-input" value="${obj.type || ''}" onkeyup="debouncedSave()" onblur="logChange('اسم الطلب', this, '${obj.id}')"></td>
+        <td><input type="text" class="excel-input" value="${obj.type || ''}" onkeyup="debouncedSave()"></td>
         <td><input type="text" class="excel-input" value="${obj.date}" readonly></td>
-        <td><input type="text" class="excel-input" value="${obj.comp || ''}" onkeyup="debouncedSave()" onblur="logChange('الشركة', this, '${obj.id}')"></td>
-        <td><input type="text" class="excel-input" value="${obj.cr || ''}" onkeyup="debouncedSave()" onblur="logChange('السجل', this, '${obj.id}')"></td>
+        <td><input type="text" class="excel-input" value="${obj.comp || ''}" onkeyup="debouncedSave()"></td>
+        <td><input type="text" class="excel-input" value="${obj.cr || ''}" onkeyup="debouncedSave()"></td>
         <td>
             <select class="excel-input status-select" onchange="handleStatusChange(this, '${obj.id}')">
                 <option value="مكتمل" ${obj.status === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
@@ -165,7 +165,7 @@ function autoSaveVisits() {
     updateVisitsStats();
 }
 
-/* --- 3. دوال العملاء (Customers Logic) --- */
+/* --- 3. دوال العملاء (Customers Logic - متوافقة 100% مع تنظيم خلاياك الأصلي) --- */
 function loadCustomersFromStorage() {
     const saved = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
     const tbody = document.getElementById('customersBody');
@@ -181,10 +181,14 @@ function renderCustomerRow(obj) {
     const row = tbody.insertRow(-1);
     row.className = 'main-row';
     
+    // بناء الخلايا متطابق تماماً مع ترتيب th في ملف customers.html المرفق الخاص بك
     row.innerHTML = `
         <td><input type="checkbox" class="select-check"></td>
         <td><input type="text" class="excel-input" value="${obj.name || ''}" onkeyup="debouncedSave()"></td>
-        <td><input type="text" class="excel-input" value="${obj.phone || ''}" onkeyup="debouncedSave()"></td>
+        <td class="phone-cell-container">
+            <a href="https://wa.me/${(obj.phone || '').replace(/\s+/g, '')}" target="_blank" class="whatsapp-icon-btn"><i class="fab fa-whatsapp"></i></a>
+            <input type="text" class="excel-input" value="${obj.phone || ''}" onkeyup="debouncedSave()">
+        </td>
         <td><input type="text" class="excel-input" value="${obj.email || ''}" onkeyup="debouncedSave()"></td>
         <td><input type="text" class="excel-input" value="${obj.city || ''}" onkeyup="debouncedSave()"></td>
         <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${(obj.notes || '[]').replace(/'/g, "&apos;")}'>${getLastNoteOnly(obj.notes)}</div></td>
@@ -201,7 +205,7 @@ function autoSaveCustomers() {
     const rows = document.querySelectorAll('#customersBody .main-row');
     const data = Array.from(rows).map(r => ({
         name: r.cells[1].querySelector('input').value,
-        phone: r.cells[2].querySelector('input').value,
+        phone: r.cells[2].querySelector('.excel-input').value,
         email: r.cells[3].querySelector('input').value,
         city: r.cells[4].querySelector('input').value,
         notes: r.cells[5].querySelector('.notes-preview').getAttribute('data-full-notes'),
@@ -217,13 +221,25 @@ function openNote(el) {
     let arr = [];
     try { arr = JSON.parse(raw); } catch(e) { arr = []; }
     
-    const html = arr.map(msg => `<div class="chat-msg-block"><b>${msg.user || 'المستخدم'}</b>: ${msg.text}</div>`).join('');
+    const html = arr.map(msg => `
+        <div class="chat-msg-block">
+            <div class="chat-msg-header">
+                <span>${msg.user || 'المستخدم'}</span>
+                <span class="msg-header-time">${msg.date || ''} ${msg.time || ''}</span>
+            </div>
+            <span class="chat-msg-text">${msg.text}</span>
+        </div>
+    `).join('');
     
     const historyLogEl = document.getElementById('historyLog');
     if(historyLogEl) historyLogEl.innerHTML = html;
     
     const modalEl = document.getElementById('noteModal');
-    if(modalEl) modalEl.style.display = "flex";
+    if(modalEl) {
+        modalEl.style.display = "flex";
+        const txtArea = document.getElementById('modalTextArea');
+        if(txtArea) txtArea.focus();
+    }
 }
 
 function saveNote() {
@@ -236,9 +252,9 @@ function saveNote() {
         let arr = [];
         try { arr = JSON.parse(raw); } catch(e) { arr = []; }
         
-        arr.push({ user: "المستخدم", date: getTodayFormatted(), text: txt });
+        arr.push({ user: "المستخدم", date: getTodayFormatted(), time: getTimeFormatted(), text: txt });
         currentActivePreview.setAttribute('data-full-notes', JSON.stringify(arr));
-        currentActivePreview.innerText = txt.substring(0, 20) + "...";
+        currentActivePreview.innerText = txt;
         debouncedSave();
     }
     closeNote();
@@ -272,7 +288,6 @@ function addLog(key, text) {
     logs.unshift(`${getTodayFormatted()} - ${text}`);
     localStorage.setItem(key, JSON.stringify(logs.slice(0, 50)));
     
-    // إعادة رندرة السجل إذا كان الكونتينر المفتوح يطابق الطلب
     if(key === LOGS_KEY && document.getElementById('salesBody')) renderLogs(LOGS_KEY, 'activityLogs');
     if(key === VISITS_LOGS_KEY && document.getElementById('visitsBody')) renderLogs(VISITS_LOGS_KEY, 'activityLogs');
     if(key === CUSTOMERS_LOGS_KEY && document.getElementById('customersBody')) renderLogs(CUSTOMERS_LOGS_KEY, 'activityLogs');
@@ -303,10 +318,6 @@ function updateVisitsStats() {
     if(visitCountEl) visitCountEl.innerText = saved.length;
 }
 
-// دالات لتجنب أخطاء توقف الأكواد القديمة
-function logChange(field, input, id) {
-    addLog(LOGS_KEY, `تعديل ${field} للطلب رقم #${id}`);
-}
 function handleStatusChange(select, id) {
     debouncedSave();
     addLog(LOGS_KEY, `تغيير حالة الطلب رقم #${id} إلى ${select.value}`);
