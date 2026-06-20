@@ -306,3 +306,67 @@ tbody tr.main-row:hover td { background-color: #f1f5f9; }
 
 /* خطوط مكتبة التنبيهات (SweetAlert2) */
 div:where(.swal2-container) { font-family: 'Cairo', sans-serif !important; }
+/* ==========================================================================
+   تنسيقات الصفحة الرئيسية (Dashboard - النسخة الأصلية المحمية)
+   ========================================================================== */
+.dashboard-page-v1 {
+    background-color: #f4f7f9;
+    font-weight: 300;
+    overflow-y: auto; /* السماح بالتمرير في الرئيسية */
+}
+.dashboard-page-v1 .navbar.dashboard-navbar {
+    width: auto; flex-direction: row; gap: 16px; flex-shrink: unset;
+    background-color: #2e1065; display: flex; align-items: center; padding: 12px 24px; 
+    margin: 10px; border-radius: 15px; height: auto; position: sticky; top: 10px; z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;
+}
+.dashboard-page-v1 .navbar.dashboard-navbar a {
+    color: #cbd5e1; text-decoration: none; padding: 0 15px; font-weight: 700; 
+    font-size: 13px; border-radius: 8px; transition: 0.3s; line-height: 26px; height: auto; display: inline-block;
+}
+.dashboard-page-v1 .navbar.dashboard-navbar a.active { color: #a78bfa; background: transparent; font-weight: 800; }
+.dashboard-page-v1 .navbar.dashboard-navbar a:hover { color: #ffffff; background: transparent; }
+
+.dashboard-page-v1 .employee-info-bar { margin: 10px 20px; height: 35px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 0 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.dashboard-page-v1 .info-content { display: flex; gap: 35px; align-items: center; }
+.dashboard-page-v1 .info-item { font-size: 11px; color: #2e1065; font-weight: 700; }
+.dashboard-page-v1 .info-item span { color: #64748b; font-weight: 300; margin-right: 5px; }
+
+.dashboard-page-v1 .container { padding: 5px 20px 20px 20px; }
+.dashboard-page-v1 .dashboard-grid { display: flex; gap: 20px; align-items: stretch; width: 100%; flex-direction: row; margin: 0; }
+.dashboard-page-v1 .right-section { flex: 38; }
+.dashboard-page-v1 .left-section { flex: 62; display: flex; flex-direction: column; gap: 15px; }
+
+.dashboard-page-v1 .content-box { background: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
+.dashboard-page-v1 h3 { font-size: 13px; margin: 0; color: #2e1065; font-weight: 800; border-right: 4px solid #3b82f6; padding-right: 8px; margin-bottom: 15px; text-align: right; }
+
+.dashboard-page-v1 .yearly-table { width: 100%; border-collapse: collapse; font-size: 10.5px; table-layout: fixed; }
+.dashboard-page-v1 .yearly-table th, .dashboard-page-v1 .yearly-table td { border: 0.5px solid #e2e8f0; padding: 2px; height: 30px; text-align: center; font-weight: bold; color: #475569; }
+.dashboard-page-v1 .yearly-table th { background: #f8fafc; color: #2e1065; font-weight: 800; }
+.dashboard-page-v1 .thick-border { border-left: 3px solid #2e1065 !important; }
+
+.dashboard-page-v1 .filters-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.dashboard-page-v1 .filter-card { background: white; padding: 8px 12px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; text-align: right; }
+.dashboard-page-v1 .filter-card label { font-size: 9px; font-weight: 800; color: #2e1065; }
+.dashboard-page-v1 .filter-input { width: 100%; border: none; background: #f8fafc; font-family: 'Cairo'; font-size: 10px; padding: 4px; border-radius: 6px; outline: none; text-align: right;}
+
+.dashboard-page-v1 .stats-cards { display: flex; gap: 8px; width: 100%; align-items: center; }
+.dashboard-page-v1 .stat-card { flex: 1; height: 52px; padding: 5px 12px; border-radius: 10px; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; box-sizing: border-box; }
+.dashboard-page-v1 .stat-card .label-text { font-size: 10px; font-weight: bold; opacity: 0.9; }
+.dashboard-page-v1 .stat-card .value-text { font-size: 13.5px; font-weight: 800; }
+
+.dashboard-page-v1 .bg-blue { background-color: #3b82f6; }
+.dashboard-page-v1 .bg-green { background-color: #22c55e; }
+.dashboard-page-v1 .bg-yellow { background-color: #facc15; color: #854d0e; }
+.dashboard-page-v1 .bg-purple { background-color: #8b5cf6; }
+.dashboard-page-v1 .bg-orange { background-color: #f97316; }
+
+.dashboard-page-v1 .charts-row { display: flex; justify-content: space-around; align-items: center; flex-grow: 1; gap: 5px; }
+.dashboard-page-v1 .chart-item-wrapper { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.dashboard-page-v1 .chart-container-reduced { position: relative; width: 205px; height: 205px; }
+.dashboard-page-v1 .gauge-container-reduced { position: relative; width: 125px; height: 72px; margin-top: 10px; }
+.dashboard-page-v1 .chart-percentage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: 800; color: #2e1065; }
+.dashboard-page-v1 .gauge-value { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); font-size: 15px; font-weight: 900; }
+.dashboard-page-v1 .chart-label { font-size: 12px; font-weight: 800; color: #475569; margin-top: 5px; }
+
+.dashboard-page-v1 .staff-performance-section { margin-top: 20px; width: 100%; height: 350px; }
