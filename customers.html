@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASGate - إدارة العملاء</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- الربط بملف التنسيق الموحد -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css\">\n    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -27,45 +25,44 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="filterCustomersTable()">
             </div>
             
-            <div class="stats-bar">
-                <div class="stat-item">إجمالي العملاء: <span id="stat-total" class="stat-val">0</span></div>
-                <div class="stat-item">عملاء الشهر: <span id="stat-month" class="stat-val">0</span></div>
-                <div class="stat-item">عملاء اليوم: <span id="stat-today" class="stat-val">0</span></div>
+            <div class="stats-bar-visit" id="statsContainer" style="margin-right: auto; display: flex; gap: 15px; align-items: center;">
+                <div class="stat-item">إجمالي العملاء: <span class="stat-val style-total-val" id="stat-total">0</span></div>
+                <div class="stat-divider">|</div>
+                <div class="stat-item">عملاء الشهر: <span class="stat-val style-month-val" id="stat-month">0</span></div>
+                <div class="stat-divider">|</div>
+                <div class="stat-item">عملاء اليوم: <span class="stat-val" id="stat-today">0</span></div>
+                <button class="btn-eye-toggle" id="eyeToggleBtn" onclick="toggleStatsVisibility()" style="border:none; background:none; cursor:pointer; padding:0 5px;"><i class="fas fa-eye"></i></button>
             </div>
 
             <div class="bulk-action-wrapper">
-                <button class="btn-bulk-trigger" onclick="toggleDropdown(event, this)">إجراء ▾</button>
+                <button class="btn-bulk-trigger" onclick="toggleDropdown(event, this)">إجراء جماعي <i class="fas fa-chevron-down opacity-chevron"></i></button>
                 <div class="dropdown-menu">
-                    <button onclick="handleCustomerBulkAction('تغيير المالك')">تغيير المالك</button>
-                    <button onclick="handleCustomerBulkAction('تعديل')">تعديل</button>
-                    <button onclick="handleCustomerBulkAction('تصدير')">تصدير</button>
-                    <button onclick="handleCustomerBulkAction('طباعة')">طباعة</button>
-                    <button class="del-btn" onclick="handleCustomerBulkAction('حذف')">حذف</button>
+                    <button class="del-btn" onclick="handleCustomerBulkAction('حذف')">حذف العميل</button>
                 </div>
             </div>
         </div>
-        
+
         <div class="table-wrapper">
-            <table id="mainTable">
+            <table>
                 <thead>
                     <tr>
                         <th class="col-select"><input type="checkbox" onclick="toggleAllCheckboxes(this)"></th>
-                        <th class="col-id">ID</th>
-                        <th class="col-company">اسم المنشأة / الشركة</th>
-                        <th class="col-address">العنوان</th> 
-                        <th class="col-records">السجل الرئيسي</th>
-                        <th class="col-contact">الشخص المسؤول</th>
-                        <th class="col-phone">رقم التواصل</th>
-                        <th class="col-email">البريد الإلكتروني</th>
-                        <th class="col-type">التصنيف</th>
-                        <th class="col-status">الحالة</th>
-                        <th class="col-notes">سجل المتابعة</th>
-                        <th class="col-created">تاريخ الإنشاء</th>
-                        <th class="col-owner">المالك</th>
+                        <th style="width: 6%;">ID</th>
+                        <th style="width: 15%;">اسم المنشأة الشركة</th>
+                        <th style="width: 12%;">العنوان</th>
+                        <th style="width: 10%;">السجل الرئيسي</th>
+                        <th style="width: 10%;">الشخص المسؤول</th>
+                        <th style="width: 11%;">رقم التواصل</th>
+                        <th style="width: 12%;">البريد الإلكتروني</th>
+                        <th style="width: 7%;">التصنيف</th>
+                        <th style="width: 6%;">الحالة</th>
+                        <th style="width: 10%;">الملاحظات</th>
+                        <th style="width: 8%;">تاريخ الإنشاء</th>
+                        <th style="width: 6%;">المالك</th>
                     </tr>
                 </thead>
-                <!-- تم وضع ID خاص لجدول العملاء ليتعرف عليه الـ JavaScript الموحد -->
-                <tbody id="customersBody"></tbody>
+                <tbody id="customersBody">
+                    </tbody>
             </table>
         </div>
 
@@ -80,18 +77,20 @@
 </div>
 
 <div id="noteModal" class="modal">
-    <div class="modal-content">
-        <div style="font-weight: 800; color: #4c1d95; font-size:13px; margin-bottom: 12px; text-align: center;">سجل ملاحظات ومتابعة</div>
+    <div class="modal-notes-content">
+        <div class="modal-notes-title-wrapper">
+            <i class="fas fa-comments note-icon-color"></i>
+            <span>سجل ملاحظات ومتابعة العميل</span>
+        </div>
         <div id="historyLog" class="history-log"></div>
-        <textarea id="modalTextArea" class="note-area" placeholder="أضف ملاحظة جديدة..."></textarea>
-        <div style="display:flex; justify-content: flex-end; gap:8px; margin-top:12px;">
-            <button onclick="closeNote()" style="background:#94a3b8; border:none; color:white; padding:6px 16px; border-radius:6px; cursor:pointer; font-family:Cairo; font-size:11.5px;">إلغاء</button>
-            <button onclick="saveNote()" style="background:#22c55e; border:none; color:white; padding:6px 16px; border-radius:6px; cursor:pointer; font-family:Cairo; font-size:11.5px; font-weight:bold;">تحديث الملاحظات</button>
+        <textarea id="modalTextArea" class="note-area" placeholder="أكتب ملاحظة أو تحديثاً جديداً هنا..."></textarea>
+        <div class="modal-actions-wrapper">
+            <button onclick="closeNote()" class="btn-modal-cancel">إلغاء</button>
+            <button onclick="saveNote()" class="btn-modal-save">حفظ التحديث</button>
         </div>
     </div>
 </div>
 
-<!-- الربط بملف الجافاسكربت الموحد -->
 <script src="script.js"></script>
 </body>
 </html>
