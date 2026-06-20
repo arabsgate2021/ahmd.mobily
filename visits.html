@@ -3,9 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>ASGate - الزيارات</title>
+    <!-- استدعاءات المكتبات الخارجية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- استدعاء ملف الستايل الخارجي (تأكد أن ملف style.css موجود في نفس المجلد) -->
     <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* تنسيقات إضافية لضمان ظهور الجدول بشكل صحيح في الصفحة */
+        .table-wrapper { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .visits-table { width: 100%; border-collapse: collapse; }
+        .visits-table th { background: #4c1d95; color: white; padding: 12px; }
+        .visits-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
+        .btn-add { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; }
+    </style>
 </head>
 <body>
 
@@ -19,25 +32,37 @@
     </nav>
 
     <div class="main-content">
-        <div class="action-bar">
-            <h3>📋 سجل الزيارات</h3>
-            <button class="btn-add" onclick="addNewVisitRow()">+ إضافة زيارة</button>
+        <div class="action-bar" style="margin-bottom: 20px;">
+            <button class="btn-add" onclick="insertNewRow()"><i class="fas fa-plus"></i> إضافة زيارة جديدة</button>
         </div>
         
-        <table class="visits-table">
-            <thead>
-                <tr>
-                    <th>التاريخ</th>
-                    <th>العميل</th>
-                    <th>الحالة</th>
-                    <th>الإجراء</th>
-                </tr>
-            </thead>
-            <tbody id="visitsBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table id="mainTable" class="visits-table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الشركة</th>
+                        <th>الحالة</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+<!-- استدعاء ملف الجافاسكريبت الخارجي -->
 <script src="script.js"></script>
+<script>
+    // التأكد من تشغيل الدوال عند فتح الصفحة
+    window.onload = function() {
+        if(typeof loadSavedData === 'function') {
+            loadSavedData();
+        } else {
+            console.error("دالة loadSavedData غير موجودة في script.js");
+        }
+    };
+</script>
 </body>
 </html>
