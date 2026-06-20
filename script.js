@@ -46,3 +46,22 @@ new Chart(ctxStaff, {
 });
 
 window.onload = updateLiveStats;
+/* دالة تحميل الزيارات */
+function loadVisitsFromStorage() {
+    const visits = JSON.parse(localStorage.getItem('asgate_visits_db') || '[]');
+    const tbody = document.getElementById('visitsBody');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '';
+    visits.forEach((v, index) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${v.date}</td><td>${v.customer}</td><td>${v.status}</td><td><button onclick="deleteVisit(${index})">حذف</button></td>`;
+    });
+}
+
+function deleteVisit(index) {
+    let visits = JSON.parse(localStorage.getItem('asgate_visits_db') || '[]');
+    visits.splice(index, 1);
+    localStorage.setItem('asgate_visits_db', JSON.stringify(visits));
+    loadVisitsFromStorage();
+}
