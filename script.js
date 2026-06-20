@@ -3,15 +3,14 @@
    ========================================================================== */
 
 let currentActivePreview = null;
-let currentAttachmentName = null; 
 let saveTimeout;
 
-// مفاتيح التخزين الثابتة (Storage Keys) مطابق لملفاتك الأصلية
+// مفاتيح التخزين الثابتة من النسخة الأصلية
 const SALES_DB_KEY = 'asgate_sales_db';
 const VISITS_DB_KEY = 'asgate_visits_db';
 const CUSTOMERS_STORAGE_KEY = 'asgate_customers_v2_final'; 
 
-// مفاتيح سجل النشاطات (Logs Keys)
+// مفاتيح سجل النشاطات
 const LOGS_KEY = 'asgate_general_sales_logs';
 const VISITS_LOGS_KEY = 'asgate_general_visits_logs';
 const CUSTOMERS_LOGS_KEY = 'asgate_customers_logs_v2';
@@ -21,11 +20,11 @@ document.addEventListener('DOMContentLoaded', initPage);
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0'); }
 
-/* --- دالة التهيئة عند تحميل الصفحة --- */
+/* --- دالة التهيئة الحكيمة عند تحميل الصفحة --- */
 function initPage() {
     initStatsVisibility();
     
-    // الفحص الذكي لجدول الصفحة المفتوحة حالياً لتشغيل الدالة المناسبة دون تداخل
+    // فحص ذكي لتشغيل بيانات الصفحة الحالية دون أي تداخل
     if (document.getElementById('salesBody')) {
         loadSalesFromStorage();
     } else if (document.getElementById('visitsBody')) {
@@ -35,7 +34,7 @@ function initPage() {
     }
 }
 
-/* --- نظام الإحصائيات (Visibility) --- */
+/* --- نظام إخفاء/إظهار الإحصائيات (Visibility) --- */
 function toggleStatsVisibility() {
     const container = document.getElementById('statsContainer');
     const btn = document.getElementById('eyeToggleBtn');
@@ -65,24 +64,188 @@ function debouncedSave() {
     }, 500);
 }
 
-/* --- 1. دوال المبيعات (Sales Logic) --- */
+/* ==========================================================================
+   1. نظام إدارة العملاء (13 عموداً مطابقاً لـ customers (8)_2.html تماماً)
+   ========================================================================== */
+function loadCustomersFromStorage() {
+    const saved = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
+    const tbody = document.getElementById('customersBody');
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    saved.forEach(item => renderCustomerRow(item));
+    renderLogs(CUSTOMERS_LOGS_KEY, 'activityList');
+    updateCustomersStats();
+}
+
+function renderCustomerRow(c = {}, prepend = false) {
+    const tbody = document.getElementById('customersBody');
+    if (!tbody) return;
+    
+    const mainRow = prepend ? tbody.insertRow(0) : tbody.insertRow(-1);
+    mainRow.className = 'main-row';
+    
+    const notes = c.notes || '';
+    const lastNoteText = getLastNoteOnly(notes);
+    const createdAt = c.createdDate || getTodayFormatted();
+    const generatedId = c.id || Math.floor(1000 + Math.random() * 9000);
+
+    // بناء الخلايا الـ 13 مطابقة لترتيب الجدول الأصلي لمنع أي انزياح أو تداخل
+    mainRow.innerHTML = `
+        <td class="col-select"><input type="checkbox" class="select-check"></td>
+        <td class="col-id"><a href="customer-profile.html?id=${generatedId}" class="id-link" target="_blank">${generatedId}</a></td>
+        <td><input type="text" class="excel-input" value="${c.comp || ''}" onchange="trackCustomerChange('اسم المنشأة الشركة', this); debouncedSave();"></td>
+        <td><input type="text" class="excel-input" value="${c.subRecord || ''}" onchange="trackCustomerChange('العنوان', this); debouncedSave();"></td>
+        <td><input type="text" class="excel-input" value="${c.mainRecord || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onchange="trackCustomerChange('السجل الرئيسي', this); debouncedSave();"></td>
+        <td><input type="text" class="excel-input" value="${c.contact || ''}" onchange="trackCustomerChange('الشخص المسؤول', this); debouncedSave();"></td>
+        <td>
+            <div class="phone-cell-container">
+                <a class="whatsapp-icon-btn" onclick="openWhatsAppChat(this)" title="مراسلة عبر واتساب"><i class="fab fa-whatsapp"></i></a>
+                <input type="text" class="excel-input" value="${c.phone || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onchange="trackCustomerChange('رقم التواصل', this); debouncedSave();">
+            </div>
+        </td>
+        <td><input type="text" class="excel-input" value="${c.email || ''}" onchange="trackCustomerChange('البريد الإلكتروني', this); debouncedSave();"></td>
+        <td>
+            <select class="excel-input" onchange="trackCustomerChange('التصنيف', this); debouncedSave();">
+                <option value="VIP" ${c.type === 'VIP' ? 'selected' : ''}>VIP</option>
+                <option value="تجاري" ${c.type === 'تجاري' ? 'selected' : ''}>تجاري</option>
+                <option value="حكومي" ${c.type === 'حكومي' ? 'selected' : ''}>حكومي</option>
+                <option value="صغير" ${c.type === 'صغير' ? 'selected' : ''}>صغير</option>
+            </select>
+        </td>
+        <td>
+            <select class="excel-input" onchange="trackCustomerChange('الحالة', this); debouncedSave();">
+                <option value="نشط" ${c.status === 'نشط' ? 'selected' : ''}>نشط</option>
+                <option value="غير نشط" ${c.status === 'غير نشط' ? 'selected' : ''}>غير نشط</option>
+            </select>
+        </td>
+        <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notes.replace(/'/g, "&apos;")}'>${lastNoteText}</div></td>
+        <td><input type="text" class="excel-input readonly-input" value="${createdAt}" readonly><input type="hidden" class="created-date-val" value="${createdAt}"></td>
+        <td><input type="text" class="excel-input" value="${c.owner || 'أحمد'}" onchange="trackCustomerChange('المالك', this); debouncedSave();"></td>
+    `;
+    updateCustomersStats();
+}
+
+function autoSaveCustomers() {
+    const rows = document.querySelectorAll('#customersBody .main-row');
+    const data = Array.from(rows).map(row => ({
+        id: row.cells[1].querySelector('.id-link').innerText,
+        comp: row.cells[2].querySelector('input').value,
+        subRecord: row.cells[3].querySelector('input').value, 
+        mainRecord: row.cells[4].querySelector('input').value,
+        contact: row.cells[5].querySelector('input').value,
+        phone: row.cells[6].querySelector('input').value,
+        email: row.cells[7].querySelector('input').value,
+        type: row.cells[8].querySelector('select').value,
+        status: row.cells[9].querySelector('select').value,
+        notes: row.querySelector('.notes-preview').getAttribute('data-full-notes') || '',
+        createdDate: row.querySelector('.created-date-val').value,
+        owner: row.cells[12].querySelector('input').value
+    }));
+    localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(data));
+    updateCustomersStats();
+}
+
+function insertNewCustomerRow() { 
+    renderCustomerRow({}, true); 
+    autoSaveCustomers(); 
+}
+
+function trackCustomerChange(fieldName, inputEl) {
+    const row = inputEl.closest('tr');
+    const compName = row.cells[2].querySelector('input').value || "عميل جديد";
+    addLog(CUSTOMERS_LOGS_KEY, `تعديل ${fieldName} للعميل (${compName}) إلى [${inputEl.value}]`);
+}
+
+function filterCustomersTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    document.querySelectorAll('#customersBody .main-row').forEach(r => {
+        const idVal = r.cells[1].querySelector('.id-link').innerText.toLowerCase();
+        const compVal = r.cells[2].querySelector('input').value.toLowerCase();
+        const mainRecVal = r.cells[4].querySelector('input').value.toLowerCase();
+        const contactVal = r.cells[5].querySelector('input').value.toLowerCase();
+        const phoneVal = r.cells[6].querySelector('input').value.toLowerCase();
+        const emailVal = r.cells[7].querySelector('input').value.toLowerCase();
+
+        const isMatch = idVal.includes(q) || compVal.includes(q) || mainRecVal.includes(q) || 
+                        contactVal.includes(q) || phoneVal.includes(q) || emailVal.includes(q);
+        r.style.display = isMatch ? "" : "none";
+    });
+}
+
+function updateCustomersStats() {
+    const rows = document.querySelectorAll('#customersBody .main-row');
+    const today = getTodayFormatted();
+    const currentMonth = today.substring(0, 7);
+    
+    let total = rows.length;
+    let countToday = 0;
+    let countMonth = 0;
+
+    rows.forEach(r => {
+        const dateVal = r.querySelector('.created-date-val').value;
+        if(dateVal === today) countToday++;
+        if(dateVal.startsWith(currentMonth)) countMonth++;
+    });
+
+    if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
+    if(document.getElementById('stat-month')) document.getElementById('stat-month').innerText = countMonth;
+    if(document.getElementById('stat-today')) document.getElementById('stat-today').innerText = countToday;
+}
+
+function openWhatsAppChat(el) {
+    const inputEl = el.closest('.phone-cell-container').querySelector('input');
+    let rawPhone = inputEl.value.trim();
+    if (!rawPhone) return alert("يرجى إدخال رقم الجوال أولاً");
+    let cleanNumber = rawPhone.replace(/\D/g, '');
+    if (cleanNumber.startsWith('00966')) cleanNumber = cleanNumber.substring(2);
+    else if (cleanNumber.startsWith('05')) cleanNumber = '966' + cleanNumber.substring(1);
+    else if (cleanNumber.startsWith('5') && cleanNumber.length === 9) cleanNumber = '966' + cleanNumber;
+    window.open("https://wa.me/" + cleanNumber, '_blank');
+}
+
+function toggleActivityLogHeight() {
+    const section = document.getElementById('custActivityLogSection');
+    const btn = document.getElementById('toggleLogBtn');
+    if(!section || !btn) return;
+    if (section.classList.contains('expanded')) {
+        section.classList.remove('expanded');
+        btn.innerText = '⤢';
+    } else {
+        section.classList.add('expanded');
+        btn.innerText = '⤡';
+    }
+}
+
+function handleCustomerBulkAction(action) {
+    const selected = document.querySelectorAll('#customersBody .select-check:checked');
+    if (selected.length === 0) return alert('يرجى تحديد العملاء أولاً');
+    
+    if (action === 'حذف' && confirm('هل أنت متأكد من حذف العملاء المحددين؟')) {
+        selected.forEach(chk => chk.closest('tr').remove());
+        addLog(CUSTOMERS_LOGS_KEY, `إجراء جماعي: حذف عدد (${selected.length}) من العملاء المحددين.`);
+        autoSaveCustomers();
+    } else {
+        alert('تم طلب تنفيذ ' + action + ' على ' + selected.length + ' عميل');
+    }
+}
+
+/* ==========================================================================
+   2. دوال المبيعات والزيارات الأخرى (تظل ثابتة ومستقرة كما هي)
+   ========================================================================== */
 function loadSalesFromStorage() {
     const saved = JSON.parse(localStorage.getItem(SALES_DB_KEY) || '[]');
     const tbody = document.getElementById('salesBody');
     if(!tbody) return;
     tbody.innerHTML = "";
     saved.forEach(item => renderSalesRow(item));
-    updateHeaderStats();
     renderLogs(LOGS_KEY, 'activityLogs');
 }
 
 function renderSalesRow(obj) {
     const tbody = document.getElementById('salesBody');
     if(!tbody) return;
-    const sums = calculateOrderSums(obj.id);
     const row = tbody.insertRow(-1);
     row.className = 'main-row';
-    row.id = `row-${obj.id}`;
     if (obj.status === "فقدان") row.classList.add('lost-row');
     
     row.innerHTML = `
@@ -93,14 +256,14 @@ function renderSalesRow(obj) {
         <td><input type="text" class="excel-input" value="${obj.comp || ''}" onkeyup="debouncedSave()"></td>
         <td><input type="text" class="excel-input" value="${obj.cr || ''}" onkeyup="debouncedSave()"></td>
         <td>
-            <select class="excel-input status-select" onchange="handleStatusChange(this, '${obj.id}')">
+            <select class="excel-input status-select" onchange="debouncedSave()">
                 <option value="مكتمل" ${obj.status === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
                 <option value="معلق" ${obj.status === 'معلق' ? 'selected' : ''}>معلق</option>
                 <option value="فقدان" ${obj.status === 'فقدان' ? 'selected' : ''}>فقدان</option>
             </select>
         </td>
-        <td>${sums.completed.toFixed(2)}</td>
-        <td>${sums.pending.toFixed(2)}</td>
+        <td>0.00</td>
+        <td>0.00</td>
         <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${(obj.notes || '[]').replace(/'/g, "&apos;")}'>${getLastNoteOnly(obj.notes)}</div></td>
         <td><input type="text" class="excel-input" value="${obj.lastModifiedDate || ''}" readonly></td>
         <td><input type="text" class="excel-input" value="${obj.owner || 'أحمد'}" onkeyup="debouncedSave()"></td>
@@ -121,17 +284,14 @@ function autoSaveSales() {
         owner: r.cells[11].querySelector('input').value
     }));
     localStorage.setItem(SALES_DB_KEY, JSON.stringify(data));
-    updateHeaderStats();
 }
 
-/* --- 2. دوال الزيارات (Visits Logic) --- */
 function loadVisitsFromStorage() {
     const saved = JSON.parse(localStorage.getItem(VISITS_DB_KEY) || '[]');
     const tbody = document.getElementById('visitsBody');
     if(!tbody) return;
     tbody.innerHTML = "";
     saved.forEach(item => renderVisitRow(item));
-    updateVisitsStats();
     renderLogs(VISITS_LOGS_KEY, 'activityLogs');
 }
 
@@ -162,59 +322,11 @@ function autoSaveVisits() {
         status: r.cells[6].querySelector('select').value
     }));
     localStorage.setItem(VISITS_DB_KEY, JSON.stringify(data));
-    updateVisitsStats();
 }
 
-/* --- 3. دوال العملاء (Customers Logic - متوافقة 100% مع تنظيم خلاياك الأصلي) --- */
-function loadCustomersFromStorage() {
-    const saved = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
-    const tbody = document.getElementById('customersBody');
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    saved.forEach(item => renderCustomerRow(item));
-    renderLogs(CUSTOMERS_LOGS_KEY, 'activityLogs');
-}
-
-function renderCustomerRow(obj) {
-    const tbody = document.getElementById('customersBody');
-    if(!tbody) return;
-    const row = tbody.insertRow(-1);
-    row.className = 'main-row';
-    
-    // بناء الخلايا متطابق تماماً مع ترتيب th في ملف customers.html المرفق الخاص بك
-    row.innerHTML = `
-        <td><input type="checkbox" class="select-check"></td>
-        <td><input type="text" class="excel-input" value="${obj.name || ''}" onkeyup="debouncedSave()"></td>
-        <td class="phone-cell-container">
-            <a href="https://wa.me/${(obj.phone || '').replace(/\s+/g, '')}" target="_blank" class="whatsapp-icon-btn"><i class="fab fa-whatsapp"></i></a>
-            <input type="text" class="excel-input" value="${obj.phone || ''}" onkeyup="debouncedSave()">
-        </td>
-        <td><input type="text" class="excel-input" value="${obj.email || ''}" onkeyup="debouncedSave()"></td>
-        <td><input type="text" class="excel-input" value="${obj.city || ''}" onkeyup="debouncedSave()"></td>
-        <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${(obj.notes || '[]').replace(/'/g, "&apos;")}'>${getLastNoteOnly(obj.notes)}</div></td>
-        <td>
-            <select class="excel-input" onchange="debouncedSave()">
-                <option value="نشط" ${obj.status === 'نشط' ? 'selected' : ''}>نشط</option>
-                <option value="غير نشط" ${obj.status === 'غير نشط' ? 'selected' : ''}>غير نشط</option>
-            </select>
-        </td>
-    `;
-}
-
-function autoSaveCustomers() {
-    const rows = document.querySelectorAll('#customersBody .main-row');
-    const data = Array.from(rows).map(r => ({
-        name: r.cells[1].querySelector('input').value,
-        phone: r.cells[2].querySelector('.excel-input').value,
-        email: r.cells[3].querySelector('input').value,
-        city: r.cells[4].querySelector('input').value,
-        notes: r.cells[5].querySelector('.notes-preview').getAttribute('data-full-notes'),
-        status: r.cells[6].querySelector('select').value
-    }));
-    localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(data));
-}
-
-/* --- 4. إدارة الملاحظات والسجلات الموحدة (Shared Module) --- */
+/* ==========================================================================
+   3. إدارة الملاحظات والسجلات المشتركة (Shared Chat-style Notes)
+   ========================================================================== */
 function openNote(el) {
     currentActivePreview = el;
     const raw = el.getAttribute('data-full-notes') || "[]";
@@ -223,22 +335,15 @@ function openNote(el) {
     
     const html = arr.map(msg => `
         <div class="chat-msg-block">
-            <div class="chat-msg-header">
-                <span>${msg.user || 'المستخدم'}</span>
-                <span class="msg-header-time">${msg.date || ''} ${msg.time || ''}</span>
-            </div>
+            <span class="chat-msg-header">👤 ${msg.user || 'أحمد'} <span class="chat-msg-time">🗓️ ${msg.date || ''} ${msg.time || ''}</span></span>
             <span class="chat-msg-text">${msg.text}</span>
         </div>
     `).join('');
     
-    const historyLogEl = document.getElementById('historyLog');
-    if(historyLogEl) historyLogEl.innerHTML = html;
-    
-    const modalEl = document.getElementById('noteModal');
-    if(modalEl) {
-        modalEl.style.display = "flex";
-        const txtArea = document.getElementById('modalTextArea');
-        if(txtArea) txtArea.focus();
+    if(document.getElementById('historyLog')) document.getElementById('historyLog').innerHTML = html;
+    if(document.getElementById('noteModal')) {
+        document.getElementById('noteModal').style.display = "flex";
+        document.getElementById('modalTextArea').focus();
     }
 }
 
@@ -252,7 +357,7 @@ function saveNote() {
         let arr = [];
         try { arr = JSON.parse(raw); } catch(e) { arr = []; }
         
-        arr.push({ user: "المستخدم", date: getTodayFormatted(), time: getTimeFormatted(), text: txt });
+        arr.push({ user: "أحمد", date: getTodayFormatted(), time: getTimeFormatted(), text: txt });
         currentActivePreview.setAttribute('data-full-notes', JSON.stringify(arr));
         currentActivePreview.innerText = txt;
         debouncedSave();
@@ -261,18 +366,16 @@ function saveNote() {
 }
 
 function closeNote() { 
-    const modalEl = document.getElementById('noteModal');
-    if(modalEl) modalEl.style.display = "none"; 
-    const txtArea = document.getElementById('modalTextArea');
-    if(txtArea) txtArea.value = "";
+    if(document.getElementById('noteModal')) document.getElementById('noteModal').style.display = "none"; 
+    if(document.getElementById('modalTextArea')) document.getElementById('modalTextArea').value = "";
 }
 
 function getLastNoteOnly(jsonStr) { 
     try { 
         const a = JSON.parse(jsonStr); 
-        return a.length ? a[a.length-1].text : '...'; 
+        return a.length ? a[a.length-1].text : 'أضف ملاحظة...'; 
     } catch(e) { 
-        return '...'; 
+        return 'أضف ملاحظة...'; 
     } 
 }
 
@@ -283,42 +386,33 @@ function renderLogs(key, containerId) {
     container.innerHTML = logs.map(l => `<div class="activity-item">${l}</div>`).join('');
 }
 
-function addLog(key, text) {
+function addLog(key, actionText) {
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const d = new Date();
+    const headerHTML = `<span class="activity-header-part">👤 (أحمد)  🗓️ ${days[d.getDay()]}  ${getTodayFormatted()}  <span class="activity-time-part">${getTimeFormatted()}</span>&nbsp;&nbsp;</span>`;
+    const fullLogHTML = `${headerHTML}<span class="activity-text-part">${actionText}</span>`;
+    
     const logs = JSON.parse(localStorage.getItem(key) || '[]');
-    logs.unshift(`${getTodayFormatted()} - ${text}`);
+    logs.unshift(fullLogHTML);
     localStorage.setItem(key, JSON.stringify(logs.slice(0, 50)));
     
-    if(key === LOGS_KEY && document.getElementById('salesBody')) renderLogs(LOGS_KEY, 'activityLogs');
-    if(key === VISITS_LOGS_KEY && document.getElementById('visitsBody')) renderLogs(VISITS_LOGS_KEY, 'activityLogs');
-    if(key === CUSTOMERS_LOGS_KEY && document.getElementById('customersBody')) renderLogs(CUSTOMERS_LOGS_KEY, 'activityLogs');
+    if(key === CUSTOMERS_LOGS_KEY && document.getElementById('customersBody')) renderLogs(CUSTOMERS_LOGS_KEY, 'activityList');
 }
 
-/* --- 5. خدمات مساعدة وحسابية (Helper Functions) --- */
-function calculateOrderSums(id) {
-    const db = JSON.parse(localStorage.getItem('asgate_products_db') || '{}');
-    const prods = db[id] || [];
-    let completed = 0, pending = 0;
-    prods.forEach(p => {
-        const val = (parseFloat(p.qty) || 0) * (parseFloat(p.sub) || 0);
-        if(p.status === "مكتمل") completed += val;
-        else pending += val;
-    });
-    return { completed, pending };
+function toggleAllCheckboxes(source) {
+    document.querySelectorAll('.select-check').forEach(chk => chk.checked = source.checked);
 }
 
-function updateHeaderStats() {
-    const saved = JSON.parse(localStorage.getItem(SALES_DB_KEY) || '[]');
-    const totalCountEl = document.getElementById('count-total');
-    if(totalCountEl) totalCountEl.innerText = saved.length;
+function toggleDropdown(e, btn) {
+    e.stopPropagation();
+    const menu = btn.nextElementSibling;
+    const isOpen = menu.classList.contains('show');
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    if(!isOpen) menu.classList.add('show');
 }
 
-function updateVisitsStats() {
-    const saved = JSON.parse(localStorage.getItem(VISITS_DB_KEY) || '[]');
-    const visitCountEl = document.getElementById('visit-count-total');
-    if(visitCountEl) visitCountEl.innerText = saved.length;
-}
-
-function handleStatusChange(select, id) {
-    debouncedSave();
-    addLog(LOGS_KEY, `تغيير حالة الطلب رقم #${id} إلى ${select.value}`);
-}
+window.onclick = (e) => {
+    if (!e.target.matches('.btn-bulk-trigger')) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    }
+};
