@@ -13,16 +13,16 @@
     --chat-yellow: #b45309;
 }
 
-html, body {
+html, body { 
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow: hidden; 
     background-color: var(--bg-color);
-    font-family: 'Cairo', sans-serif;
+    font-family: 'Cairo', sans-serif; 
     font-size: 13px;
     line-height: 1.2;
-    color: var(--text-dark);
+    color: var(--text-dark); 
 }
 
 .dashboard-container {
@@ -32,19 +32,19 @@ html, body {
     box-sizing: border-box;
 }
 
-.navbar {
+.navbar { 
     background: var(--nav-shiny-navy);
     display: flex;
     align-items: center;
     padding: 0 20px;
-    margin: 10px 10px 5px 10px;
+    margin: 10px 10px 5px 10px; 
     border-radius: 12px;
     height: 37px;
     flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.1);
     border: 1px solid #1e293b;
-    overflow-x:auto;
-    white-space:nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
 .navbar a {
@@ -57,7 +57,7 @@ html, body {
     line-height: 26px;
     display: inline-block;
     transition: 0.3s;
-    flex:0 0 auto;
+    flex: 0 0 auto;
 }
 
 .navbar a.active {
@@ -130,7 +130,7 @@ html, body {
     height: 25px;
     border: 1px solid var(--border-soft);
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    flex-wrap:wrap;
+    flex-wrap: wrap;
 }
 
 .stat-item {
@@ -145,11 +145,11 @@ html, body {
     margin-right: 3px;
 }
 
-.table-wrapper {
+.table-wrapper { 
     background: white;
     border-radius: 10px;
     overflow-y: auto;
-    border: 1px solid var(--border-soft);
+    border: 1px solid var(--border-soft); 
     flex: 1;
     min-height: 0;
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
@@ -162,12 +162,12 @@ table {
     table-layout: fixed;
 }
 
-th {
+th { 
     background: var(--header-shiny-purple);
     color: white;
     padding: 0 5px;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 800; 
     text-align: center;
     border-bottom: 2px solid #2e1065;
     position: sticky;
@@ -192,19 +192,19 @@ tbody tr:nth-child(even) {
     background-color: #eff6ff;
 }
 
-.excel-input {
+.excel-input { 
     width: 95%;
     border: none;
     text-align: center;
     font-family: 'Cairo';
-    outline: none;
+    outline: none; 
     background: transparent;
     font-size: 11.5px;
     color: inherit;
-    font-weight: inherit;
+    font-weight: inherit; 
     height: 100%;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis; 
 }
 
 .select-check {
@@ -220,14 +220,14 @@ tbody tr:nth-child(even) {
 }
 
 .dots-btn,
-.header-dots-btn {
+.header-dots-btn { 
     cursor: pointer;
     font-size: 10px;
     color: #475569;
-    background: #fff;
+    background: #fff; 
     border: 1px solid #cbd5e1;
     border-radius: 4px;
-    padding: 4px 10px;
+    padding: 4px 10px; 
     font-family: 'Cairo';
     font-weight: 700;
     transition: 0.2s;
@@ -257,32 +257,32 @@ tbody tr:nth-child(even) {
     color: var(--accent-blue);
 }
 
-.dropdown-menu {
+.dropdown-menu { 
     display: none;
     position: absolute;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%); 
     top: 35px;
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    border-radius: 6px; 
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
     z-index: 1000;
     min-width: 110px;
     padding: 4px;
 }
 
-.dropdown-menu button {
+.dropdown-menu button { 
     width: 100%;
     padding: 6px 10px;
     border: none;
     background: none;
-    font-family: 'Cairo';
+    font-family: 'Cairo'; 
     font-size: 10.5px;
     text-align: right;
     cursor: pointer;
     color: #475569;
-    font-weight: 700;
+    font-weight: 700; 
     border-radius: 4px;
     transition: 0.2s;
     display: block;
@@ -302,29 +302,29 @@ tbody tr:nth-child(even) {
     display: block;
 }
 
-.notes-preview {
+.notes-preview { 
     width: 95%;
     height: 20px;
     border: none;
     background: transparent;
-    font-family: 'Cairo';
+    font-family: 'Cairo'; 
     font-size: 11px;
     text-align: center;
     cursor: pointer;
     color: #3b82f6;
-    font-weight: 700;
+    font-weight: 700; 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
-    margin: 0 auto;
+    margin: 0 auto; 
 }
 
-.activity-log-section {
+.activity-log-section { 
     margin: 15px 0 10px 0;
     padding: 12px 18px;
     background: #ffffff;
-    border-radius: 10px;
+    border-radius: 10px; 
     border: 1px solid var(--border-soft);
     box-shadow: 0 -3px 10px rgba(0,0,0,0.03);
     flex-shrink: 0;
@@ -443,13 +443,13 @@ tbody tr:nth-child(even) {
 
 @media (max-width: 1100px){
     .search-wrapper{ width: 28%; }
-    .action-bar{ flex-wrap:wrap; }
-    .stats-bar{ margin-right:0; }
+    .action-bar{ flex-wrap: wrap; }
+    .stats-bar{ margin-right: 0; }
 }
 
 @media (max-width: 700px){
-    .search-wrapper{ width:100%; }
-    .action-bar{ flex-direction:column; align-items:stretch; }
-    .stats-bar{ height:auto; padding:8px 10px; }
-    .table-wrapper{ overflow:auto; }
+    .search-wrapper{ width: 100%; }
+    .action-bar{ flex-direction: column; align-items: stretch; }
+    .stats-bar{ height: auto; padding: 8px 10px; }
+    .table-wrapper{ overflow: auto; }
 }
