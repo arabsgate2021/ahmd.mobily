@@ -1,73 +1,16 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASGate - لوحة تحكم المبيعات</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --nav-purple: #2e1065; 
-            --nav-active: #a78bfa;
-            --bg-color: #f4f7f9;
-            --border-color: #e2e8f0;
-            --white: #ffffff;
-            --accent-blue: #3b82f6;
-            --accent-green: #22c55e;
-            --accent-yellow: #facc15;
-            --accent-purple: #8b5cf6;
-            --accent-orange: #f97316;
-            --input-bg: #f8fafc;
-        }
-
-        body { 
-            background-color: var(--bg-color); font-family: 'Cairo', sans-serif; 
-            margin: 0; line-height: 1.2; font-size: 14px;
-        }
-
-        .navbar {
-            background-color: var(--nav-purple); padding: 12px 24px;
-            display: flex; gap: 16px; align-items: center;
-        }
-        .navbar a {
-            color: #cbd5e1; text-decoration: none; font-weight: 700;
-            font-size: 13px; transition: color 0.2s;
-        }
-        .navbar a:hover { color: var(--white); }
-        .navbar a.active { color: var(--nav-active); font-weight: 800; }
-
-        .dashboard-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px; padding: 15px;
-        }
-        .chart-card {
-            background: var(--white); border-radius: 8px; padding: 15px;
-            border: 1px solid var(--border-color);
-        }
-        .chart-card-title {
-            font-size: 12.5px; font-weight: 800; color: #1e293b; margin-bottom: 12px;
-        }
-        .mini-charts-container {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px; padding: 15px 15px 0 15px;
-        }
-        .mini-chart-box {
-            background: var(--white); border-radius: 8px; padding: 12px;
-            border: 1px solid var(--border-color); display: flex; align-items: center;
-            justify-content: space-between;
-        }
-        .mini-chart-info { display: flex; flex-direction: column; gap: 3px; }
-        .mini-chart-label { font-size: 10px; color: #64748b; font-weight: 700; }
-        .mini-chart-value { font-size: 16px; font-weight: 800; color: #0f172a; }
-        
-        .chart-wrapper-fixed { position: relative; height: 230px; width: 100%; }
-        .donut-wrapper-fixed { position: relative; height: 75px; width: 75px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dashboard-page-v1">
 
-<nav class="navbar">
+<nav class="navbar dashboard-navbar">
     <a href="index.html" class="active">الرئيسية</a>
     <a href="visits.html">الزيارات</a>
     <a href="opportunities.html">الفرص البيعية</a>
@@ -75,104 +18,79 @@
     <a href="sales.html">المبيعات</a>
 </nav>
 
-<div class="mini-charts-container">
-    <div class="mini-chart-box">
-        <div class="mini-chart-info">
-            <span class="mini-chart-label">المحقق الفعلي لإجمالي المبيعات</span>
-            <span class="mini-chart-value">82.4%</span>
-        </div>
-        <div class="donut-wrapper-fixed">
-            <canvas id="achievedChart"></canvas>
-        </div>
-    </div>
-    
-    <div class="mini-chart-box">
-        <div class="mini-chart-info">
-            <span class="mini-chart-label">الفرص المعلقة قيد المتابعة</span>
-            <span class="mini-chart-value">17.6%</span>
-        </div>
-        <div class="donut-wrapper-fixed">
-            <canvas id="pendingChart"></canvas>
-        </div>
-    </div>
-
-    <div class="mini-chart-box">
-        <div class="mini-chart-info">
-            <span class="mini-chart-label">معدل كفاءة الأداء الفني والتشغيلي</span>
-            <span class="mini-chart-value">71.2%</span>
-        </div>
-        <div class="donut-wrapper-fixed">
-            <canvas id="gaugeChart"></canvas>
-        </div>
+<div class="employee-info-bar">
+    <div class="info-content">
+        <div class="info-item">الموظف: <span>محمد المنصور</span></div>
+        <div class="info-item">الرقم: <span>ASG-2026</span></div>
+        <div class="info-item">المشروع: <span>ASGate</span></div>
     </div>
 </div>
 
-<div class="dashboard-grid">
-    <div class="chart-card" style="grid-column: span 2;">
-        <div class="chart-card-title">📊 مخطط بياني لتحليل حجم وأداء المبيعات الشهري ومقارنة إنتاجية الفرق والمندوبين</div>
-        <div class="chart-wrapper-fixed">
+<div class="container">
+    <div class="dashboard-grid">
+        <div class="right-section">
+            <div class="content-box">
+                <h3>📅 سجل الأهداف والزيارات (2026)</h3>
+                <table class="yearly-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">الشهر</th>
+                            <th>هدف</th>
+                            <th>تم</th>
+                            <th class="thick-border">معلق</th>
+                            <th style="background:#eff6ff">زيارة</th>
+                            <th style="background:#f0fdf4">ناجحة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="left-section">
+            <div class="filters-grid">
+                <div class="filter-card"><label>الشهر</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card"><label>المنطقة</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card"><label>المشرف</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card"><label>المندوب</label><select class="filter-input"><option>الكل</option></select></div>
+            </div>
+            
+            <div class="stats-cards">
+                <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
+                <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
+                <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
+                <div class="stat-card bg-purple" style="flex:0.6"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
+                <div class="stat-card bg-orange" style="flex:0.6"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
+            </div>
+
+            <div class="content-box">
+                <h3>📈 تحليل الأداء الإجمالي</h3>
+                <div class="charts-row">
+                    <div class="chart-item-wrapper">
+                        <div class="chart-container-reduced"><canvas id="achievedChart"></canvas><div class="chart-percentage">82%</div></div>
+                        <div class="chart-label">المحقق</div>
+                    </div>
+                    <div class="chart-item-wrapper" style="flex: 0.6;">
+                        <div class="gauge-container-reduced"><canvas id="gaugeChart"></canvas><div class="gauge-value">200%</div></div>
+                        <div class="chart-label" style="margin-top: 25px;">مؤشر الإنجاز</div>
+                    </div>
+                    <div class="chart-item-wrapper">
+                        <div class="chart-container-reduced"><canvas id="pendingChart"></canvas><div class="chart-percentage">18%</div></div>
+                        <div class="chart-label">المعلق</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-box staff-performance-section">
+        <h3>👥 أداء فريق المبيعات (30 موظفاً)</h3>
+        <div style="flex-grow: 1; position: relative; margin-top: 10px;">
             <canvas id="staffChart"></canvas>
         </div>
     </div>
-    
-    <div class="chart-card">
-        <div class="chart-card-title">📈 توزيع نسب الإنتاجية والعمليات الفنية بين الأقسام</div>
-        <div class="chart-wrapper-fixed">
-            <canvas id="departmentChart"></canvas>
-        </div>
-    </div>
 </div>
 
-<script>
-    new Chart(document.getElementById('achievedChart'), {
-        type: 'doughnut',
-        data: { datasets: [{ data: [82, 18], backgroundColor: ['#22c55e', '#f1f5f9'], borderWidth: 0, borderRadius: 8 }] },
-        options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-
-    const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
-    new Chart(gaugeCtx, {
-        type: 'doughnut',
-        data: { datasets: [{ data: [25, 25, 25, 25], backgroundColor: ['#ef4444', '#fbbf24', '#4ade80', '#15803d'], borderWidth: 0, circumference: 180, rotation: 270 }] },
-        options: { cutout: '90%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-
-    new Chart(document.getElementById('pendingChart'), {
-        type: 'doughnut',
-        data: { datasets: [{ data: [18, 82], backgroundColor: ['#facc15', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
-        options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-
-    const ctxStaff = document.getElementById('staffChart').getContext('2d');
-    new Chart(ctxStaff, {
-        type: 'bar',
-        data: {
-            labels: Array.from({length: 30}, (_, i) => `م${i + 1}`),
-            datasets: [
-                { label: 'المحقق', data: Array.from({length: 30}, () => Math.floor(Math.random() * 5000) + 25000), backgroundColor: '#22c55e' },
-                { label: 'المعلق', data: Array.from({length: 30}, () => Math.floor(Math.random() * 3000) + 1000), backgroundColor: '#facc15' }
-            ]
-        },
-        options: { 
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { font: { family: 'Cairo', size: 10 } } } },
-            scales: { x: { grid: { display: false }, ticks: { font: { family: 'Cairo', size: 9 } } }, y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Cairo', size: 9 } } } }
-        }
-    });
-
-    const ctxDept = document.getElementById('departmentChart').getContext('2d');
-    new Chart(ctxDept, {
-        type: 'pie',
-        data: {
-            labels: ['المبيعات', 'التسويق', 'الدعم الفني', 'العمليات'],
-            datasets: [{ data: [40, 25, 20, 15], backgroundColor: ['#3b82f6', '#8b5cf6', '#f97316', '#22c55e'] }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo', size: 10 } } } }
-        }
-    });
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
