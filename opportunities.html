@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الفرص البيعية - ASGate CRM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="opportunities.css">
+</head>
+
+<body onload="loadSavedData()">
+
+<div class="dashboard-container">
+
+    <!-- Navigation -->
+    <div class="navbar">
+        <a href="dashboard.html">الرئيسية</a>
+        <a href="visits.html">الزيارات</a>
+        <a href="opportunities.html" class="active">الفرص البيعية</a>
+        <a href="reports.html">التقارير</a>
+    </div>
+
+    <div class="main-content">
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+
+            <button class="btn-top btn-add"
+                    onclick="insertNewRow()">
+                <i class="fas fa-plus"></i>
+                إضافة فرصة
+            </button>
+
+            <input
+                type="text"
+                id="searchInput"
+                class="search-box"
+                placeholder="بحث..."
+                onkeyup="debouncedFilterTable()">
+
+            <select
+                id="statusFilter"
+                class="status-filter"
+                onchange="filterTable()">
+
+                <option value="">كل الحالات</option>
+                <option value="مهتم">مهتم</option>
+                <option value="مغلق رابح">مغلق رابح</option>
+                <option value="مغلق خاسر">مغلق خاسر</option>
+
+            </select>
+
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <span class="stat-title">
+                    إجمالي الفرص
+                </span>
+                <span id="stat-total" class="stat-value">
+                    0
+                </span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-title">
+                    فرص اليوم
+                </span>
+                <span id="stat-today" class="stat-value">
+                    0
+                </span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-title">
+                    فرص الشهر
+                </span>
+                <span id="stat-month" class="stat-value">
+                    0
+                </span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-title">
+                    القيمة الإجمالية
+                </span>
+                <span id="stat-value-total" class="stat-value">
+                    0 ر.س
+                </span>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-title">
+                    قيمة الشهر
+                </span>
+                <span id="stat-value-month" class="stat-value">
+                    0 ر.س
+                </span>
+            </div>
+
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+
+            <table id="crmTable">
+
+                <thead>
+                    <tr>
+
+                        <th class="col-select">#</th>
+                        <th>الشركة</th>
+                        <th>العنوان</th>
+                        <th>المسؤول</th>
+                        <th>رقم التواصل</th>
+                        <th>الإيميل</th>
+                        <th>السجل</th>
+                        <th>تاريخ الفرصة</th>
+                        <th>الخدمة المقترحة</th>
+                        <th>قيمة الفرصة</th>
+                        <th>المتابعة</th>
+                        <th>الحالة</th>
+                        <th>التاريخ المتوقع</th>
+                        <th>المالك</th>
+
+                    </tr>
+                </thead>
+
+                <tbody id="tableBody"></tbody>
+
+            </table>
+
+        </div>
+                <!-- سجل النشاط -->
+        <div class="activity-log-section">
+
+            <div class="activity-log-header-container">
+                <h3 class="activity-log-title">
+                    <i class="fas fa-history"></i>
+                    سجل النشاط
+                </h3>
+            </div>
+
+            <div
+                id="activityList"
+                class="activity-list">
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- نافذة الملاحظات -->
+
+<div
+    id="noteModal"
+    class="modal-overlay"
+    style="display:none;">
+
+    <div class="note-modal">
+
+        <div class="note-modal-header">
+            <span>الملاحظات</span>
+            <button
+                type="button"
+                onclick="closeNote()">
+                ✕
+            </button>
+        </div>
+
+        <div
+            id="historyLog"
+            class="chat-history">
+        </div>
+
+        <textarea
+            id="modalTextArea"
+            placeholder="أدخل الملاحظة هنا...">
+        </textarea>
+
+        <div class="modal-actions">
+
+            <button
+                onclick="closeNote()"
+                class="btn-cancel">
+                إلغاء
+            </button>
+
+            <button
+                onclick="saveNote()"
+                class="btn-save">
+                حفظ الملاحظة
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="opportunities.js"></script>
+
+</body>
+</html>
