@@ -1,14 +1,8 @@
-/* =========================
-   1. تعريف المتغيرات (يجب أن تكون في السطر الأول)
-   ========================= */
+// 1. التعريفات في أعلى الملف (مهم جداً)
 const STORAGE_KEY = 'asgate_visits_final_v31';
 const LOGS_KEY = 'asgate_visits_logs_v32';
-const OPPORTUNITIES_KEY = 'asgate_opportunities_final_v31';
 
-/* =========================
-   2. الدوال التي يناديها الـ HTML مباشرة
-   ========================= */
-
+// 2. الدوال التي يناديها الـ HTML
 function loadSavedData() {
     const rawData = localStorage.getItem(STORAGE_KEY);
     if (!rawData) return;
@@ -18,25 +12,15 @@ function loadSavedData() {
     if (!tbody) return;
     
     tbody.innerHTML = '';
+    // ملاحظة: تأكد أن دالة renderRow موجودة في الأسفل
     data.forEach(v => renderRow(v, false));
-    reorderRows();
-    updateStats();
-    renderActivityLog();
+    // ... بقية الدوال التي تحتاجها
 }
 
 function insertNewRow() {
+    // تأكد أن دالة renderRow و saveAllDataSilently موجودتان في هذا الملف
     renderRow({}, true);
     saveAllDataSilently();
-    const wrapper = document.querySelector('.table-wrapper');
-    if (wrapper) wrapper.scrollTop = 0;
 }
 
-/* =========================
-   3. بقية الدوال (ضع باقي الدوال التي لديك هنا بالترتيب)
-   ========================= */
-   
-// ضع دالة renderRow هنا
-// ضع دالة saveAllDataSilently هنا
-// ... إلخ
-
-// تأكد من إغلاق القوس الأخير لآخر دالة في الملف
+// 3. ضع باقي الدوال هنا...
