@@ -1,82 +1,96 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASGate - لوحة تحكم المبيعات</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        /* التنسيقات الأصلية التي كنت تستخدمها */
-        body { font-family: 'Cairo', sans-serif; background-color: #f4f7f9; margin: 0; padding: 0; }
-        .navbar { background-color: #2e1065; display: flex; gap: 20px; padding: 15px 20px; border-radius: 12px; margin: 10px; }
-        .navbar a { color: #fff; text-decoration: none; font-weight: 700; font-size: 13px; }
-        .container { padding: 20px; }
-        .dashboard-grid { display: grid; grid-template-columns: 38% 62%; gap: 20px; }
-        .content-box { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        h3 { color: #2e1065; font-weight: 800; font-size: 13px; margin-top: 0; border-right: 4px solid #3b82f6; padding-right: 8px; }
-        
-        .yearly-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .yearly-table th, .yearly-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: center; }
-        
-        .stats-cards { display: flex; gap: 10px; margin-bottom: 15px; }
-        .stat-card { flex: 1; padding: 10px; border-radius: 10px; color: white; text-align: center; }
-        .bg-blue { background: #3b82f6; } .bg-green { background: #22c55e; } 
-        .bg-yellow { background: #facc15; } .bg-purple { background: #8b5cf6; }
-        
-        .charts-row { display: flex; gap: 10px; justify-content: center; }
-        .chart-container { width: 120px; height: 120px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <nav class="navbar">
-        <a href="#">الرئيسية</a>
-        <a href="#">الزيارات</a>
-        <a href="#">الفرص</a>
-        <a href="#">العملاء</a>
-    </nav>
+<nav class="navbar">
+    <a href="index.html" class="active">الرئيسية</a>
+    <a href="visits.html">الزيارات</a>
+    <a href="opportunities.html">الفرص البيعية</a>
+    <a href="customers.html">العملاء</a>
+    <a href="sales.html">المبيعات</a>
+</nav>
 
-    <div class="container">
-        <div class="dashboard-grid">
+<div class="employee-info-bar">
+    <div class="info-content">
+        <div class="info-item">الموظف: <span>محمد المنصور</span></div>
+        <div class="info-item">الرقم: <span>ASG-2026</span></div>
+        <div class="info-item">المشروع: <span>ASGate</span></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="dashboard-grid">
+        <div class="right-section">
             <div class="content-box">
-                <h3>سجل الأهداف</h3>
+                <h3>📅 سجل الأهداف والزيارات (2026)</h3>
                 <table class="yearly-table">
-                    <thead><tr><th>الشهر</th><th>الهدف</th><th>الزيارات</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">الشهر</th>
+                            <th>هدف</th>
+                            <th>تم</th>
+                            <th class="thick-border">معلق</th>
+                            <th style="background:#eff6ff">زيارة</th>
+                            <th style="background:#f0fdf4">ناجحة</th>
+                        </tr>
+                    </thead>
                     <tbody id="monthsBody"></tbody>
                 </table>
             </div>
+        </div>
 
-            <div>
-                <div class="stats-cards">
-                    <div class="stat-card bg-blue">الهدف<br>180,000</div>
-                    <div class="stat-card bg-green">المبيعات<br>14,210</div>
-                </div>
-                <div class="content-box">
-                    <h3>تحليل الأداء</h3>
-                    <div class="charts-row">
-                        <div class="chart-container"><canvas id="myChart"></canvas></div>
+        <div class="left-section">
+            <div class="filters-grid">
+                <div class="filter-card"><label>الشهر</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card"><label>المنطقة</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card"><label>المشرف</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card"><label>المندوب</label><select class="filter-input"><option>الكل</option></select></div>
+            </div>
+            
+            <div class="stats-cards">
+                <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
+                <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
+                <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
+                <div class="stat-card bg-purple" style="flex:0.6"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
+                <div class="stat-card bg-orange" style="flex:0.6"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
+            </div>
+
+            <div class="content-box">
+                <h3>📈 تحليل الأداء الإجمالي</h3>
+                <div class="charts-row">
+                    <div class="chart-item-wrapper">
+                        <div class="chart-container-reduced"><canvas id="achievedChart"></canvas><div class="chart-percentage">82%</div></div>
+                        <div class="chart-label">المحقق</div>
+                    </div>
+                    <div class="chart-item-wrapper" style="flex: 0.6;">
+                        <div class="gauge-container-reduced"><canvas id="gaugeChart"></canvas><div class="gauge-value">200%</div></div>
+                        <div class="chart-label" style="margin-top: 25px;">مؤشر الإنجاز</div>
+                    </div>
+                    <div class="chart-item-wrapper">
+                        <div class="chart-container-reduced"><canvas id="pendingChart"></canvas><div class="chart-percentage">18%</div></div>
+                        <div class="chart-label">المعلق</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // إعداد الجدول
-        const months = ["يناير", "فبراير", "مارس"];
-        const tbody = document.getElementById('monthsBody');
-        months.forEach(m => {
-            tbody.innerHTML += `<tr><td>${m}</td><td>5000</td><td>10</td></tr>`;
-        });
+    <div class="content-box staff-performance-section">
+        <h3>👥 أداء فريق المبيعات (30 موظفاً)</h3>
+        <div style="flex-grow: 1; position: relative; margin-top: 10px;">
+            <canvas id="staffChart"></canvas>
+        </div>
+    </div>
+</div>
 
-        // إعداد الرسم البياني
-        const ctx = document.getElementById('myChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: { datasets: [{ data: [80, 20], backgroundColor: ['#22c55e', '#e2e8f0'] }] }
-        });
-    </script>
+<script src="script.js"></script>
 </body>
 </html>
