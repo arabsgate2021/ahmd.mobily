@@ -1,16 +1,16 @@
-/* ==========================================
-   1. المتغيرات الأساسية (تأكد من وجودها في الأعلى)
-   ========================================== */
+/* ==========================================================
+   1. المتغيرات والتعريفات الأساسية (يجب أن تكون في السطر الأول)
+   ========================================================== */
+let currentActivePreview = null;
+let saveTimeout;
+
 const STORAGE_KEY = 'asgate_visits_final_v31';
 const LOGS_KEY = 'asgate_visits_logs_v32';
 const OPPORTUNITIES_KEY = 'asgate_opportunities_final_v31';
 
-let saveTimeout;
-let currentActivePreview = null;
-
-/* ==========================================
-   2. الدالة المفقودة الأساسية (renderRow)
-   ========================================== */
+/* ==========================================================
+   2. الدالة الأساسية لبناء السطور (renderRow)
+   ========================================================== */
 function renderRow(v = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
@@ -24,6 +24,7 @@ function renderRow(v = {}, prepend = false) {
     const subRow = document.createElement('tr');
     subRow.className = 'sub-table-row';
     subRow.id = 'sub-' + rowId;
+    subRow.style.display = 'none'; // مخفية افتراضياً
 
     const today = getTodayFormatted();
     const visitDate = v.visitDate || today;
@@ -60,16 +61,31 @@ function renderRow(v = {}, prepend = false) {
         </td>
     `;
 
+    subRow.innerHTML = `
+        <td colspan="12" style="padding:10px; background:#f8fafc;">
+            <div style="font-weight:bold; color:#2e1065; margin-bottom:5px;">تفاصيل التعديل والوقت:</div>
+            <div class="edit-date-container">
+                ${parseEditDateHTML(v.editDate || '')}
+            </div>
+            <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
+        </td>
+    `;
+
     if (prepend && tbody.firstChild) {
+        tbody.insertBefore(subRow, tbody.firstChild);
         tbody.insertBefore(mainRow, tbody.firstChild);
     } else {
         tbody.appendChild(mainRow);
+        tbody.appendChild(subRow);
     }
+
+    const selectEl = mainRow.querySelector('.status-select');
+    applyStatusColor(selectEl);
 }
 
-/* ==========================================
-   3. الدوال التنفيذية (التي تشتكي من الأخطاء)
-   ========================================== */
+/* ==========================================================
+   3. الدوال التشغيلية (استدعاء البيانات والإضافة الجديدة)
+   ========================================================== */
 function loadSavedData() {
     const rawData = localStorage.getItem(STORAGE_KEY);
     const tbody = document.getElementById('tableBody');
@@ -81,9 +97,9 @@ function loadSavedData() {
         data.forEach(v => renderRow(v, false));
     }
     
-    if (typeof reorderRows === "function") reorderRows();
-    if (typeof updateStats === "function") updateStats();
-    if (typeof renderActivityLog === "function") renderActivityLog();
+    reorderRows();
+    updateStats();
+    renderActivityLog();
 }
 
 function insertNewRow() {
@@ -93,12 +109,13 @@ function insertNewRow() {
     if (wrapper) wrapper.scrollTop = 0;
 }
 
-/* ==========================================
-   4. بقية الدوال المساعدة للحفظ والوقت والملاحظات
-   ========================================== */
+/* ==========================================================
+   4. دوال الحفظ والعمليات التلقائية لقاعدة البيانات المحلية
+   ========================================================== */
 function saveAllDataSilently() {
     const rows = document.querySelectorAll('#tableBody .main-row');
     const data = Array.from(rows).map(row => {
+        const subRow = document.getElementById('sub-' + row.id);
         return {
             comp: row.cells[1].querySelector('input').value,
             address: row.cells[2].querySelector('input').value,
@@ -110,7 +127,8 @@ function saveAllDataSilently() {
             curServ: row.cells[8].querySelector('input').value,
             oppValue: row.cells[9].querySelector('input').value,
             notes: row.querySelector('.notes-preview').getAttribute('data-full-notes'),
-            status: row.cells[11].querySelector('select').value
+            status: row.cells[11].querySelector('select').value,
+            editDate: subRow ? subRow.querySelector('.edit-date-val')?.value || '' : ''
         };
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -120,14 +138,14 @@ function debouncedSaveAllData() {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
         saveAllDataSilently();
-        if (typeof updateStats === "function") updateStats();
+        updateStats();
     }, 600);
 }
 
-function getTodayFormatted() {
-    return new Date().toISOString().split('T')[0];
-}
-
+/* ==========================================================
+   5. دوال الترتيب وإحصائيات سجل النشاط والوقت
+   ========================================================== */
+function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() {
     const d = new Date();
     return String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0');
@@ -142,7 +160,140 @@ function getLastNoteOnlyFromJSON(jsonStr) {
 
 function toggleSubTable(rowId) {
     const sub = document.getElementById('sub-' + rowId);
-    if (sub) sub.style.display = sub.style.display === 'table-row' ? 'none' : 'table-row';
+    const arrow = document.querySelector(`#${rowId} .toggle-arrow i`);
+    if (sub) {
+        if (sub.style.display === 'table-row') {
+            sub.style.display = 'none';
+            if (arrow) arrow.className = 'fas fa-caret-left';
+        } else {
+            sub.style.display = 'table-row';
+            if (arrow) arrow.className = 'fas fa-caret-down';
+        }
+    }
+}
+
+function updateEditDateField(row) {
+    if (!row) return;
+    const dateFormatted = getTodayFormatted();
+    const time24 = getTimeFormatted();
+    const fullDateTime = `${dateFormatted} ${time24}`;
+    const subRow = document.getElementById('sub-' + row.id);
+    if (!subRow) return;
+    const container = subRow.querySelector('.edit-date-container');
+    const hiddenInput = subRow.querySelector('.edit-date-val');
+    if (container) {
+        container.innerHTML = `<span class="edit-date-d">${dateFormatted}</span> <span class="edit-date-t">${time24}</span>`;
+    }
+    if (hiddenInput) hiddenInput.value = fullDateTime;
+}
+
+function parseEditDateHTML(fullDateTime) {
+    if (!fullDateTime || !fullDateTime.includes(' ')) {
+        return `<span class="edit-date-d">${fullDateTime || ''}</span> <span class="edit-date-t"></span>`;
+    }
+    const parts = fullDateTime.split(' ');
+    return `<span class="edit-date-d">${parts[0]}</span> <span class="edit-date-t">${parts[1]}</span>`;
+}
+
+function handleStatusChange(selectEl, rowId) {
+    applyStatusColor(selectEl);
+    updateEditDateField(selectEl.closest('tr'));
+    addToActivityLog('الوضع الحالي', selectEl.dataset.old, selectEl.value, selectEl.closest('tr').cells[1].querySelector('input').value);
+    selectEl.dataset.old = selectEl.value;
+    debouncedSaveAllData();
+}
+
+function applyStatusColor(selectEl) {
+    if (!selectEl) return;
+    const val = selectEl.value;
+    const parentCell = selectEl.closest('td');
+    const mainRow = selectEl.closest('.main-row');
+    if (!parentCell) return;
+    parentCell.classList.remove('status-yellow', 'status-red');
+    selectEl.classList.remove('status-yellow', 'status-red');
+    if (mainRow) mainRow.classList.remove('lost-row');
+    if (val === 'عرض سعر') {
+        selectEl.classList.add('status-yellow');
+    } else if (val === 'فقدان') {
+        selectEl.classList.add('status-red');
+        if (mainRow) mainRow.classList.add('lost-row');
+    }
+}
+
+function reorderRows() {
+    const tbody = document.getElementById('tableBody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('.main-row'));
+    const today = getTodayFormatted();
+    const currentMonth = today.substring(0, 7);
+    const rowsData = rows.map(row => ({
+        row: row,
+        subRow: document.getElementById('sub-' + row.id),
+        date: row.querySelector('.visit-date-val')?.value || '9999-12-31'
+    }));
+    rowsData.sort((a, b) => b.date.localeCompare(a.date));
+    const groups = {};
+    rowsData.forEach(item => {
+        const month = item.date.substring(0, 7);
+        if (!groups[month]) groups[month] = [];
+        groups[month].push(item);
+    });
+    tbody.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => {
+        const sepRow = document.createElement('tr');
+        sepRow.className = 'month-separator';
+        const isCurrentMonth = (month === currentMonth);
+        const sepStyle = isCurrentMonth ? 'background-color: #3b82f6 !important; color:#fff !important;' : '';
+        sepRow.innerHTML = `<td colspan="12"><div class="sep-text" style="${sepStyle}">${month}</div></td>`;
+        fragment.appendChild(sepRow);
+        groups[month].forEach(item => {
+            fragment.appendChild(item.row);
+            if (item.subRow) fragment.appendChild(item.subRow);
+        });
+    });
+    tbody.appendChild(fragment);
+}
+
+function updateStats() {
+    const rows = document.querySelectorAll('#tableBody .main-row');
+    const today = getTodayFormatted();
+    const currentMonth = today.substring(0, 7);
+    let total = rows.length, tDay = 0, tMonth = 0, valTotal = 0, valMonth = 0;
+    rows.forEach(row => {
+        const dateInput = row.querySelector('.visit-date-val');
+        const visitValInput = row.querySelector('.opp-value-input');
+        const visitVal = visitValInput ? parseFloat(visitValInput.value) || 0 : 0;
+        valTotal += visitVal;
+        if (dateInput) {
+            const date = dateInput.value;
+            if (date === today) tDay++;
+            if (date.startsWith(currentMonth)) { tMonth++; valMonth += visitVal; }
+        }
+    });
+    if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
+    if (document.getElementById('stat-today')) document.getElementById('stat-today').innerText = tDay;
+    if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = tMonth;
+}
+
+function addToActivityLog(fieldName, oldVal, newVal, companyName) {
+    if (oldVal === newVal) return;
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const d = new Date();
+    const cleanCompany = companyName || 'شركة غير مسماة';
+    let actionText = fieldName === 'إجراء' ? `${oldVal} لزيارة شركة ( ${cleanCompany} )` : `تعديل ${fieldName} من [${oldVal || 'فارغ'}] إلى [${newVal || 'فارغ'}] للعميل ( ${cleanCompany} )`;
+    const fullLogHTML = `<span style="color:#64748b;font-size:9px;"><i class="fas fa-clock"></i> ${days[d.getDay()]} ${d.toLocaleDateString()} ${getTimeFormatted()}</span> &nbsp;|&nbsp; <span style="color:#0f172a;font-weight:700;">${actionText}</span>`;
+    let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+    logs.unshift(fullLogHTML);
+    localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100)));
+    renderActivityLog();
+}
+
+function renderActivityLog() {
+    const list = document.getElementById('activityList');
+    if (!list) return;
+    const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+    list.innerHTML = logs.map(log => `<div class="activity-item">${log}</div>`).join('');
 }
 
 function openWhatsAppChat(el) {
