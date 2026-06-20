@@ -1,59 +1,65 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASGate - الزيارات</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>ASGate - نظام الزيارات</title>
     <style>
-        /* تم دمج التنسيقات الخاصة بك هنا */
-        :root { --nav-shiny-navy: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); --header-shiny-purple: linear-gradient(180deg, #4c1d95 0%, #2e1065 100%); --nav-bg: #0f172a; --nav-active: #a78bfa; --bg-color: #f8fafc; --accent-blue: #3b82f6; --border-soft: #e2e8f0; --text-dark: #0f172a; --text-muted: #64748b; }
-        body { margin: 0; background-color: var(--bg-color); font-family: 'Cairo', sans-serif; font-size: 12px; height: 100vh; overflow: hidden; }
-        .dashboard-container { display: flex; flex-direction: column; height: 100vh; }
-        .navbar { background: var(--nav-shiny-navy); display: flex; align-items: center; padding: 0 20px; margin: 10px; border-radius: 10px; height: 40px; }
-        .navbar a { color: white; text-decoration: none; padding: 0 15px; font-weight: 700; }
-        .navbar a.active { background-color: var(--nav-active); color: #0f172a; border-radius: 6px; }
-        .main-content { flex: 1; padding: 0 15px 10px 15px; display: flex; flex-direction: column; gap: 8px; }
-        .table-wrapper { background: white; border-radius: 10px; overflow-y: auto; border: 1px solid var(--border-soft); flex: 1; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: var(--header-shiny-purple); color: white; padding: 12px; position: sticky; top: 0; }
-        td { border-bottom: 1px solid #f1f5f9; padding: 8px; text-align: center; }
-        .btn-add { background: var(--accent-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        body { font-family: 'Cairo', sans-serif; background: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { color: #2e1065; border-right: 4px solid #3b82f6; padding-right: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #4c1d95; color: white; padding: 12px; }
+        td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; }
+        .btn-add { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
-<body onload="loadSavedData()">
+<body>
 
-<div class="dashboard-container">
-    <nav class="navbar">
-        <a href="index.html">الرئيسية</a>
-        <a href="visits.html" class="active">الزيارات</a>
-        <a href="opportunities.html">الفرص البيعية</a>
-        <a href="customers.html">العملاء</a>
-        <a href="sales.html">المبيعات</a>
-    </nav>
-    <div class="main-content">
-        <button class="btn-add" onclick="insertNewRow()">+ إضافة زيارة جديدة</button>
-        <div class="table-wrapper">
-            <table id="mainTable">
-                <thead><tr><th>الشركة</th><th>تاريخ الزيارة</th><th>الحالة</th><th>الإجراء</th></tr></thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-    </div>
+<div class="container">
+    <h2>سجل الزيارات</h2>
+    <button class="btn-add" onclick="addRow()">+ إضافة زيارة جديدة</button>
+    
+    <table id="visitsTable">
+        <thead>
+            <tr>
+                <th>التاريخ</th>
+                <th>الشركة</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
 </div>
 
 <script>
-    // وظيفة بسيطة للتحميل لضمان عمل الصفحة
-    function loadSavedData() {
-        console.log("تم تحميل الصفحة بنجاح");
-    }
-    function insertNewRow() {
+    // دالة إضافة صف جديد
+    function addRow() {
         const tbody = document.getElementById('tableBody');
         const row = tbody.insertRow();
-        row.innerHTML = `<td>جديد</td><td>${new Date().toLocaleDateString()}</td><td>قيد الانتظار</td><td><button onclick="this.parentElement.parentElement.remove()">حذف</button></td>`;
+        row.innerHTML = `
+            <td>${new Date().toLocaleDateString('ar-SA')}</td>
+            <td>شركة جديدة</td>
+            <td>قيد الانتظار</td>
+            <td><button class="btn-del" onclick="this.parentElement.parentElement.remove()">حذف</button></td>
+        `;
+        saveData();
     }
+
+    // حفظ البيانات في المتصفح
+    function saveData() {
+        const data = document.getElementById('tableBody').innerHTML;
+        localStorage.setItem('asgate_visits_data', data);
+    }
+
+    // استرجاع البيانات عند فتح الصفحة
+    window.onload = function() {
+        const saved = localStorage.getItem('asgate_visits_data');
+        if (saved) document.getElementById('tableBody').innerHTML = saved;
+    };
 </script>
+
 </body>
 </html>
