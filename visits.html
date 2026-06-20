@@ -1,68 +1,36 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
     <title>ASGate - الزيارات</title>
-    <!-- استدعاءات المكتبات الخارجية -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- استدعاء ملف الستايل الخارجي (تأكد أن ملف style.css موجود في نفس المجلد) -->
-    <link rel="stylesheet" href="style.css">
-    
     <style>
-        /* تنسيقات إضافية لضمان ظهور الجدول بشكل صحيح في الصفحة */
-        .table-wrapper { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .visits-table { width: 100%; border-collapse: collapse; }
-        .visits-table th { background: #4c1d95; color: white; padding: 12px; }
-        .visits-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
-        .btn-add { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #4c1d95; color: white; }
+        button { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="dashboard-container">
-    <nav class="navbar">
-        <a href="index.html">الرئيسية</a>
-        <a href="visits.html" class="active">الزيارات</a>
-        <a href="opportunities.html">الفرص البيعية</a>
-        <a href="customers.html">العملاء</a>
-        <a href="sales.html">المبيعات</a>
-    </nav>
-
-    <div class="main-content">
-        <div class="action-bar" style="margin-bottom: 20px;">
-            <button class="btn-add" onclick="insertNewRow()"><i class="fas fa-plus"></i> إضافة زيارة جديدة</button>
-        </div>
-        
-        <div class="table-wrapper">
-            <table id="mainTable" class="visits-table">
-                <thead>
-                    <tr>
-                        <th>التاريخ</th>
-                        <th>الشركة</th>
-                        <th>الحالة</th>
-                        <th>إجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-    </div>
+<div class="container">
+    <h2>سجل الزيارات</h2>
+    <button onclick="addRow()">إضافة زيارة</button>
+    <table id="myTable">
+        <thead>
+            <tr><th>الشركة</th><th>الحالة</th><th>إجراء</th></tr>
+        </thead>
+        <tbody id="body"></tbody>
+    </table>
 </div>
 
-<!-- استدعاء ملف الجافاسكريبت الخارجي -->
-<script src="script.js"></script>
 <script>
-    // التأكد من تشغيل الدوال عند فتح الصفحة
-    window.onload = function() {
-        if(typeof loadSavedData === 'function') {
-            loadSavedData();
-        } else {
-            console.error("دالة loadSavedData غير موجودة في script.js");
-        }
-    };
+    function addRow() {
+        const tbody = document.getElementById('body');
+        const row = tbody.insertRow();
+        row.innerHTML = '<td>جديد</td><td>قيد الانتظار</td><td><button onclick="this.parentElement.parentElement.remove()">حذف</button></td>';
+    }
 </script>
 </body>
 </html>
