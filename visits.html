@@ -1,31 +1,27 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html dir="rtl">
 <head>
     <meta charset="UTF-8">
     <title>ASGate - الزيارات</title>
-    <!-- استدعاء ملف الستايل الخارجي -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- تنسيقات إضافية لحل المشكلة فوراً -->
-    <style>
-        .visits-container { padding: 20px; }
-        .action-bar { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
-        .visits-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
-        .visits-table th, .visits-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        .visits-table th { background-color: #f4f4f4; }
-    </style>
 </head>
 <body>
 
+<div class="dashboard-container">
     <nav class="navbar">
         <a href="index.html">الرئيسية</a>
         <a href="visits.html" class="active">الزيارات</a>
+        <a href="opportunities.html">الفرص البيعية</a>
+        <a href="customers.html">العملاء</a>
+        <a href="sales.html">المبيعات</a>
     </nav>
 
-    <div class="visits-container">
+    <div class="main-content">
         <div class="action-bar">
-            <h3>سجل الزيارات</h3>
-            <button class="btn-add">+ إضافة زيارة</button>
+            <h3>📋 سجل الزيارات</h3>
+            <button class="btn-add" onclick="addNewVisitRow()">+ إضافة زيارة</button>
         </div>
         
         <table class="visits-table">
@@ -34,25 +30,14 @@
                     <th>التاريخ</th>
                     <th>العميل</th>
                     <th>الحالة</th>
-                    <th>إجراء</th>
+                    <th>الإجراء</th>
                 </tr>
             </thead>
-            <tbody id="visitsBody">
-                <!-- هنا ستظهر البيانات من الجافاسكريبت -->
-            </tbody>
+            <tbody id="visitsBody"></tbody>
         </table>
     </div>
+</div>
 
-    <script src="script.js"></script>
-    <script>
-        // التأكد من استدعاء الدالة بعد تحميل الصفحة
-        window.onload = function() {
-            if(typeof loadVisitsFromStorage === 'function') {
-                loadVisitsFromStorage();
-            } else {
-                console.log("الدالة loadVisitsFromStorage غير موجودة في script.js");
-            }
-        };
-    </script>
+<script src="script.js"></script>
 </body>
 </html>
