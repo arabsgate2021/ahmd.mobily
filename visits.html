@@ -3,21 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>ASGate - الزيارات</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <!-- استدعاء ملف الستايل الخارجي -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- تنسيقات إضافية لحل المشكلة فوراً -->
+    <style>
+        .visits-container { padding: 20px; }
+        .action-bar { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+        .visits-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+        .visits-table th, .visits-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        .visits-table th { background-color: #f4f4f4; }
+    </style>
 </head>
 <body>
 
     <nav class="navbar">
         <a href="index.html">الرئيسية</a>
         <a href="visits.html" class="active">الزيارات</a>
-        </nav>
+    </nav>
 
     <div class="visits-container">
         <div class="action-bar">
             <h3>سجل الزيارات</h3>
             <button class="btn-add">+ إضافة زيارة</button>
         </div>
+        
         <table class="visits-table">
             <thead>
                 <tr>
@@ -27,14 +37,22 @@
                     <th>إجراء</th>
                 </tr>
             </thead>
-            <tbody id="visitsBody"></tbody>
+            <tbody id="visitsBody">
+                <!-- هنا ستظهر البيانات من الجافاسكريبت -->
+            </tbody>
         </table>
     </div>
 
     <script src="script.js"></script>
     <script>
-        // تشغيل دالة التحميل عند فتح الصفحة
-        document.addEventListener('DOMContentLoaded', loadVisitsFromStorage);
+        // التأكد من استدعاء الدالة بعد تحميل الصفحة
+        window.onload = function() {
+            if(typeof loadVisitsFromStorage === 'function') {
+                loadVisitsFromStorage();
+            } else {
+                console.log("الدالة loadVisitsFromStorage غير موجودة في script.js");
+            }
+        };
     </script>
 </body>
 </html>
