@@ -2,23 +2,58 @@
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASGate - الزيارات</title>
-    <!-- استدعاء المكتبات عبر الإنترنت -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- ضع تنسيقاتك هنا لضمان عملها -->
     <style>
-        /* [قم بلصق محتوى الكود الخاص بك من قسم <style>... </style> هنا تماماً كما أرسلته لي] */
+        /* تم دمج التنسيقات الخاصة بك هنا */
+        :root { --nav-shiny-navy: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); --header-shiny-purple: linear-gradient(180deg, #4c1d95 0%, #2e1065 100%); --nav-bg: #0f172a; --nav-active: #a78bfa; --bg-color: #f8fafc; --accent-blue: #3b82f6; --border-soft: #e2e8f0; --text-dark: #0f172a; --text-muted: #64748b; }
+        body { margin: 0; background-color: var(--bg-color); font-family: 'Cairo', sans-serif; font-size: 12px; height: 100vh; overflow: hidden; }
+        .dashboard-container { display: flex; flex-direction: column; height: 100vh; }
+        .navbar { background: var(--nav-shiny-navy); display: flex; align-items: center; padding: 0 20px; margin: 10px; border-radius: 10px; height: 40px; }
+        .navbar a { color: white; text-decoration: none; padding: 0 15px; font-weight: 700; }
+        .navbar a.active { background-color: var(--nav-active); color: #0f172a; border-radius: 6px; }
+        .main-content { flex: 1; padding: 0 15px 10px 15px; display: flex; flex-direction: column; gap: 8px; }
+        .table-wrapper { background: white; border-radius: 10px; overflow-y: auto; border: 1px solid var(--border-soft); flex: 1; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--header-shiny-purple); color: white; padding: 12px; position: sticky; top: 0; }
+        td { border-bottom: 1px solid #f1f5f9; padding: 8px; text-align: center; }
+        .btn-add { background: var(--accent-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body onload="loadSavedData()">
 
-<!-- [قم بلصق محتوى الكود الخاص بك من قسم <body>... </body> هنا تماماً كما أرسلته لي] -->
+<div class="dashboard-container">
+    <nav class="navbar">
+        <a href="index.html">الرئيسية</a>
+        <a href="visits.html" class="active">الزيارات</a>
+        <a href="opportunities.html">الفرص البيعية</a>
+        <a href="customers.html">العملاء</a>
+        <a href="sales.html">المبيعات</a>
+    </nav>
+    <div class="main-content">
+        <button class="btn-add" onclick="insertNewRow()">+ إضافة زيارة جديدة</button>
+        <div class="table-wrapper">
+            <table id="mainTable">
+                <thead><tr><th>الشركة</th><th>تاريخ الزيارة</th><th>الحالة</th><th>الإجراء</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
-    /* [قم بلصق محتوى الكود الخاص بك من قسم <script>... </script> هنا تماماً كما أرسلته لي] */
+    // وظيفة بسيطة للتحميل لضمان عمل الصفحة
+    function loadSavedData() {
+        console.log("تم تحميل الصفحة بنجاح");
+    }
+    function insertNewRow() {
+        const tbody = document.getElementById('tableBody');
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>جديد</td><td>${new Date().toLocaleDateString()}</td><td>قيد الانتظار</td><td><button onclick="this.parentElement.parentElement.remove()">حذف</button></td>`;
+    }
 </script>
 </body>
 </html>
