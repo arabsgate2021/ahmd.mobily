@@ -1,58 +1,39 @@
-/* ==========================================================================
-   ASGate Management System - Main Style Sheet
-   ========================================================================== */
-
-:root {
-    --nav-shiny-navy: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    --header-shiny-purple: linear-gradient(180deg, #4c1d95 0%, #2e1065 100%);
-    --nav-bg: #0f172a;
-    --nav-active: #a78bfa;
-    --bg-color: #f8fafc;
-    --white: #ffffff;
-    --accent-blue: #3b82f6;
-    --accent-blue-hover: #2563eb;
-    --accent-green-active: #22c55e;
-    --border-soft: #e2e8f0;
-    --text-dark: #0f172a;
-    --text-muted: #64748b;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --warning: #eab308;
-}
-
-/* --- تنسيقات النظام العامة (العملاء، الزيارات، المبيعات) --- */
-body { font-family: 'Cairo', sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; direction: rtl; }
-.navbar { background: var(--nav-shiny-navy); padding: 10px 20px; display: flex; gap: 20px; }
-.navbar a { color: #fff; text-decoration: none; font-size: 13px; font-weight: 700; }
-.navbar a.active { color: var(--nav-active); }
-.main-content { padding: 20px; }
+/* --- تنسيقات النظام العامة (لأي صفحة لا تحتوي على كلاس dashboard-page-v1) --- */
+body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; direction: rtl; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; }
 
 /* -----------------------------------------------------
-   تنسيق استعادة الصفحة الرئيسية (Dashboard)
-   يتم تفعيل هذا فقط عند إضافة class="dashboard-page-v1" لوسم body
+   عزل تام: تنسيقات الصفحة الرئيسية (Dashboard)
    ----------------------------------------------------- */
-.dashboard-page-v1 { background-color: #f4f7f9 !important; }
-.dashboard-page-v1 .navbar { background-color: #2e1065 !important; background-image: none !important; border-radius: 12px; margin: 10px; }
-.dashboard-page-v1 .dashboard-grid { 
-    display: grid !important; 
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; 
-    gap: 15px !important; 
-    padding: 15px !important; 
+.dashboard-page-v1, .dashboard-page-v1 * {
+    box-sizing: border-box !important;
 }
-.dashboard-page-v1 .chart-card { 
-    background: var(--white); 
-    border-radius: 8px; 
-    padding: 15px; 
-    border: 1px solid #e2e8f0; 
+
+.dashboard-page-v1 {
+    background-color: #f4f7f9 !important;
+    display: block !important; /* فرض العرض العادي */
 }
-.dashboard-page-v1 .donut-wrapper-fixed { height: 75px; width: 75px; }
 
-/* --- تنسيقات الجداول المشتركة --- */
-table { width: 100%; border-collapse: collapse; background: white; }
-th, td { border: 1px solid var(--border-soft); padding: 10px; text-align: center; }
-.excel-input { width: 100%; border: none; outline: none; font-family: 'Cairo'; }
+.dashboard-page-v1 .navbar {
+    background-color: #2e1065 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    padding: 15px !important;
+    margin: 10px !important;
+    border-radius: 12px !important;
+}
 
-/* --- تخصيص شريط التمرير (Scrollbar) --- */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.dashboard-page-v1 .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: 38% 62% !important; /* الحفاظ على نسب التوزيع الأصلية */
+    gap: 20px !important;
+    padding: 20px !important;
+}
+
+.dashboard-page-v1 .content-box {
+    background: white !important;
+    padding: 15px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+}
