@@ -207,11 +207,15 @@ function openNote(el) {
     currentActivePreview = el;
     const rawNotes = el.getAttribute('data-full-notes') || "";
     const historyLog = document.getElementById('historyLog');
+    
     if (rawNotes.trim() !== "") {
-        historyLog.innerHTML = rawNotes.split('\n--------------------\n').map(entry => `<div class="activity-item" style="border-bottom:1px solid #e2e8f0; padding:5px 0;">${entry}</div>`).join('');
+        historyLog.innerHTML = rawNotes.split('\n--------------------\n')
+            .map(entry => `<div class="activity-item" style="border-bottom:1px solid #e2e8f0; padding:5px 0;">${entry}</div>`)
+            .join('');
     } else {
         historyLog.innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:20px;">لا توجد ملاحظات سابقة</div>';
     }
+    
     document.getElementById('noteModal').style.display = "flex";
     document.getElementById('modalTextArea').focus();
 }
@@ -222,19 +226,22 @@ function saveNote() {
         let oldNotes = currentActivePreview.getAttribute('data-full-notes') || "";
         let newEntry = `${generateStyledHeader()}<span class="activity-text-part">${newText}</span>`;
         let updatedFullNotes = oldNotes === "" ? newEntry : oldNotes + "\n--------------------\n" + newEntry;
+        
         currentActivePreview.setAttribute('data-full-notes', updatedFullNotes);
         currentActivePreview.innerText = newText;
+        
         const companyName = currentActivePreview.closest('tr').cells[1].querySelector('input').value;
         addToActivityLog('ملاحظات الزيارة', '...', newText, companyName);
+        
         updateEditDateField(currentActivePreview.closest('tr'));
         saveAllDataSilently();
     }
     closeNote();
 }
 
-function closeNote() {
-    document.getElementById('noteModal').style.display = "none";
-    document.getElementById('modalTextArea').value = "";
+function closeNote() { 
+    document.getElementById('noteModal').style.display = "none"; 
+    document.getElementById('modalTextArea').value = ""; 
 }
 
 window.onclick = (e) => {
