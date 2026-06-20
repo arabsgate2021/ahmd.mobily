@@ -161,13 +161,25 @@ function getLastNoteOnlyFromJSON(jsonStr) {
 function toggleSubTable(rowId) {
     const sub = document.getElementById('sub-' + rowId);
     const arrow = document.querySelector(`#${rowId} .toggle-arrow i`);
-    if (sub) {
-        if (sub.style.display === 'table-row') {
-            sub.style.display = 'none';
-            if (arrow) arrow.className = 'fas fa-caret-left';
-        } else {
-            sub.style.display = 'table-row';
-            if (arrow) arrow.className = 'fas fa-caret-down';
+    
+    if (!sub) {
+        console.error("لم يتم العثور على سطر التفاصيل للمعرف:", 'sub-' + rowId);
+        return;
+    }
+
+    // التحقق من حالة العرض الحالية (مخفي أو فارغ)
+    if (sub.style.display === 'none' || sub.style.display === '') {
+        sub.style.display = 'table-row'; // إظهار السطر
+        if (arrow) {
+            arrow.classList.remove('fa-caret-left');
+            arrow.classList.add('fa-caret-down');
+        }
+    } else {
+        sub.style.display = 'none'; // إخفاء السطر
+        if (arrow) {
+            arrow.classList.remove('fa-caret-down');
+            
+            arrow.classList.add('fa-caret-left');
         }
     }
 }
