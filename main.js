@@ -41,8 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (item.supervisor) supervisors.add(item.supervisor);
             if (item.salesman) salesmen.add(item.salesman);
             if (item.date) {
-                const year = new Set(item.date.split('-')[0]);
-                if(year) years.add(item.date.split('-')[0]);
+                const year = item.date.split('-')[0];
+                if(year) years.add(year);
             }
         });
 
@@ -122,14 +122,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // تحديث مربعات الأرقام العلوية بالأنيميشن أو النص المباشر
+        // تحديث مربعات الأرقام العلوية
         if(oppCountEl) oppCountEl.innerText = filteredOpps.length;
         if(visitCountEl) visitCountEl.innerText = filteredVisits.length;
         if(salesValueEl) salesValueEl.innerText = totalSales.toLocaleString('en-US');
         const pendingValueEl = document.querySelector('.bg-yellow .value-text');
         if(pendingValueEl) pendingValueEl.innerText = totalPending.toLocaleString('en-US');
 
-        // تحديث جدول الأشهر السنوي بناءً على التصفية الحالية
+        // تحديث جدول الأشهر السنوي
         updateYearlyTable(filteredOpps, filteredVisits, selectedYear);
 
         // تحديث الرسوم البيانية بالبيانات الجديدة
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 5. تهيئة وتحديث المخططات البيانية (Chart.js) لمنع تكرار الرسم أو الأخطاء
+    // 5. تهيئة المخططات البيانية (Chart.js)
     function initCharts() {
         const achievedEl = document.getElementById('achievedChart');
         if (achievedEl) {
@@ -204,13 +204,26 @@ document.addEventListener('DOMContentLoaded', function() {
             staffChart = new Chart(staffEl.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: Array.from({length: 15}, (_, i) => `موظف ${i + 1}`),
+                    labels: Array.from({length: 15}, (_, i) => `موظف مبيعات متميز ${i + 1}`), // مثال لأسماء طويلة تجريبية
                     datasets: [
                         { label: 'المحقق', data: Array.from({length: 15}, () => 0), backgroundColor: '#22c55e' },
                         { label: 'المعلق', data: Array.from({length: 15}, () => 0), backgroundColor: '#facc15' }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { font: { family: 'Cairo', size: 9 } } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { 
+                                font: { family: 'Cairo', size: 9 },
+                                maxRotation: 45,  // تدوير النص مائل بزاوية 45 لحماية الأسماء الكبيرة
+                                minRotation: 45
+                            } 
+                        } 
+                    } 
+                }
             });
         }
     }
@@ -220,20 +233,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const salesPercent = Math.round((sales / grandTotal) * 100) || 0;
         const pendingPercent = Math.round((pending / grandTotal) * 100) || 0;
 
-        // تحديث النسب النصية المكتوبة فوق المخططات
         const achievedText = document.querySelector('.chart-container-reduced:has(#achievedChart) .chart-percentage');
         if(achievedText) achievedText.innerText = `${salesPercent}%`;
 
         const pendingText = document.querySelector('.chart-container-reduced:has(#pendingChart) .chart-percentage');
         if(pendingText) pendingText.innerText = `${pendingPercent}%`;
 
-        // حساب مؤشر الإنجاز (المبيعات الفلكية مقارنة بالهدف السنوي الافتراضي 180,000)
         const targetYearly = 180000;
         const gaugePercent = Math.min(Math.round((sales / targetYearly) * 100), 200);
         const gaugeValueText = document.querySelector('.gauge-container-reduced .gauge-value');
         if(gaugeValueText) gaugeValueText.innerText = `${gaugePercent}%`;
 
-        // ضخ البيانات الجديدة داخل مصفوفات الدونات شارت وعمل تحديث سلس (Update)
         if (achievedChart) {
             achievedChart.data.datasets[0].data = [salesPercent, 100 - salesPercent];
             achievedChart.update();
@@ -243,15 +253,12 @@ document.addEventListener('DOMContentLoaded', function() {
             pendingChart.update();
         }
 
-        // تحريك مؤشر الإنجاز الدائري بناءً على النسبة
         if (gaugeChart) {
-            // تقسيم مؤشر الجيج بناء على الإنجاز الفعلي
             const part = gaugePercent / 4;
             gaugeChart.data.datasets[0].data = [part, part, part, part];
             gaugeChart.update();
         }
 
-        // تحديث مخطط الموظفين ببيانات محاكية قريبة من الواقع الحالي المصفى
         if (staffChart) {
             staffChart.data.datasets[0].data = Array.from({length: 15}, () => Math.floor(sales * (Math.random() * 0.15)));
             staffChart.data.datasets[1].data = Array.from({length: 15}, () => Math.floor(pending * (Math.random() * 0.10)));
@@ -264,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     populateFilterOptions();
     updateDashboard();
 
-    // ربط مستمعي الأحداث (Event Listeners) بالفلاتر للتحديث الفوري بمجرد الاختيار
+    // ربط مستمعي الأحداث بالفلاتر للتحديث الفوري بمجرد الاختيار
     document.querySelectorAll('.filters-grid select').forEach(select => {
         select.addEventListener('change', updateDashboard);
     });
