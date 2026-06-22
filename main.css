@@ -62,7 +62,7 @@ h3 { font-size: 13px; margin: 0; color: var(--nav-purple); font-weight: 800; bor
 
 .filters-grid { 
     display: grid; 
-    grid-template-columns: repeat(5, 1fr); /* تم التعديل إلى 5 ليتناسب مع الفلتر الجديد */
+    grid-template-columns: repeat(5, 1fr); /* تم التحديث هنا إلى 5 لتناسب إضافة فلتر السنة */
     gap: 10px; 
 }
 .filter-card { background: white; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
