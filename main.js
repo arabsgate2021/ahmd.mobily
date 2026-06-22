@@ -1,97 +1,271 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. تحديث البيانات من التخزين المحلي لربط الصفحات
-    function updateLiveStats() {
+    // الاحتفاظ بنسخ المخططات لتحديثها ديناميكياً دون إعادة إنشائها
+    let achievedChart, gaugeChart, pendingChart, staffChart;
+
+    // المراجع لعناصر الواجهة (مربعات الأرقام)
+    const oppCountEl = document.getElementById('oppCount');
+    const visitCountEl = document.getElementById('visitCount');
+    const salesValueEl = document.getElementById('salesValue');
+    const tbody = document.getElementById('monthsBody');
+
+    // أسماء الأشهر للجدول
+    const monthsNames = ["يناير", "فبراير", "مارس", "ابريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+
+    // 1. جلب البيانات الأساسية من التخزين المحلي مع الحماية
+    function getRawData() {
         try {
             const oppsData = localStorage.getItem('asgate_opportunities_v21');
             const visitsData = localStorage.getItem('asgate_visits_data_v21');
-            
-            // التأكد من وجود بيانات صحيحة قبل التحويل
-            const opps = oppsData ? JSON.parse(oppsData) : [];
-            const visits = visitsData ? JSON.parse(visitsData) : [];
-            
-            document.getElementById('oppCount').innerText = Array.isArray(opps) ? opps.length : 0;
-            document.getElementById('visitCount').innerText = Array.isArray(visits) ? visits.length : 0;
-        } catch (error) {
-            console.error("خطأ في قراءة البيانات من التخزين المحلي:", error);
-            document.getElementById('oppCount').innerText = 0;
-            document.getElementById('visitCount').innerText = 0;
+            return {
+                opportunities: oppsData ? JSON.parse(oppsData) : [],
+                visits: visitsData ? JSON.parse(visitsData) : []
+            };
+        } catch (e) {
+            console.error("خطأ في قراءة LocalStorage:", e);
+            return { opportunities: [], visits: [] };
         }
     }
 
-    // 2. بناء جدول الأهداف والزيارات السنوي
-    const months = ["يناير", "فبراير", "مارس", "ابريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-    const tbody = document.getElementById('monthsBody');
-    if (tbody) {
-        months.forEach((m, i) => {
+    // 2. تعبئة خيارات الفلاتر ديناميكياً بناءً على البيانات الفعليّة المخزنة
+    function populateFilterOptions() {
+        const data = getRawData();
+        
+        const regions = new Set();
+        const supervisors = new Set();
+        const salesmen = new Set();
+        const years = new Set(["2026"]); // سنة افتراضية
+
+        // جمع البيانات الفريدة من الفرص البيعية
+        data.opportunities.forEach(item => {
+            if (item.region) regions.add(item.region);
+            if (item.supervisor) supervisors.add(item.supervisor);
+            if (item.salesman) salesmen.add(item.salesman);
+            if (item.date) {
+                const year = new Set(item.date.split('-')[0]);
+                if(year) years.add(item.date.split('-')[0]);
+            }
+        });
+
+        // جمع البيانات الفريدة من الزيارات
+        data.visits.forEach(item => {
+            if (item.region) regions.add(item.region);
+            if (item.supervisor) supervisors.add(item.supervisor);
+            if (item.salesman) salesmen.add(item.salesman);
+            if (item.date) years.add(item.date.split('-')[0]);
+        });
+
+        // تعبئة عناصر الـ Select في الـ HTML
+        fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(1) select'), years, "2026");
+        fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(2) select'), monthsNames, "الكل", true);
+        fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(3) select'), regions, "الكل");
+        fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(4) select'), supervisors, "الكل");
+        fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(5) select'), salesmen, "الكل");
+    }
+
+    function fillSelect(selectElement, setOrArray, defaultVal, isMonth = false) {
+        if (!selectElement) return;
+        selectElement.innerHTML = '';
+        
+        // خيار الكل أو الافتراضي
+        const defaultOpt = document.createElement('option');
+        defaultOpt.text = defaultVal;
+        defaultOpt.value = defaultVal === "الكل" ? "all" : defaultVal;
+        selectElement.appendChild(defaultOpt);
+
+        setOrArray.forEach((val, index) => {
+            if(isMonth && val === defaultVal) return;
+            const opt = document.createElement('option');
+            opt.text = val;
+            opt.value = isMonth ? (index + 1).toString().padStart(2, '0') : val; // تحويل الشهر لرقم 01, 02..
+            if(val !== defaultVal) selectElement.appendChild(opt);
+        });
+    }
+
+    // 3. معالجة وتصفية البيانات وتحديث الشاشة كاملاً
+    function updateDashboard() {
+        const data = getRawData();
+
+        // جلب القيم الحالية للفلاتر
+        const selectedYear = document.querySelector('.filters-grid .filter-card:nth-child(1) select')?.value || "2026";
+        const selectedMonth = document.querySelector('.filters-grid .filter-card:nth-child(2) select')?.value || "all";
+        const selectedRegion = document.querySelector('.filters-grid .filter-card:nth-child(3) select')?.value || "all";
+        const selectedSupervisor = document.querySelector('.filters-grid .filter-card:nth-child(4) select')?.value || "all";
+        const selectedSalesman = document.querySelector('.filters-grid .filter-card:nth-child(5) select')?.value || "all";
+
+        // دالة فلترة مخصصة لكل مصفوفة بيانات
+        const filterCallback = (item) => {
+            const itemYear = item.date ? item.date.split('-')[0] : "";
+            const itemMonth = item.date ? item.date.split('-')[1] : "";
+
+            if (selectedYear !== "all" && itemYear !== selectedYear) return false;
+            if (selectedMonth !== "all" && itemMonth !== selectedMonth) return false;
+            if (selectedRegion !== "all" && item.region !== selectedRegion) return false;
+            if (selectedSupervisor !== "all" && item.supervisor !== selectedSupervisor) return false;
+            if (selectedSalesman !== "all" && item.salesman !== selectedSalesman) return false;
+            return true;
+        };
+
+        const filteredOpps = data.opportunities.filter(filterCallback);
+        const filteredVisits = data.visits.filter(filterCallback);
+
+        // حساب الإحصائيات الحيوية
+        let totalSales = 0;
+        let totalPending = 0;
+        let successfulVisits = filteredVisits.filter(v => v.status === "ناجحة" || v.status === "نجاح").length;
+
+        filteredOpps.forEach(opp => {
+            const val = parseFloat(opp.value) || 0;
+            if (opp.status === "محقق" || opp.status === "ناجح") {
+                totalSales += val;
+            } else if (opp.status === "معلق") {
+                totalPending += val;
+            }
+        });
+
+        // تحديث مربعات الأرقام العلوية بالأنيميشن أو النص المباشر
+        if(oppCountEl) oppCountEl.innerText = filteredOpps.length;
+        if(visitCountEl) visitCountEl.innerText = filteredVisits.length;
+        if(salesValueEl) salesValueEl.innerText = totalSales.toLocaleString('en-US');
+        const pendingValueEl = document.querySelector('.bg-yellow .value-text');
+        if(pendingValueEl) pendingValueEl.innerText = totalPending.toLocaleString('en-US');
+
+        // تحديث جدول الأشهر السنوي بناءً على التصفية الحالية
+        updateYearlyTable(filteredOpps, filteredVisits, selectedYear);
+
+        // تحديث الرسوم البيانية بالبيانات الجديدة
+        updateChartsLogic(totalSales, totalPending, filteredVisits.length, successfulVisits);
+    }
+
+    // 4. بناء وتحديث جدول الأهداف والزيارات السنوي ديناميكياً
+    function updateYearlyTable(opps, visits, year) {
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        monthsNames.forEach((monthName, index) => {
+            const monthCode = (index + 1).toString().padStart(2, '0');
+            
+            // فلترة بيانات الشهر المحدد في الحلقة
+            const mOpps = opps.filter(o => o.date && o.date.split('-')[1] === monthCode);
+            const mVisits = visits.filter(v => v.date && v.date.split('-')[1] === monthCode);
+
+            let mSales = 0;
+            let mPending = 0;
+            let mSuccessVisits = mVisits.filter(v => v.status === "ناجحة" || v.status === "نجاح").length;
+
+            mOpps.forEach(o => {
+                const val = parseFloat(o.value) || 0;
+                if (o.status === "محقق" || o.status === "ناجح") mSales += val;
+                else if (o.status === "معلق") mPending += val;
+            });
+
             const row = tbody.insertRow();
-            row.innerHTML = `<td>${m}</td><td>15k</td><td>${i===0?'14.2k':'-'}</td><td class="thick-border">${i===0?'790':'-'}</td><td style="color:#3b82f6">${i===0?'45':'-'}</td><td style="color:#22c55e">${i===0?'12':'-'}</td>`;
+            row.innerHTML = `
+                <td>${monthName}</td>
+                <td>15k</td>
+                <td>${mSales > 0 ? (mSales/1000).toFixed(1) + 'k' : '-'}</td>
+                <td class="thick-border">${mPending > 0 ? (mPending/1000).toFixed(1) + 'k' : '-'}</td>
+                <td style="color:#3b82f6">${mVisits.length > 0 ? mVisits.length : '-'}</td>
+                <td style="color:#22c55e">${mSuccessVisits > 0 ? mSuccessVisits : '-'}</td>
+            `;
         });
     }
 
-    // 3. المخطط الدائري للمحقق
-    const achievedEl = document.getElementById('achievedChart');
-    if (achievedEl) {
-        new Chart(achievedEl, {
-            type: 'doughnut',
-            data: { datasets: [{ data: [82, 18], backgroundColor: ['#22c55e', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
-            options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+    // 5. تهيئة وتحديث المخططات البيانية (Chart.js) لمنع تكرار الرسم أو الأخطاء
+    function initCharts() {
+        const achievedEl = document.getElementById('achievedChart');
+        if (achievedEl) {
+            achievedChart = new Chart(achievedEl, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [0, 100], backgroundColor: ['#22c55e', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
+                options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        const gaugeEl = document.getElementById('gaugeChart');
+        if (gaugeEl) {
+            gaugeChart = new Chart(gaugeEl.getContext('2d'), {
+                type: 'doughnut',
+                data: { datasets: [{ data: [25, 25, 25, 25], backgroundColor: ['#ef4444', '#fbbf24', '#4ade80', '#15803d'], borderWidth: 0 }] },
+                options: { rotation: 270, circumference: 180, cutout: '90%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        const pendingEl = document.getElementById('pendingChart');
+        if (pendingEl) {
+            pendingChart = new Chart(pendingEl, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [0, 100], backgroundColor: ['#facc15', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
+                options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        const staffEl = document.getElementById('staffChart');
+        if (staffEl) {
+            staffChart = new Chart(staffEl.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 15}, (_, i) => `موظف ${i + 1}`),
+                    datasets: [
+                        { label: 'المحقق', data: Array.from({length: 15}, () => 0), backgroundColor: '#22c55e' },
+                        { label: 'المعلق', data: Array.from({length: 15}, () => 0), backgroundColor: '#facc15' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { font: { family: 'Cairo', size: 9 } } } } }
+            });
+        }
     }
 
-    // 4. مخطط مؤشر الإنجاز (Gauge Chart)
-    const gaugeEl = document.getElementById('gaugeChart');
-    if (gaugeEl) {
-        new Chart(gaugeEl.getContext('2d'), {
-            type: 'doughnut',
-            data: { 
-                datasets: [{ 
-                    data: [25, 25, 25, 25], 
-                    backgroundColor: ['#ef4444', '#fbbf24', '#4ade80', '#15803d'], 
-                    borderWidth: 0 
-                }] 
-            },
-            options: { 
-                rotation: 270, // تم نقلها هنا لضمان رسم نصف دائرة بدقة
-                circumference: 180, // تم نقلها هنا لدعم إصدارات Chart.js الحديثة
-                cutout: '90%', 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } } 
-            }
-        });
+    function updateChartsLogic(sales, pending, totalVisits, successVisits) {
+        const grandTotal = sales + pending || 1; 
+        const salesPercent = Math.round((sales / grandTotal) * 100) || 0;
+        const pendingPercent = Math.round((pending / grandTotal) * 100) || 0;
+
+        // تحديث النسب النصية المكتوبة فوق المخططات
+        const achievedText = document.querySelector('.chart-container-reduced:has(#achievedChart) .chart-percentage');
+        if(achievedText) achievedText.innerText = `${salesPercent}%`;
+
+        const pendingText = document.querySelector('.chart-container-reduced:has(#pendingChart) .chart-percentage');
+        if(pendingText) pendingText.innerText = `${pendingPercent}%`;
+
+        // حساب مؤشر الإنجاز (المبيعات الفلكية مقارنة بالهدف السنوي الافتراضي 180,000)
+        const targetYearly = 180000;
+        const gaugePercent = Math.min(Math.round((sales / targetYearly) * 100), 200);
+        const gaugeValueText = document.querySelector('.gauge-container-reduced .gauge-value');
+        if(gaugeValueText) gaugeValueText.innerText = `${gaugePercent}%`;
+
+        // ضخ البيانات الجديدة داخل مصفوفات الدونات شارت وعمل تحديث سلس (Update)
+        if (achievedChart) {
+            achievedChart.data.datasets[0].data = [salesPercent, 100 - salesPercent];
+            achievedChart.update();
+        }
+        if (pendingChart) {
+            pendingChart.data.datasets[0].data = [pendingPercent, 100 - pendingPercent];
+            pendingChart.update();
+        }
+
+        // تحريك مؤشر الإنجاز الدائري بناءً على النسبة
+        if (gaugeChart) {
+            // تقسيم مؤشر الجيج بناء على الإنجاز الفعلي
+            const part = gaugePercent / 4;
+            gaugeChart.data.datasets[0].data = [part, part, part, part];
+            gaugeChart.update();
+        }
+
+        // تحديث مخطط الموظفين ببيانات محاكية قريبة من الواقع الحالي المصفى
+        if (staffChart) {
+            staffChart.data.datasets[0].data = Array.from({length: 15}, () => Math.floor(sales * (Math.random() * 0.15)));
+            staffChart.data.datasets[1].data = Array.from({length: 15}, () => Math.floor(pending * (Math.random() * 0.10)));
+            staffChart.update();
+        }
     }
 
-    // 5. مخطط المعلق
-    const pendingEl = document.getElementById('pendingChart');
-    if (pendingEl) {
-        new Chart(pendingEl, {
-            type: 'doughnut',
-            data: { datasets: [{ data: [18, 82], backgroundColor: ['#facc15', '#f1f5f9'], borderWidth: 0, borderRadius: 10 }] },
-            options: { cutout: '85%', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-    }
+    // تشغيل وإطلاق النظام التفاعلي
+    initCharts();
+    populateFilterOptions();
+    updateDashboard();
 
-    // 6. مخطط أداء فريق المبيعات
-    const staffEl = document.getElementById('staffChart');
-    if (staffEl) {
-        new Chart(staffEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: Array.from({length: 30}, (_, i) => `م${i + 1}`),
-                datasets: [
-                    { label: 'المحقق', data: Array.from({length: 30}, () => Math.floor(Math.random() * 5000) + 25000), backgroundColor: '#22c55e' },
-                    { label: 'المعلق', data: Array.from({length: 30}, () => Math.floor(Math.random() * 3000) + 1000), backgroundColor: '#facc15' }
-                ]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: { x: { grid: { display: false }, ticks: { font: { family: 'Cairo', size: 9 } } } } 
-            }
-        });
-    }
-
-    // جلب الإحصائيات فور اكتمال بناء الصفحة
-    updateLiveStats();
+    // ربط مستمعي الأحداث (Event Listeners) بالفلاتر للتحديث الفوري بمجرد الاختيار
+    document.querySelectorAll('.filters-grid select').forEach(select => {
+        select.addEventListener('change', updateDashboard);
+    });
 });
