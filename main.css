@@ -60,10 +60,11 @@ h3 { font-size: 13px; margin: 0; color: var(--nav-purple); font-weight: 800; bor
 .yearly-table th { background: #f8fafc; color: var(--nav-purple); font-weight: 800; }
 .thick-border { border-left: 3px solid var(--nav-purple) !important; }
 
-.filters-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.filter-card { background: white; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
-.filter-card label { font-size: 9px; font-weight: 800; color: var(--nav-purple); }
-.filter-input { width: 100%; border: none; background: var(--input-bg); font-family: 'Cairo'; font-size: 10px; padding: 4px; border-radius: 6px; outline: none; }
+.filters-grid { 
+    display: grid; 
+    grid-template-columns: repeat(5, 1fr); /* تم التعديل إلى 5 ليتناسب مع الفلتر الجديد */
+    gap: 10px; 
+}
 
 .stats-cards { display: flex; gap: 8px; width: 100%; align-items: center; }
 .stat-card { 
