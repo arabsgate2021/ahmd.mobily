@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // الاحتفاظ بنسخ المخططات لتحديثها ديناميكياً دون إعادة إنشائها
     let achievedChart, gaugeChart, pendingChart, staffChart;
 
-    // المراجع لعناصر الواجهة (مربعات الأرقام)
+    // المراجع لعناصر الواجهة (مربعات الأرقام والجدول)
     const oppCountEl = document.getElementById('oppCount');
     const visitCountEl = document.getElementById('visitCount');
     const salesValueEl = document.getElementById('salesValue');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const regions = new Set();
         const supervisors = new Set();
         const salesmen = new Set();
-        const years = new Set(["2026"]); // سنة افتراضية
+        const years = new Set(["2026"]); // سنة افتراضية أساسية للمشروع
 
         // جمع البيانات الفريدة من الفرص البيعية
         data.opportunities.forEach(item => {
@@ -51,10 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (item.region) regions.add(item.region);
             if (item.supervisor) supervisors.add(item.supervisor);
             if (item.salesman) salesmen.add(item.salesman);
-            if (item.date) years.add(item.date.split('-')[0]);
+            if (item.date) {
+                const year = item.date.split('-')[0];
+                if(year) years.add(year);
+            }
         });
 
-        // تعبئة عناصر الـ Select في الـ HTML
+        // تعبئة عناصر الـ Select في الـ HTML بالترتيب الصحيح
         fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(1) select'), years, "2026");
         fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(2) select'), monthsNames, "الكل", true);
         fillSelect(document.querySelector('.filters-grid .filter-card:nth-child(3) select'), regions, "الكل");
@@ -76,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(isMonth && val === defaultVal) return;
             const opt = document.createElement('option');
             opt.text = val;
-            opt.value = isMonth ? (index + 1).toString().padStart(2, '0') : val; // تحويل الشهر لرقم 01, 02..
+            opt.value = isMonth ? (index + 1).toString().padStart(2, '0') : val; // تحويل الشهر لترميز رقمي مثل 01، 02
             if(val !== defaultVal) selectElement.appendChild(opt);
         });
     }
@@ -85,14 +88,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDashboard() {
         const data = getRawData();
 
-        // جلب القيم الحالية للفلاتر
+        // جلب القيم الحالية المحددة في الفلاتر
         const selectedYear = document.querySelector('.filters-grid .filter-card:nth-child(1) select')?.value || "2026";
         const selectedMonth = document.querySelector('.filters-grid .filter-card:nth-child(2) select')?.value || "all";
         const selectedRegion = document.querySelector('.filters-grid .filter-card:nth-child(3) select')?.value || "all";
         const selectedSupervisor = document.querySelector('.filters-grid .filter-card:nth-child(4) select')?.value || "all";
         const selectedSalesman = document.querySelector('.filters-grid .filter-card:nth-child(5) select')?.value || "all";
 
-        // دالة فلترة مخصصة لكل مصفوفة بيانات
+        // دالة فلترة مخصصة لمطابقة البيانات المحددة
         const filterCallback = (item) => {
             const itemYear = item.date ? item.date.split('-')[0] : "";
             const itemMonth = item.date ? item.date.split('-')[1] : "";
@@ -108,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const filteredOpps = data.opportunities.filter(filterCallback);
         const filteredVisits = data.visits.filter(filterCallback);
 
-        // حساب الإحصائيات الحيوية
+        // حساب الإحصائيات الحيوية للبطاقات
         let totalSales = 0;
         let totalPending = 0;
         let successfulVisits = filteredVisits.filter(v => v.status === "ناجحة" || v.status === "نجاح").length;
@@ -122,17 +125,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // تحديث مربعات الأرقام العلوية
+        // تحديث مربعات الأرقام العلوية في الواجهة
         if(oppCountEl) oppCountEl.innerText = filteredOpps.length;
         if(visitCountEl) visitCountEl.innerText = filteredVisits.length;
         if(salesValueEl) salesValueEl.innerText = totalSales.toLocaleString('en-US');
         const pendingValueEl = document.querySelector('.bg-yellow .value-text');
         if(pendingValueEl) pendingValueEl.innerText = totalPending.toLocaleString('en-US');
 
-        // تحديث جدول الأشهر السنوي
+        // تحديث جدول الأشهر السنوي بناءً على التصفية الحالية
         updateYearlyTable(filteredOpps, filteredVisits, selectedYear);
 
-        // تحديث الرسوم البيانية بالبيانات الجديدة
+        // تحديث الرسوم البيانية بالبيانات الحقيقية والمحاكاة
         updateChartsLogic(totalSales, totalPending, filteredVisits.length, successfulVisits);
     }
 
@@ -204,10 +207,10 @@ document.addEventListener('DOMContentLoaded', function() {
             staffChart = new Chart(staffEl.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: Array.from({length: 15}, (_, i) => `موظف مبيعات متميز ${i + 1}`), // مثال لأسماء طويلة تجريبية
+                    labels: Array.from({length: 30}, (_, i) => `موظف مبيعات متميز ${i + 1}`), // العودة لـ 30 موظفاً كما في التصميم الأصلي
                     datasets: [
-                        { label: 'المحقق', data: Array.from({length: 15}, () => 0), backgroundColor: '#22c55e' },
-                        { label: 'المعلق', data: Array.from({length: 15}, () => 0), backgroundColor: '#facc15' }
+                        { label: 'المحقق', data: Array.from({length: 30}, () => 0), backgroundColor: '#22c55e' },
+                        { label: 'المعلق', data: Array.from({length: 30}, () => 0), backgroundColor: '#facc15' }
                     ]
                 },
                 options: { 
@@ -218,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             grid: { display: false }, 
                             ticks: { 
                                 font: { family: 'Cairo', size: 9 },
-                                maxRotation: 45,  // تدوير النص مائل بزاوية 45 لحماية الأسماء الكبيرة
+                                maxRotation: 45,  // تدوير النص مائل بزاوية 45 لحماية الأسماء الكبيرة من التداخل
                                 minRotation: 45
                             } 
                         } 
@@ -259,9 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
             gaugeChart.update();
         }
 
+        // ضخ بيانات عشوائية محاكية لـ 30 موظفاً بشكل متناسق مع الفلاتر والأرقام الحقيقية
         if (staffChart) {
-            staffChart.data.datasets[0].data = Array.from({length: 15}, () => Math.floor(sales * (Math.random() * 0.15)));
-            staffChart.data.datasets[1].data = Array.from({length: 15}, () => Math.floor(pending * (Math.random() * 0.10)));
+            staffChart.data.datasets[0].data = Array.from({length: 30}, () => Math.floor(sales * (Math.random() * 0.15)));
+            staffChart.data.datasets[1].data = Array.from({length: 30}, () => Math.floor(pending * (Math.random() * 0.10)));
             staffChart.update();
         }
     }
@@ -271,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
     populateFilterOptions();
     updateDashboard();
 
-    // ربط مستمعي الأحداث بالفلاتر للتحديث الفوري بمجرد الاختيار
+    // ربط مستمعي الأحداث بالفلاتر لتحديث الإحصائيات فوراً بمجرد تغيير الاختيار
     document.querySelectorAll('.filters-grid select').forEach(select => {
         select.addEventListener('change', updateDashboard);
     });
