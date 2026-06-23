@@ -61,7 +61,6 @@ function renderRow(v = {}, prepend = false) {
         </td>
     `;
 
-    // دمج جدول المنتجات مع تفاصيل التعديل القديمة في نفس السطر
     subRow.innerHTML = `
         <td colspan="12" style="padding:15px 10px; background:#f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,.02);">
             <div style="display: flex; gap: 15px; align-items: stretch;">
@@ -107,14 +106,12 @@ function renderRow(v = {}, prepend = false) {
     const selectEl = mainRow.querySelector('.status-select');
     applyStatusColor(selectEl);
 
-    // إضافة صفوف المنتجات المحفوظة أو صف فارغ جديد
     if (v.products && v.products.length > 0) {
         v.products.forEach(p => addProductRow(rowId, p));
     } else {
         addProductRow(rowId);
     }
     
-    // حساب الإجمالي المبدئي
     calculateMainVisitValue(rowId);
 }
 
@@ -182,7 +179,79 @@ function calculateMainVisitValue(rowId) {
 }
 
 /* ==========================================================
-   4. الدوال التشغيلية (استدعاء البيانات والإضافة الجديدة)
+   4. إدارة وفتح الملاحظات (تمت إضافتها هنا ومعالجة خطأ الاستجابة)
+   ========================================================== */
+function openNote(el) {
+    currentActivePreview = el;
+    const raw = el.getAttribute('data-full-notes') || "[]";
+    let arr = [];
+    try { arr = JSON.parse(raw); } catch(e) { arr = []; }
+    
+    const htmlContent = arr.map(msg => `
+        <div class="activity-item" style="margin-bottom:8px; padding:6px; border-bottom:1px solid #f1f5f9;">
+            <span style="color:var(--accent-blue); font-weight:700; font-size:11px;">${msg.user || 'المستخدم'}</span> 
+            <span style="color:#64748b; font-size:9px; margin-right:8px;"><i class="fas fa-clock"></i> ${msg.date || ''} ${msg.time || ''}</span>
+            <div style="color:var(--text-dark); font-weight:600; margin-top:4px; font-size:11.5px;">${msg.text || ''}</div>
+        </div>
+    `).join('');
+    
+    const historyLog = document.getElementById('historyLog');
+    if (historyLog) historyLog.innerHTML = htmlContent || '<div style="color:#64748b; text-align:center; font-size:11px;">لا توجد ملاحظات سابقة</div>';
+    
+    const noteModal = document.getElementById('noteModal');
+    if (noteModal) noteModal.style.display = "flex";
+    
+    const modalTextArea = document.getElementById('modalTextArea');
+    if (modalTextArea) {
+        modalTextArea.value = "";
+        modalTextArea.focus();
+    }
+}
+
+function saveNote() {
+    const txt = document.getElementById('modalTextArea').value.trim();
+    if (txt && currentActivePreview) {
+        const raw = currentActivePreview.getAttribute('data-full-notes') || "[]"; 
+        let arr = []; 
+        try { arr = JSON.parse(raw); } catch(e) { arr = []; }
+        
+        // معالجة ذكية لتفادي خطأ الكراش القديم والتقاط اسم المسؤول من الحقل الصحيح
+        let username = "المستخدم";
+        const mainRow = currentActivePreview.closest('.main-row');
+        if (mainRow && mainRow.cells) {
+            const mgrInput = mainRow.cells[3]?.querySelector('input');
+            if (mgrInput && mgrInput.value.trim()) {
+                username = mgrInput.value.trim();
+            }
+        }
+
+        arr.push({ 
+            user: username, 
+            date: getTodayFormatted(), 
+            time: getTimeFormatted(), 
+            text: txt 
+        });
+        
+        currentActivePreview.setAttribute('data-full-notes', JSON.stringify(arr));
+        currentActivePreview.innerText = txt;
+        
+        const mainRowEl = currentActivePreview.closest('.main-row');
+        if (mainRowEl) updateEditDateField(mainRowEl);
+        
+        saveAllDataSilently();
+    }
+    closeNote();
+}
+
+function closeNote() {
+    const noteModal = document.getElementById('noteModal');
+    if (noteModal) noteModal.style.display = "none";
+    const modalTextArea = document.getElementById('modalTextArea');
+    if (modalTextArea) modalTextArea.value = "";
+}
+
+/* ==========================================================
+   5. الدوال التشغيلية (استدعاء البيانات والإضافة الجديدة)
    ========================================================== */
 function loadSavedData() {
     const rawData = localStorage.getItem(STORAGE_KEY);
@@ -208,14 +277,13 @@ function insertNewRow() {
 }
 
 /* ==========================================================
-   5. دوال الحفظ والعمليات التلقائية لقاعدة البيانات المحلية
+   6. دوال الحفظ والعمليات التلقائية لقاعدة البيانات المحلية
    ========================================================== */
 function saveAllDataSilently() {
     const rows = document.querySelectorAll('#tableBody .main-row');
     const data = Array.from(rows).map(row => {
         const subRow = document.getElementById('sub-' + row.id);
         
-        // استخراج بيانات المنتجات لحفظها
         const products = [];
         if (subRow) {
             subRow.querySelectorAll('.product-body tr').forEach(pRow => {
@@ -245,7 +313,7 @@ function saveAllDataSilently() {
             notes: row.querySelector('.notes-preview').getAttribute('data-full-notes'),
             status: row.cells[11].querySelector('select').value,
             editDate: subRow ? subRow.querySelector('.edit-date-val')?.value || '' : '',
-            products: products // حفظ المنتجات
+            products: products
         };
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -260,7 +328,7 @@ function debouncedSaveAllData() {
 }
 
 /* ==========================================================
-   6. دوال الترتيب وإحصائيات سجل النشاط والوقت
+   7. دوال الترتيب وإحصائيات سجل النشاط والوقت
    ========================================================== */
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() {
