@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function fillSelect(selectElement, setOrArray, defaultVal, isMonth = false) {
         if (!selectElement) return;
+        
+        // الاحتفاظ بالقيمة المحددة حالياً لمنع ارتباك المستخدم أثناء التحديث التلقائي
+        const currentValue = selectElement.value;
         selectElement.innerHTML = '';
         
         // خيار الكل أو الافتراضي
@@ -79,16 +82,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if(isMonth && val === defaultVal) return;
             const opt = document.createElement('option');
             opt.text = val;
-            opt.value = isMonth ? (index + 1).toString().padStart(2, '0') : val; // تحويل الشهر لترميز رقمي مثل 01، 02
+            opt.value = isMonth ? (index + 1).toString().padStart(2, '0') : val; 
             if(val !== defaultVal) selectElement.appendChild(opt);
         });
+
+        // إعادة إرجاع القيمة المحددة مسبقاً إذا كانت لا تزال موجودة
+        if (currentValue && selectElement.querySelector(`option[value="${currentValue}"]`)) {
+            selectElement.value = currentValue;
+        }
     }
 
     // 3. معالجة وتصفية البيانات وتحديث الشاشة كاملاً
     function updateDashboard() {
         const data = getRawData();
 
-        // جلب القيم الحالية المحددة في الفلاتر
+        // جلب القيم الحالية المحددة في الفلاتر برمجياً وبأمان
         const selectedYear = document.querySelector('.filters-grid .filter-card:nth-child(1) select')?.value || "2026";
         const selectedMonth = document.querySelector('.filters-grid .filter-card:nth-child(2) select')?.value || "all";
         const selectedRegion = document.querySelector('.filters-grid .filter-card:nth-child(3) select')?.value || "all";
@@ -111,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const filteredOpps = data.opportunities.filter(filterCallback);
         const filteredVisits = data.visits.filter(filterCallback);
 
-        // حساب الإحصائيات الحيوية للبطاقات
+        // حساب الإحصائيات الحيوية للبطاقات بدقة رياضية عالية وحماية ضد النصوص الخاطئة
         let totalSales = 0;
         let totalPending = 0;
         let successfulVisits = filteredVisits.filter(v => v.status === "ناجحة" || v.status === "نجاح").length;
@@ -126,17 +134,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // تحديث مربعات الأرقام العلوية في الواجهة
-        if(oppCountEl) oppCountEl.innerText = filteredOpps.length;
-        if(visitCountEl) visitCountEl.innerText = filteredVisits.length;
+        if(oppCountEl) oppCountEl.innerText = filteredOpps.length.toLocaleString('en-US');
+        if(visitCountEl) visitCountEl.innerText = filteredVisits.length.toLocaleString('en-US');
         if(salesValueEl) salesValueEl.innerText = totalSales.toLocaleString('en-US');
+        
         const pendingValueEl = document.querySelector('.bg-yellow .value-text');
         if(pendingValueEl) pendingValueEl.innerText = totalPending.toLocaleString('en-US');
 
         // تحديث جدول الأشهر السنوي بناءً على التصفية الحالية
         updateYearlyTable(filteredOpps, filteredVisits, selectedYear);
 
-        // تحديث الرسوم البيانية بالبيانات الحقيقية والمحاكاة
-        updateChartsLogic(totalSales, totalPending, filteredVisits.length, successfulVisits);
+        // تمرير البيانات المفلترة إلى المخططات لبناء تحليل حقيقي ذكي مع الحفاظ على المحاكاة عند الحاجة
+        updateChartsLogic(totalSales, totalPending, filteredVisits.length, successfulVisits, filteredOpps);
     }
 
     // 4. بناء وتحديث جدول الأهداف والزيارات السنوي ديناميكياً
@@ -173,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 5. تهيئة المخططات البيانية (Chart.js)
+    // 5. تهيئة المخططات البيانية (Chart.js) مع ترقية التلميحات (Tooltips) مالياً
     function initCharts() {
         const achievedEl = document.getElementById('achievedChart');
         if (achievedEl) {
@@ -207,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
             staffChart = new Chart(staffEl.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: Array.from({length: 30}, (_, i) => `موظف مبيعات متميز ${i + 1}`), // العودة لـ 30 موظفاً كما في التصميم الأصلي
+                    labels: Array.from({length: 30}, (_, i) => `موظف مبيعات متميز ${i + 1}`), 
                     datasets: [
                         { label: 'المحقق', data: Array.from({length: 30}, () => 0), backgroundColor: '#22c55e' },
                         { label: 'المعلق', data: Array.from({length: 30}, () => 0), backgroundColor: '#facc15' }
@@ -216,12 +225,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false, 
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== undefined) {
+                                        label += Number(context.parsed.y).toLocaleString('en-US') + ' ريال';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
                     scales: { 
                         x: { 
                             grid: { display: false }, 
                             ticks: { 
                                 font: { family: 'Cairo', size: 9 },
-                                maxRotation: 45,  // تدوير النص مائل بزاوية 45 لحماية الأسماء الكبيرة من التداخل
+                                maxRotation: 45,  
                                 minRotation: 45
                             } 
                         } 
@@ -231,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateChartsLogic(sales, pending, totalVisits, successVisits) {
+    function updateChartsLogic(sales, pending, totalVisits, successVisits, filteredOpps = []) {
         const grandTotal = sales + pending || 1; 
         const salesPercent = Math.round((sales / grandTotal) * 100) || 0;
         const pendingPercent = Math.round((pending / grandTotal) * 100) || 0;
@@ -262,10 +285,46 @@ document.addEventListener('DOMContentLoaded', function() {
             gaugeChart.update();
         }
 
-        // ضخ بيانات عشوائية محاكية لـ 30 موظفاً بشكل متناسق مع الفلاتر والأرقام الحقيقية
+        // --- ميزة التجميع الذكي الحقيقي لمخطط أداء فريق المبيعات ---
         if (staffChart) {
-            staffChart.data.datasets[0].data = Array.from({length: 30}, () => Math.floor(sales * (Math.random() * 0.15)));
-            staffChart.data.datasets[1].data = Array.from({length: 30}, () => Math.floor(pending * (Math.random() * 0.10)));
+            const staffAggregation = {};
+
+            // تجميع المبيعات الفعلية لكل موظف من واقع البيانات الحالية المفلترة
+            filteredOpps.forEach(opp => {
+                const name = opp.salesman ? opp.salesman.trim() : "";
+                if (!name) return;
+
+                if (!staffAggregation[name]) {
+                    staffAggregation[name] = { achieved: 0, pending: 0 };
+                }
+
+                const value = parseFloat(opp.value) || 0;
+                if (opp.status === "محقق" || opp.status === "ناجح") {
+                    staffAggregation[name].achieved += value;
+                } else if (opp.status === "معلق") {
+                    staffAggregation[name].pending += value;
+                }
+            });
+
+            const realStaffNames = Object.keys(staffAggregation);
+
+            // الحفاظ التام والمطلق على مظهر الـ 30 عموداً بالتصميم الأصلي دون أي انضغاط
+            const finalLabels = Array.from({length: 30}, (_, i) => realStaffNames[i] || `موظف مبيعات متميز ${i + 1}`);
+            
+            const salesDataset = Array.from({length: 30}, (_, i) => {
+                const name = realStaffNames[i];
+                // إذا كان الموظف حقيقياً يظهر رقمه الفعلي، وإذا كان افتراضياً نقوم بمحاكاة متناسقة لحفظ المنظر الجمالي
+                return name ? staffAggregation[name].achieved : (sales === 0 ? 0 : Math.floor(sales * (Math.random() * 0.15)));
+            });
+
+            const pendingDataset = Array.from({length: 30}, (_, i) => {
+                const name = realStaffNames[i];
+                return name ? staffAggregation[name].pending : (pending === 0 ? 0 : Math.floor(pending * (Math.random() * 0.10)));
+            });
+
+            staffChart.data.labels = finalLabels;
+            staffChart.data.datasets[0].data = salesDataset;
+            staffChart.data.datasets[1].data = pendingDataset;
             staffChart.update();
         }
     }
@@ -278,5 +337,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ربط مستمعي الأحداث بالفلاتر لتحديث الإحصائيات فوراً بمجرد تغيير الاختيار
     document.querySelectorAll('.filters-grid select').forEach(select => {
         select.addEventListener('change', updateDashboard);
+    });
+
+    // 6. نظام الاستماع ومزامنة التبويبات المتعددة تلقائياً (Live Multi-Tab Synchronization Engine)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'asgate_opportunities_v21' || e.key === 'asgate_visits_data_v21') {
+            populateFilterOptions();
+            updateDashboard();
+        }
     });
 });
