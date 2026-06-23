@@ -61,13 +61,38 @@ function renderRow(v = {}, prepend = false) {
         </td>
     `;
 
+    // دمج جدول المنتجات مع تفاصيل التعديل القديمة في نفس السطر
     subRow.innerHTML = `
-        <td colspan="12" style="padding:10px; background:#f8fafc;">
-            <div style="font-weight:bold; color:#2e1065; margin-bottom:5px;">تفاصيل التعديل والوقت:</div>
-            <div class="edit-date-container">
-                ${parseEditDateHTML(v.editDate || '')}
+        <td colspan="12" style="padding:15px 10px; background:#f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,.02);">
+            <div style="display: flex; gap: 15px; align-items: stretch;">
+                
+                <div class="sub-table-container" style="flex: 1; padding: 0;">
+                    <table class="inner-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>المنتج</th>
+                                <th>التفاصيل</th>
+                                <th>العدد</th>
+                                <th>الاشتراك</th>
+                                <th>الإجمالي</th>
+                                <th style="width:75px">
+                                    <button class="header-plus-btn" onclick="addProductRow('${rowId}')" title="إضافة منتج"><i class="fas fa-plus"></i></button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="product-body"></tbody>
+                    </table>
+                </div>
+
+                <div style="width: 250px; background: white; border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,.05);">
+                    <div style="font-weight:bold; color:#2e1065; margin-bottom:10px; font-size:12px;">تفاصيل التعديل والوقت:</div>
+                    <div class="edit-date-container">
+                        ${parseEditDateHTML(v.editDate || '')}
+                    </div>
+                    <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
+                </div>
+
             </div>
-            <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
     `;
 
@@ -81,10 +106,83 @@ function renderRow(v = {}, prepend = false) {
 
     const selectEl = mainRow.querySelector('.status-select');
     applyStatusColor(selectEl);
+
+    // إضافة صفوف المنتجات المحفوظة أو صف فارغ جديد
+    if (v.products && v.products.length > 0) {
+        v.products.forEach(p => addProductRow(rowId, p));
+    } else {
+        addProductRow(rowId);
+    }
+    
+    // حساب الإجمالي المبدئي
+    calculateMainVisitValue(rowId);
 }
 
 /* ==========================================================
-   3. الدوال التشغيلية (استدعاء البيانات والإضافة الجديدة)
+   3. دوال جدول المنتجات (إضافة وحساب الإجمالي)
+   ========================================================== */
+function addProductRow(rowId, data = {}) {
+    const subRow = document.getElementById('sub-' + rowId);
+    if (!subRow) return;
+    const tbody = subRow.querySelector('.product-body');
+    if (!tbody) return;
+
+    const row = tbody.insertRow();
+    row.innerHTML = `
+        <td>
+            <select onchange="debouncedSaveAllData()">
+                <option value="">-</option>
+                <option value="جوال" ${data.type === 'جوال' ? 'selected' : ''}>جوال</option>
+                <option value="بيانات" ${data.type === 'بيانات' ? 'selected' : ''}>بيانات</option>
+                <option value="هاتف" ${data.type === 'هاتف' ? 'selected' : ''}>هاتف</option>
+                <option value="فايبر نت" ${data.type === 'فايبر نت' ? 'selected' : ''}>فايبر نت</option>
+                <option value="DIA" ${data.type === 'DIA' ? 'selected' : ''}>DIA</option>
+                <option value="IPVPN" ${data.type === 'IPVPN' ? 'selected' : ''}>IPVPN</option>
+                <option value="SIP" ${data.type === 'SIP' ? 'selected' : ''}>SIP</option>
+            </select>
+        </td>
+        <td><input type="text" value="${data.desc || ''}" onkeyup="debouncedSaveAllData()"></td>
+        <td><input type="number" class="prod-qty" min="0" value="${data.qty || ''}" onkeyup="calculateMainVisitValue('${rowId}')" oninput="calculateMainVisitValue('${rowId}')"></td>
+        <td><input type="number" class="prod-sub" min="0" value="${data.sub || ''}" onkeyup="calculateMainVisitValue('${rowId}')" oninput="calculateMainVisitValue('${rowId}')"></td>
+        <td><input type="number" class="prod-total readonly-input" value="${data.total || ''}" readonly style="color:var(--text-muted); font-weight:700; cursor:not-allowed;"></td>
+        <td>
+            <div style="display:flex; justify-content:center; gap:5px;">
+                <button class="sub-action-btn" title="حذف" onclick="if(this.closest('tbody').rows.length > 1) { this.closest('tr').remove(); calculateMainVisitValue('${rowId}'); }"><i class="fas fa-trash-alt" style="font-size:10px;"></i></button>
+            </div>
+        </td>
+    `;
+}
+
+function calculateMainVisitValue(rowId) {
+    const subRow = document.getElementById('sub-' + rowId);
+    if (!subRow) return;
+    
+    let grandTotal = 0;
+    subRow.querySelectorAll('.product-body tr').forEach(pRow => {
+        const qtyInput = pRow.querySelector('.prod-qty');
+        const subInput = pRow.querySelector('.prod-sub');
+        const totalInput = pRow.querySelector('.prod-total');
+        
+        let qty = parseFloat(qtyInput.value) || 0;
+        let sub = parseFloat(subInput.value) || 0;
+        const rowTotal = qty * sub;
+        
+        totalInput.value = rowTotal > 0 ? rowTotal : '';
+        grandTotal += rowTotal;
+    });
+    
+    const mainRow = document.getElementById(rowId);
+    if (mainRow) {
+        const oppValueInput = mainRow.querySelector('.opp-value-input');
+        if (oppValueInput) {
+            oppValueInput.value = grandTotal > 0 ? grandTotal : '';
+        }
+    }
+    debouncedSaveAllData();
+}
+
+/* ==========================================================
+   4. الدوال التشغيلية (استدعاء البيانات والإضافة الجديدة)
    ========================================================== */
 function loadSavedData() {
     const rawData = localStorage.getItem(STORAGE_KEY);
@@ -110,12 +208,30 @@ function insertNewRow() {
 }
 
 /* ==========================================================
-   4. دوال الحفظ والعمليات التلقائية لقاعدة البيانات المحلية
+   5. دوال الحفظ والعمليات التلقائية لقاعدة البيانات المحلية
    ========================================================== */
 function saveAllDataSilently() {
     const rows = document.querySelectorAll('#tableBody .main-row');
     const data = Array.from(rows).map(row => {
         const subRow = document.getElementById('sub-' + row.id);
+        
+        // استخراج بيانات المنتجات لحفظها
+        const products = [];
+        if (subRow) {
+            subRow.querySelectorAll('.product-body tr').forEach(pRow => {
+                const inputs = pRow.querySelectorAll('input, select');
+                if (inputs.length >= 5) {
+                    products.push({
+                        type: inputs[0].value,
+                        desc: inputs[1].value,
+                        qty: inputs[2].value,
+                        sub: inputs[3].value,
+                        total: inputs[4].value
+                    });
+                }
+            });
+        }
+
         return {
             comp: row.cells[1].querySelector('input').value,
             address: row.cells[2].querySelector('input').value,
@@ -128,7 +244,8 @@ function saveAllDataSilently() {
             oppValue: row.cells[9].querySelector('input').value,
             notes: row.querySelector('.notes-preview').getAttribute('data-full-notes'),
             status: row.cells[11].querySelector('select').value,
-            editDate: subRow ? subRow.querySelector('.edit-date-val')?.value || '' : ''
+            editDate: subRow ? subRow.querySelector('.edit-date-val')?.value || '' : '',
+            products: products // حفظ المنتجات
         };
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -143,7 +260,7 @@ function debouncedSaveAllData() {
 }
 
 /* ==========================================================
-   5. دوال الترتيب وإحصائيات سجل النشاط والوقت
+   6. دوال الترتيب وإحصائيات سجل النشاط والوقت
    ========================================================== */
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() {
@@ -162,23 +279,18 @@ function toggleSubTable(rowId) {
     const sub = document.getElementById('sub-' + rowId);
     const arrow = document.querySelector(`#${rowId} .toggle-arrow i`);
     
-    if (!sub) {
-        console.error("لم يتم العثور على سطر التفاصيل للمعرف:", 'sub-' + rowId);
-        return;
-    }
+    if (!sub) return;
 
-    // التحقق من حالة العرض الحالية (مخفي أو فارغ)
     if (sub.style.display === 'none' || sub.style.display === '') {
-        sub.style.display = 'table-row'; // إظهار السطر
+        sub.style.display = 'table-row';
         if (arrow) {
             arrow.classList.remove('fa-caret-left');
             arrow.classList.add('fa-caret-down');
         }
     } else {
-        sub.style.display = 'none'; // إخفاء السطر
+        sub.style.display = 'none';
         if (arrow) {
             arrow.classList.remove('fa-caret-down');
-            
             arrow.classList.add('fa-caret-left');
         }
     }
