@@ -9,7 +9,7 @@ const LOGS_KEY = 'asgate_visits_logs_v32';
 const OPPORTUNITIES_KEY = 'asgate_opportunities_final_v31';
 
 /* ==========================================================
-   2. الدالة الأساسية لبناء السطور (renderRow) مع الحفاظ على 14 عمود
+   2. الدالة الأساسية لبناء السطور (renderRow) 
    ========================================================== */
 function renderRow(v = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
@@ -29,7 +29,10 @@ function renderRow(v = {}, prepend = false) {
     const editDateHTML = parseEditDateHTML(v.editDate || '');
 
     mainRow.innerHTML = `
-        <td class="col-select"><input type="checkbox" class="select-check"></td>
+        <td class="col-select">
+            <input type="checkbox" class="select-check">
+            <span class="toggle-arrow" onclick="toggleSubTable('${rowId}')"><i class="fas fa-caret-left"></i></span>
+        </td>
         <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.mgr || ''}" data-old="${v.mgr || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المسؤول', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
@@ -58,12 +61,7 @@ function renderRow(v = {}, prepend = false) {
             <div class="edit-date-container-main" style="line-height:1.2; display:flex; flex-direction:column; align-items:center;">${editDateHTML}</div>
             <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
-        <td>
-            <div style="display:flex; align-items:center; height:100%;">
-                <input type="text" class="excel-input" value="${v.owner || ''}" data-old="${v.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المالك', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;" style="flex:1;">
-                <span class="toggle-arrow" onclick="toggleSubTable('${rowId}')" style="margin-right:2px;"><i class="fas fa-caret-down"></i></span>
-            </div>
-        </td>
+        <td><input type="text" class="excel-input" value="${v.owner || ''}" data-old="${v.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المالك', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
     `;
 
     subRow.innerHTML = `
