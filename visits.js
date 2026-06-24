@@ -67,7 +67,7 @@ function renderRow(v = {}, prepend = false) {
     subRow.innerHTML = `
         <td colspan="14" style="padding:15px 10px; background:#f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,.02);">
             <div style="display: flex; gap: 15px; align-items: stretch;">
-                <div class="sub-table-container" style="flex: 1; padding: 0;">
+                <div class="sub-table-container" style="flex: 0 0 50%; padding: 0;">
                     <table class="inner-table" style="width: 100%;">
                         <thead>
                             <tr>
