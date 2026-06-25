@@ -22,7 +22,6 @@
 
     <div class="main-content">
         <div class="action-bar">
-            <!-- تم حذف زر إضافة فرصة يدوية ليعتمد النظام على الترحيل من صفحة الزيارات منعا للعشوائية -->
             <div class="search-wrapper">
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="debouncedFilterTable()">
             </div>
@@ -48,7 +47,7 @@
             </div>
         </div>
         
-        <div class="table-wrapper">
+        <div class="table-wrapper" id="tableWrapperContainer">
             <table id="mainTable">
                 <thead>
                     <tr>
