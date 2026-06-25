@@ -48,13 +48,14 @@ function renderRow(v = {}, prepend = false) {
         <td><input type="number" class="excel-input opp-value-input readonly-input" value="${v.oppValue || ''}" readonly style="color:var(--accent-blue); font-weight:800; cursor:not-allowed; background: transparent;"></td>
         <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notesJson.replace(/'/g, "&apos;")}' id="preview-${Date.now()}">${lastNoteText}</div></td>
         <td>
-            <!-- تم إرجاع الخيارات الأصلية لعمود الحالة كما طلبت تماماً -->
+            <!-- تحديث خيارات عمود الحالة بناءً على منطق العمل الجديد -->
             <select class="excel-input status-select" data-old="${v.status || ''}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
                 <option value="" ${v.status === '' ? 'selected' : ''}>-</option>
                 <option value="جديد" ${v.status === 'جديد' ? 'selected' : ''}>جديد</option>
                 <option value="مؤجل" ${v.status === 'مؤجل' ? 'selected' : ''}>مؤجل</option>
                 <option value="مهتم" ${v.status === 'مهتم' ? 'selected' : ''}>مهتم</option>
-                <option value="غير مهتم" ${v.status === 'غير مهتم' ? 'selected' : ''}>غير مهتم</option>
+                <option value="مغلق رابح" ${v.status === 'مغلق رابح' ? 'selected' : ''}>مغلق رابح</option>
+                <option value="مغلق خاسر" ${v.status === 'مغلق خاسر' ? 'selected' : ''}>مغلق خاسر</option>
             </select>
         </td>
         <td>
@@ -261,7 +262,6 @@ function hideStatusTooltip() { const tooltip = document.getElementById('status-c
 /* ==========================================================
    6. العمليات التشغيلية وتحديث التواريخ والـ UI
    ========================================================== */
-function insertNewRow() { renderRow({}, true); const firstRow = document.getElementById('tableBody').querySelector('.main-row'); if (firstRow) updateEditDateField(firstRow); saveAllDataSilently(); const wrapper = document.querySelector('.table-wrapper'); if (wrapper) wrapper.scrollTop = 0; }
 function updateEditDateField(row) {
     if (!row) return; const dateFormatted = getTodayFormatted(); const time24 = getTimeFormatted(); const fullDateTime = `${dateFormatted} ${time24}`;
     const mainContainer = row.querySelector('.edit-date-container-main'); const hiddenInput = row.querySelector('.edit-date-val');
@@ -275,7 +275,7 @@ function toggleSubTable(rowId) { const sub = document.getElementById('sub-' + ro
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
 
 /* ==========================================================
-   7. تعديل الحالات البصرية وتحديث البيانات (الوضع الأصلي)
+   7. تعديل الحالات البصرية وتحديث البيانات (الألوان الجديدة والصفوف)
    ========================================================== */
 function handleStatusChange(selectEl, rowId) {
     const newVal = selectEl.value; const oldVal = selectEl.dataset.old; const companyName = selectEl.closest('tr').cells[1].querySelector('input').value;
@@ -295,18 +295,18 @@ function applyStatusColor(selectEl) {
     const mainRow = selectEl.closest('.main-row'); 
     if (!parentCell) return; 
     
-    parentCell.classList.remove('status-yellow', 'status-red', 'status-green'); 
-    selectEl.classList.remove('status-yellow', 'status-red', 'status-green'); 
-    if (mainRow) mainRow.classList.remove('lost-row'); 
+    parentCell.classList.remove('status-yellow', 'status-green', 'status-red'); 
+    selectEl.classList.remove('status-yellow', 'status-green', 'status-red'); 
+    if (mainRow) mainRow.classList.remove('won-row', 'lost-row'); 
     
-    // محاكاة الألوان الأصلية لصفحة الزيارات
-    if (val === 'مؤجل') {
+    if (val === 'مهتم') {
         selectEl.classList.add('status-yellow'); 
-    } else if (val === 'غير مهتم') { 
-        selectEl.classList.add('status-red'); 
-        if (mainRow) mainRow.classList.add('lost-row'); 
-    } else if (val === 'مهتم') {
+    } else if (val === 'مغلق رابح') { 
         selectEl.classList.add('status-green');
+        if (mainRow) mainRow.classList.add('won-row'); 
+    } else if (val === 'مغلق خاسر') {
+        selectEl.classList.add('status-red');
+        if (mainRow) mainRow.classList.add('lost-row'); 
     }
 }
 
@@ -323,7 +323,26 @@ function saveAllDataSilently() {
 }
 
 function debouncedSaveAllData() { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveAllDataSilently(); updateStats(); }, 600); }
-function loadSavedData() { const rawData = localStorage.getItem(STORAGE_KEY); const tbody = document.getElementById('tableBody'); if (!tbody) return; tbody.innerHTML = ''; if (rawData) { JSON.parse(rawData).forEach(v => renderRow(v, false)); } reorderRows(); updateStats(); renderActivityLog(); }
+
+function loadSavedData() { 
+    const rawData = localStorage.getItem(STORAGE_KEY); 
+    const tbody = document.getElementById('tableBody'); 
+    if (!tbody) return; 
+    tbody.innerHTML = ''; 
+    if (rawData) { JSON.parse(rawData).forEach(v => renderRow(v, false)); } 
+    reorderRows(); 
+    updateStats(); 
+    renderActivityLog(); 
+    
+    // ميزة التمرير التلقائي الذكي لتركيز الشاشة على فرص الشهر الحالي مباشرة دون عناء بحث
+    setTimeout(() => {
+        const currentMonthSep = document.getElementById('current-month-sep');
+        if (currentMonthSep) {
+            currentMonthSep.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+    }, 120);
+}
+
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0'); }
 function getLastNoteOnlyFromJSON(jsonStr) { try { const arr = JSON.parse(jsonStr); return arr.length > 0 ? arr[arr.length - 1].text : "أضف ملاحظة..."; } catch(e) { return "أضف ملاحظة..."; } }
@@ -345,6 +364,12 @@ function reorderRows() {
         const sepRow = document.createElement('tr'); 
         sepRow.className = 'month-separator'; 
         const isCurrentMonth = (month === currentMonth); 
+        
+        // تمييز فاصل الشهر الحالي بـ ID محدد لتتمكن دالة الـ Auto-Focus من التقاطه فوراً
+        if (isCurrentMonth) {
+            sepRow.id = 'current-month-sep';
+        }
+        
         const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; 
         sepRow.innerHTML = `<td colspan="14"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> فرص شهر ${month}</div></td>`; 
         fragment.appendChild(sepRow); 
