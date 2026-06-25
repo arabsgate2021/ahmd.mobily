@@ -22,7 +22,7 @@ function renderRow(v = {}, prepend = false) {
     subRow.id = 'sub-' + rowId;
     subRow.style.display = 'none';
     const today = getTodayFormatted();
-    const oppDate = v.oppDate || today; // حقل تاريخ الفرصة البيعية
+    const oppDate = v.oppDate || today;
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
     const editDateHTML = parseEditDateHTML(v.editDate || '');
@@ -48,13 +48,13 @@ function renderRow(v = {}, prepend = false) {
         <td><input type="number" class="excel-input opp-value-input readonly-input" value="${v.oppValue || ''}" readonly style="color:var(--accent-blue); font-weight:800; cursor:not-allowed; background: transparent;"></td>
         <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notesJson.replace(/'/g, "&apos;")}' id="preview-${Date.now()}">${lastNoteText}</div></td>
         <td>
+            <!-- تم إرجاع الخيارات الأصلية لعمود الحالة كما طلبت تماماً -->
             <select class="excel-input status-select" data-old="${v.status || ''}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
                 <option value="" ${v.status === '' ? 'selected' : ''}>-</option>
+                <option value="جديد" ${v.status === 'جديد' ? 'selected' : ''}>جديد</option>
+                <option value="مؤجل" ${v.status === 'مؤجل' ? 'selected' : ''}>مؤجل</option>
                 <option value="مهتم" ${v.status === 'مهتم' ? 'selected' : ''}>مهتم</option>
-                <option value="عرض سعر" ${v.status === 'عرض سعر' ? 'selected' : ''}>عرض سعر</option>
-                <option value="مفاوضات" ${v.status === 'مفاوضات' ? 'selected' : ''}>مفاوضات</option>
-                <option value="رابحة" ${v.status === 'رابحة' ? 'selected' : ''}>رابحة (تم البيع)</option>
-                <option value="خاسرة" ${v.status === 'خاسرة' ? 'selected' : ''}>خاسرة</option>
+                <option value="غير مهتم" ${v.status === 'غير مهتم' ? 'selected' : ''}>غير مهتم</option>
             </select>
         </td>
         <td>
@@ -199,7 +199,7 @@ function filterTable() {
 }
 
 /* ==========================================================
-   5. إدارة الملاحظات والـ Tooltips (مع إصلاح عدم استجابة الحفظ)
+   5. إدارة الملاحظات والـ Tooltips
    ========================================================== */
 function openNote(el) {
     currentActivePreview = el;
@@ -238,7 +238,6 @@ function saveNote() {
     if (txt && currentActivePreview) {
         let arr = []; try { arr = JSON.parse(currentActivePreview.getAttribute('data-full-notes') || "[]"); } catch(e) {}
         
-        // إصلاح فني: تحديد المالك الفعلي من نفس الصف الحالي بطريقة ديناميكية آمنة
         let username = "المستخدم"; 
         const mainRow = currentActivePreview.closest('.main-row');
         if (mainRow) { 
@@ -276,7 +275,7 @@ function toggleSubTable(rowId) { const sub = document.getElementById('sub-' + ro
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
 
 /* ==========================================================
-   7. تعديل الحالات البصرية وتحديث البيانات
+   7. تعديل الحالات البصرية وتحديث البيانات (الوضع الأصلي)
    ========================================================== */
 function handleStatusChange(selectEl, rowId) {
     const newVal = selectEl.value; const oldVal = selectEl.dataset.old; const companyName = selectEl.closest('tr').cells[1].querySelector('input').value;
@@ -300,18 +299,19 @@ function applyStatusColor(selectEl) {
     selectEl.classList.remove('status-yellow', 'status-red', 'status-green'); 
     if (mainRow) mainRow.classList.remove('lost-row'); 
     
-    if (val === 'عرض سعر' || val === 'مفاوضات') {
+    // محاكاة الألوان الأصلية لصفحة الزيارات
+    if (val === 'مؤجل') {
         selectEl.classList.add('status-yellow'); 
-    } else if (val === 'خاسرة') { 
+    } else if (val === 'غير مهتم') { 
         selectEl.classList.add('status-red'); 
         if (mainRow) mainRow.classList.add('lost-row'); 
-    } else if (val === 'رابحة') {
+    } else if (val === 'مهتم') {
         selectEl.classList.add('status-green');
     }
 }
 
 /* ==========================================================
-   8. عمليات الحفظ والاسترجاع والإحصائيات للفرص
+   8. عمليات الحفظ والاسترجاع والإحصائيات
    ========================================================== */
 function saveAllDataSilently() {
     const data = Array.from(document.querySelectorAll('#tableBody .main-row')).map(row => {
