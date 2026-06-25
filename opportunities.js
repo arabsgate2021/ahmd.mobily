@@ -48,12 +48,8 @@ function renderRow(v = {}, prepend = false) {
         <td><input type="number" class="excel-input opp-value-input readonly-input" value="${v.oppValue || ''}" readonly style="color:var(--accent-blue); font-weight:800; cursor:not-allowed; background: transparent;"></td>
         <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notesJson.replace(/'/g, "&apos;")}' id="preview-${Date.now()}">${lastNoteText}</div></td>
         <td>
-            <!-- تحديث خيارات عمود الحالة بناءً على منطق العمل الجديد -->
-            <select class="excel-input status-select" data-old="${v.status || ''}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
-                <option value="" ${v.status === '' ? 'selected' : ''}>-</option>
-                <option value="جديد" ${v.status === 'جديد' ? 'selected' : ''}>جديد</option>
-                <option value="مؤجل" ${v.status === 'مؤجل' ? 'selected' : ''}>مؤجل</option>
-                <option value="مهتم" ${v.status === 'مهتم' ? 'selected' : ''}>مهتم</option>
+            <select class="excel-input status-select" data-old="${v.status || 'مهتم'}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
+                <option value="مهتم" ${v.status === 'مهتم' || !v.status ? 'selected' : ''}>مهتم</option>
                 <option value="مغلق رابح" ${v.status === 'مغلق رابح' ? 'selected' : ''}>مغلق رابح</option>
                 <option value="مغلق خاسر" ${v.status === 'مغلق خاسر' ? 'selected' : ''}>مغلق خاسر</option>
             </select>
@@ -275,7 +271,7 @@ function toggleSubTable(rowId) { const sub = document.getElementById('sub-' + ro
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
 
 /* ==========================================================
-   7. تعديل الحالات البصرية وتحديث البيانات (الألوان الجديدة والصفوف)
+   7. تعديل الحالات البصرية وتحديث البيانات (مخصصة للفرص الثلاث فقط)
    ========================================================== */
 function handleStatusChange(selectEl, rowId) {
     const newVal = selectEl.value; const oldVal = selectEl.dataset.old; const companyName = selectEl.closest('tr').cells[1].querySelector('input').value;
@@ -334,7 +330,6 @@ function loadSavedData() {
     updateStats(); 
     renderActivityLog(); 
     
-    // ميزة التمرير التلقائي الذكي لتركيز الشاشة على فرص الشهر الحالي مباشرة دون عناء بحث
     setTimeout(() => {
         const currentMonthSep = document.getElementById('current-month-sep');
         if (currentMonthSep) {
@@ -365,7 +360,6 @@ function reorderRows() {
         sepRow.className = 'month-separator'; 
         const isCurrentMonth = (month === currentMonth); 
         
-        // تمييز فاصل الشهر الحالي بـ ID محدد لتتمكن دالة الـ Auto-Focus من التقاطه فوراً
         if (isCurrentMonth) {
             sepRow.id = 'current-month-sep';
         }
