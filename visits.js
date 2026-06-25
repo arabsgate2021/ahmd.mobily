@@ -222,7 +222,7 @@ function openNote(el) {
                 <span class="log-action">${msg.text}</span>
             </div>
             `;
-        }).join('') || '<div style="color:#64748b; text-align:center; font-size:11px; padding:20px; font-weight:700;">لا توجد ملاحظات سابقة - ابدأ بإضافة ملاحظة جديدة</div>';
+        }).join('') || '<div style="color:#64748b; text-align:center; font-size:10px; padding:20px; font-weight:700;">لا توجد ملاحظات سابقة - ابدأ بإضافة ملاحظة جديدة</div>';
     }
     
     const noteModal = document.getElementById('noteModal');
@@ -309,7 +309,6 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
     const cleanCompany = companyName || 'شركة غير مسماة'; 
     let actionText = fieldName === 'إجراء' ? `${oldVal} لزيارة شركة ( ${cleanCompany} )` : `تعديل ${fieldName} من [${oldVal || 'فارغ'}] إلى [${newVal || 'فارغ'}] للعميل ( ${cleanCompany} )`; 
     
-    // هيكلة السجل بالتصميم الجديد
     const fullLogHTML = `
         <div class="log-entry">
             <span class="log-badge-user"><i class="fas fa-user-circle"></i> المستخدم</span>
