@@ -213,13 +213,16 @@ function openNote(el) {
             let dayStr = isNaN(msgDateObj) ? '' : days[msgDateObj.getDay()] + ' ';
             let userName = msg.user && msg.user !== "المستخدم" ? msg.user : "المستخدم";
 
+            // تم التعديل هنا ليكون النص في سطر جديد
             return `
-            <div class="log-entry">
-                <span class="log-badge-user"><i class="fas fa-user-circle"></i> ${userName}</span>
-                <span class="log-divider">|</span>
-                <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayStr}${msg.date} ${msg.time}</span>
-                <span class="log-divider">|</span>
-                <span class="log-action">${msg.text}</span>
+            <div class="log-entry" style="display: block; line-height: 1.6;">
+                <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="log-badge-user"><i class="fas fa-user-circle"></i> ${userName}</span>
+                    <span class="log-divider">|</span>
+                    <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayStr}${msg.date} ${msg.time}</span>
+                    <span class="log-divider">|</span>
+                </div>
+                <div class="log-action" style="padding-right: 5px; color: #0f172a; font-size: 11px; font-weight: 700; white-space: pre-wrap; display: block;">${msg.text}</div>
             </div>
             `;
         }).join('') || '<div style="color:#64748b; text-align:center; font-size:10px; padding:20px; font-weight:700;">لا توجد ملاحظات سابقة - ابدأ بإضافة ملاحظة جديدة</div>';
