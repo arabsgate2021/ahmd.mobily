@@ -205,7 +205,26 @@ function openNote(el) {
     currentActivePreview = el;
     let arr = []; try { arr = JSON.parse(el.getAttribute('data-full-notes') || "[]"); } catch(e) {}
     const historyLog = document.getElementById('historyLog');
-    if (historyLog) historyLog.innerHTML = arr.map(msg => `<div class="activity-item" style="margin-bottom:8px; padding:6px; border-bottom:1px solid #f1f5f9;"><span style="color:var(--accent-blue); font-weight:700; font-size:11px;">${msg.user || 'المستخدم'}</span> <span style="color:#64748b; font-size:9px; margin-right:8px;"><i class="fas fa-clock"></i> ${msg.date || ''} ${msg.time || ''}</span><div style="color:var(--text-dark); font-weight:600; margin-top:4px; font-size:11.5px;">${msg.text || ''}</div></div>`).join('') || '<div style="color:#64748b; text-align:center; font-size:11px;">لا توجد ملاحظات سابقة</div>';
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+    if (historyLog) {
+        historyLog.innerHTML = arr.map(msg => {
+            let msgDateObj = new Date(msg.date);
+            let dayStr = isNaN(msgDateObj) ? '' : days[msgDateObj.getDay()] + ' ';
+            let userName = msg.user && msg.user !== "المستخدم" ? msg.user : "المستخدم";
+
+            return `
+            <div class="log-entry">
+                <span class="log-badge-user"><i class="fas fa-user-circle"></i> ${userName}</span>
+                <span class="log-divider">|</span>
+                <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayStr}${msg.date} ${msg.time}</span>
+                <span class="log-divider">|</span>
+                <span class="log-action">${msg.text}</span>
+            </div>
+            `;
+        }).join('') || '<div style="color:#64748b; text-align:center; font-size:11px; padding:20px; font-weight:700;">لا توجد ملاحظات سابقة - ابدأ بإضافة ملاحظة جديدة</div>';
+    }
+    
     const noteModal = document.getElementById('noteModal');
     if (noteModal) noteModal.style.display = "flex";
     const modalTextArea = document.getElementById('modalTextArea');
@@ -280,6 +299,31 @@ function getLastNoteOnlyFromJSON(jsonStr) { try { const arr = JSON.parse(jsonStr
 function applyStatusColor(selectEl) { if (!selectEl) return; const val = selectEl.value; const parentCell = selectEl.closest('td'); const mainRow = selectEl.closest('.main-row'); if (!parentCell) return; parentCell.classList.remove('status-yellow', 'status-red'); selectEl.classList.remove('status-yellow', 'status-red'); if (mainRow) mainRow.classList.remove('lost-row'); if (val === 'عرض سعر') selectEl.classList.add('status-yellow'); else if (val === 'فقدان') { selectEl.classList.add('status-red'); if (mainRow) mainRow.classList.add('lost-row'); } }
 function reorderRows() { const tbody = document.getElementById('tableBody'); if (!tbody) return; const rows = Array.from(tbody.querySelectorAll('.main-row')); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); const rowsData = rows.map(row => ({ row: row, subRow: document.getElementById('sub-' + row.id), date: row.querySelector('.visit-date-val')?.value || '9999-12-31' })); rowsData.sort((a, b) => b.date.localeCompare(a.date)); const groups = {}; rowsData.forEach(item => { const month = item.date.substring(0, 7); if (!groups[month]) groups[month] = []; groups[month].push(item); }); tbody.innerHTML = ''; const fragment = document.createDocumentFragment(); Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => { const sepRow = document.createElement('tr'); sepRow.className = 'month-separator'; const isCurrentMonth = (month === currentMonth); const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; sepRow.innerHTML = `<td colspan="14"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> زيارات شهر ${month}</div></td>`; fragment.appendChild(sepRow); groups[month].forEach(item => { fragment.appendChild(item.row); if (item.subRow) fragment.appendChild(item.subRow); }); }); tbody.appendChild(fragment); }
 function updateStats() { const rows = document.querySelectorAll('#tableBody .main-row'); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); let total = rows.length, tDay = 0, tMonth = 0, valTotal = 0, valMonth = 0; rows.forEach(row => { const dateInput = row.querySelector('.visit-date-val'); const visitValInput = row.querySelector('.opp-value-input'); const visitVal = visitValInput ? parseFloat(visitValInput.value) || 0 : 0; valTotal += visitVal; if (dateInput) { const date = dateInput.value; if (date === today) tDay++; if (date.startsWith(currentMonth)) { tMonth++; valMonth += visitVal; } } }); if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total; if (document.getElementById('stat-today')) document.getElementById('stat-today').innerText = tDay; if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = tMonth; if (document.getElementById('stat-value-total')) document.getElementById('stat-value-total').innerText = valTotal.toLocaleString() + ' ر.س'; if (document.getElementById('stat-value-month')) document.getElementById('stat-value-month').innerText = valMonth.toLocaleString() + ' ر.س'; }
-function addToActivityLog(fieldName, oldVal, newVal, companyName) { if (oldVal === newVal) return; const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']; const d = new Date(); let dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0'), yyyy = d.getFullYear(); const cleanCompany = companyName || 'شركة غير مسماة'; let actionText = fieldName === 'إجراء' ? `${oldVal} لزيارة شركة ( ${cleanCompany} )` : `تعديل ${fieldName} من [${oldVal || 'فارغ'}] إلى [${newVal || 'فارغ'}] للعميل ( ${cleanCompany} )`; const fullLogHTML = `<span style="color:#64748b;font-size:9px;"><i class="fas fa-clock"></i> ${days[d.getDay()]} ${yyyy}-${mm}-${dd} ${getTimeFormatted()}</span> &nbsp;|&nbsp; <span style="color:#0f172a;font-weight:700;">${actionText}</span>`; let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); logs.unshift(fullLogHTML); localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100))); renderActivityLog(); }
-function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.map(log => `<div class="activity-item">${log}</div>`).join(''); }
+function addToActivityLog(fieldName, oldVal, newVal, companyName) { 
+    if (oldVal === newVal) return; 
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']; 
+    const d = new Date(); 
+    let dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0'), yyyy = d.getFullYear(); 
+    const dayName = days[d.getDay()];
+    const timeStr = getTimeFormatted();
+    const cleanCompany = companyName || 'شركة غير مسماة'; 
+    let actionText = fieldName === 'إجراء' ? `${oldVal} لزيارة شركة ( ${cleanCompany} )` : `تعديل ${fieldName} من [${oldVal || 'فارغ'}] إلى [${newVal || 'فارغ'}] للعميل ( ${cleanCompany} )`; 
+    
+    // هيكلة السجل بالتصميم الجديد
+    const fullLogHTML = `
+        <div class="log-entry">
+            <span class="log-badge-user"><i class="fas fa-user-circle"></i> المستخدم</span>
+            <span class="log-divider">|</span>
+            <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayName} ${yyyy}-${mm}-${dd} ${timeStr}</span>
+            <span class="log-divider">|</span>
+            <span class="log-action">${actionText}</span>
+        </div>
+    `; 
+    
+    let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); 
+    logs.unshift(fullLogHTML); 
+    localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100))); 
+    renderActivityLog(); 
+}
+function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.join(''); }
 function openWhatsAppChat(el) { const inputEl = el.closest('.phone-cell-container').querySelector('input'); let rawPhone = inputEl.value.trim(); if (!rawPhone) { Swal.fire({icon: 'warning', title: 'تنبيه', text: 'يرجى إدخال رقم الجوال أولاً', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; } let cleanNumber = rawPhone.replace(/\D/g, ''); if (cleanNumber.startsWith('00966')) cleanNumber = cleanNumber.substring(2); else if (cleanNumber.startsWith('05')) cleanNumber = '966' + cleanNumber.substring(1); else if (cleanNumber.startsWith('5') && cleanNumber.length === 9) cleanNumber = '966' + cleanNumber; window.open("https://wa.me/" + cleanNumber, '_blank'); }
