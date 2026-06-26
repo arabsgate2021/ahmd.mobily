@@ -27,7 +27,6 @@ function renderRow(v = {}, prepend = false) {
     const oppDate = v.oppDate || today; 
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
-    const editDateHTML = parseEditDateHTML(v.editDate || '');
 
     mainRow.innerHTML = `
         <td class="col-select">
@@ -53,13 +52,12 @@ function renderRow(v = {}, prepend = false) {
             <select class="excel-input status-select" data-old="${v.status || ''}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
                 <option value="" ${v.status === '' ? 'selected' : ''}>-</option>
                 <option value="مهتم" ${v.status === 'مهتم' ? 'selected' : ''}>مهتم</option>
-                <option value="عرض سعر" ${v.status === 'عرض سعر' ? 'selected' : ''}>عرض سعر</option>
-                <option value="غير مهتم" ${v.status === 'غير مهتم' ? 'selected' : ''}>غير مهتم</option>
+                <option value="رابح" ${v.status === 'رابح' ? 'selected' : ''}>رابح</option>
                 <option value="فقدان" ${v.status === 'فقدان' ? 'selected' : ''}>فقدان</option>
             </select>
         </td>
         <td>
-            <div class="edit-date-container-main" style="line-height:1.2; display:flex; flex-direction:column; align-items:center;">${editDateHTML}</div>
+            <input type="date" class="excel-input exp-date-input" value="${v.expDate || ''}" data-old="${v.expDate || ''}" onfocus="this.dataset.old=this.value" onchange="addToActivityLog('التاريخ المتوقع', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value; debouncedSaveAllData(); reorderRows();">
             <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
         <td><input type="text" class="excel-input" value="${v.owner || ''}" data-old="${v.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المالك', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
@@ -169,11 +167,14 @@ async function handleBulkAction(action) {
 }
 
 function exportToExcel(selectedRows) {
-    let csvContent = "\uFEFFالشركة,العنوان,المسؤول,رقم التواصل,الإيميل,السجل,تاريخ الفرصة,الخدمة,القيمة,الحالة,المالك\n";
+    let csvContent = "\uFEFFالشركة,العنوان,المسؤول,رقم التواصل,الإيميل,السجل,تاريخ الفرصة,الخدمة,القيمة,الحالة,التاريخ المتوقع,المالك\n";
     selectedRows.forEach(chk => {
         const row = chk.closest('tr');
-        const getVal = (idx) => { const inp = row.cells[idx].querySelector('input, select'); return `"${inp ? inp.value.replace(/"/g, '""') : ''}"`; };
-        csvContent += [getVal(1), getVal(2), getVal(3), getVal(4), getVal(5), getVal(6), getVal(7), getVal(8), getVal(9), getVal(11), getVal(13)].join(",") + "\n";
+        const getVal = (idx) => { 
+            if(idx === 12) return `"${row.cells[12].querySelector('.exp-date-input')?.value || ''}"`;
+            const inp = row.cells[idx].querySelector('input, select'); return `"${inp ? inp.value.replace(/"/g, '""') : ''}"`; 
+        };
+        csvContent += [getVal(1), getVal(2), getVal(3), getVal(4), getVal(5), getVal(6), getVal(7), getVal(8), getVal(9), getVal(11), getVal(12), getVal(13)].join(",") + "\n";
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "تقرير_الفرص_البيعية_" + getTodayFormatted() + ".csv";
@@ -256,8 +257,7 @@ function hideStatusTooltip() { const tooltip = document.getElementById('status-c
    ========================================================== */
 function updateEditDateField(row) {
     if (!row) return; const dateFormatted = getTodayFormatted(); const time24 = getTimeFormatted(); const fullDateTime = `${dateFormatted} ${time24}`;
-    const mainContainer = row.querySelector('.edit-date-container-main'); const hiddenInput = row.querySelector('.edit-date-val');
-    if (mainContainer) mainContainer.innerHTML = `<span class="edit-date-d">${dateFormatted}</span><span class="edit-date-t">${time24}</span>`;
+    const hiddenInput = row.querySelector('.edit-date-val');
     if (hiddenInput) hiddenInput.value = fullDateTime;
     const subRow = document.getElementById('sub-' + row.id);
     if (subRow) { const subContainer = subRow.querySelector('.edit-date-container-sub'); if (subContainer) subContainer.innerHTML = `<span class="edit-date-d">${dateFormatted}</span><span class="edit-date-t">${time24}</span>`; }
@@ -267,11 +267,45 @@ function toggleSubTable(rowId) { const sub = document.getElementById('sub-' + ro
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
 
 /* ==========================================================
-   7. دمج الحالة ومتابعة الفرص
+   7. دمج الحالة ومتابعة الفرص وألوان التاريخ
    ========================================================== */
 async function handleStatusChange(selectEl, rowId) {
     const newVal = selectEl.value; const oldVal = selectEl.dataset.old; const companyName = selectEl.closest('tr').cells[1].querySelector('input').value;
-    applyStatusColor(selectEl); addToActivityLog('الحالة', oldVal, newVal, companyName); updateEditDateField(selectEl.closest('tr')); saveAllDataSilently(); updateStats(); reorderRows(); selectEl.dataset.old = newVal;
+    applyStatusColor(selectEl); addToActivityLog('الحالة', oldVal, newVal, companyName); updateEditDateField(selectEl.closest('tr')); saveAllDataSilently(); updateStats(); selectEl.dataset.old = newVal;
+}
+
+function updateAllDateColors() {
+    const todayStr = getTodayFormatted();
+    const todayObj = new Date(todayStr);
+
+    document.querySelectorAll('#tableBody .main-row').forEach(row => {
+        const dateInput = row.querySelector('.exp-date-input');
+        if(!dateInput) return;
+        const status = row.querySelector('.status-select').value;
+
+        // إزالة ألوان التنبيه السابقة
+        dateInput.classList.remove('date-today', 'date-warning', 'date-past');
+
+        // إذا كانت الحالة رابح أو فقدان يتوقف التنبيه نهائياً
+        if (status === 'رابح' || status === 'فقدان') {
+            return;
+        }
+
+        const dVal = dateInput.value;
+        if (!dVal) return;
+
+        const expDateObj = new Date(dVal);
+        const diffTime = expDateObj - todayObj;
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            dateInput.classList.add('date-past');       // تأخر وفات (أحمر)
+        } else if (diffDays === 0) {
+            dateInput.classList.add('date-today');      // اليوم (أخضر)
+        } else if (diffDays > 0 && diffDays <= 3) {
+            dateInput.classList.add('date-warning');    // متبقي 3 أيام أو أقل (أصفر)
+        }
+    });
 }
 
 /* ==========================================================
@@ -281,7 +315,12 @@ function saveAllDataSilently() {
     const data = Array.from(document.querySelectorAll('#tableBody .main-row')).map(row => {
         const subRow = document.getElementById('sub-' + row.id); const products = [];
         if (subRow) { subRow.querySelectorAll('.product-body tr').forEach(pRow => { const inputs = pRow.querySelectorAll('input, select'); if (inputs.length >= 5) products.push({ type: inputs[0].value, desc: inputs[1].value, qty: inputs[2].value, sub: inputs[3].value, total: inputs[4].value }); }); }
-        return { comp: row.cells[1].querySelector('input').value, address: row.cells[2].querySelector('input').value, mgr: row.cells[3].querySelector('input').value, mob: row.cells[4].querySelector('input').value, email: row.cells[5].querySelector('input').value, record: row.cells[6].querySelector('input').value, oppDate: row.querySelector('.opp-date-val').value, curServ: row.cells[8].querySelector('input').value, oppValue: row.cells[9].querySelector('input').value, notes: row.cells[10].querySelector('.notes-preview').getAttribute('data-full-notes'), status: row.cells[11].querySelector('select').value, editDate: row.querySelector('.edit-date-val')?.value || '', owner: row.cells[13].querySelector('input').value, products: products };
+        return { 
+            comp: row.cells[1].querySelector('input').value, address: row.cells[2].querySelector('input').value, mgr: row.cells[3].querySelector('input').value, mob: row.cells[4].querySelector('input').value, email: row.cells[5].querySelector('input').value, record: row.cells[6].querySelector('input').value, oppDate: row.querySelector('.opp-date-val').value, curServ: row.cells[8].querySelector('input').value, oppValue: row.cells[9].querySelector('input').value, notes: row.cells[10].querySelector('.notes-preview').getAttribute('data-full-notes'), status: row.cells[11].querySelector('select').value, 
+            expDate: row.cells[12].querySelector('.exp-date-input').value, // حقل التاريخ المتوقع
+            editDate: row.querySelector('.edit-date-val')?.value || '', // للاحتفاظ بسجل التعديل في التفاصيل
+            owner: row.cells[13].querySelector('input').value, products: products 
+        };
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -290,28 +329,84 @@ function loadSavedData() { const rawData = localStorage.getItem(STORAGE_KEY); co
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0'); }
 function getLastNoteOnlyFromJSON(jsonStr) { try { const arr = JSON.parse(jsonStr); return arr.length > 0 ? arr[arr.length - 1].text : "أضف ملاحظة..."; } catch(e) { return "أضف ملاحظة..."; } }
-function applyStatusColor(selectEl) { if (!selectEl) return; const val = selectEl.value; const parentCell = selectEl.closest('td'); const mainRow = selectEl.closest('.main-row'); if (!parentCell) return; parentCell.classList.remove('status-yellow', 'status-red'); selectEl.classList.remove('status-yellow', 'status-red'); if (mainRow) mainRow.classList.remove('lost-row'); if (val === 'عرض سعر') selectEl.classList.add('status-yellow'); else if (val === 'فقدان') { selectEl.classList.add('status-red'); if (mainRow) mainRow.classList.add('lost-row'); } }
+
+function applyStatusColor(selectEl) { 
+    if (!selectEl) return; 
+    const val = selectEl.value; 
+    const parentCell = selectEl.closest('td'); 
+    const mainRow = selectEl.closest('.main-row'); 
+    if (!parentCell) return; 
+    
+    // إزالة الفئات القديمة
+    selectEl.classList.remove('status-yellow', 'status-green', 'status-red'); 
+    if (mainRow) mainRow.classList.remove('closed-row'); 
+    
+    if (val === 'مهتم') {
+        selectEl.classList.add('status-yellow'); 
+    } else if (val === 'رابح') {
+        selectEl.classList.add('status-green'); 
+        if (mainRow) mainRow.classList.add('closed-row'); 
+    } else if (val === 'فقدان') { 
+        selectEl.classList.add('status-red'); 
+        if (mainRow) mainRow.classList.add('closed-row'); 
+    } 
+    updateAllDateColors(); // إعادة التحقق من الألوان للتاريخ بعد تغيير الحالة
+}
 
 function reorderRows() { 
     const tbody = document.getElementById('tableBody'); if (!tbody) return; 
     const rows = Array.from(tbody.querySelectorAll('.main-row')); 
     const today = getTodayFormatted(), currentMonth = today.substring(0, 7); 
-    const rowsData = rows.map(row => ({ row: row, subRow: document.getElementById('sub-' + row.id), date: row.querySelector('.opp-date-val')?.value || '9999-12-31' })); 
-    rowsData.sort((a, b) => b.date.localeCompare(a.date)); 
+    
+    // الاعتماد الكلي على التاريخ المتوقع للفرز والتجميع
+    const rowsData = rows.map(row => {
+        const expInput = row.querySelector('.exp-date-input');
+        return {
+            row: row, 
+            subRow: document.getElementById('sub-' + row.id), 
+            date: (expInput && expInput.value) ? expInput.value : '9999-12-31'
+        };
+    }); 
+    
+    // الفرز للأقدم فالأحدث ضمن الشهر
+    rowsData.sort((a, b) => a.date.localeCompare(b.date)); 
+    
     const groups = {}; 
-    rowsData.forEach(item => { const month = item.date.substring(0, 7); if (!groups[month]) groups[month] = []; groups[month].push(item); }); 
+    rowsData.forEach(item => { 
+        const month = item.date === '9999-12-31' ? 'بدون تاريخ متوقع' : item.date.substring(0, 7); 
+        if (!groups[month]) groups[month] = []; 
+        groups[month].push(item); 
+    }); 
+    
     tbody.innerHTML = ''; 
     const fragment = document.createDocumentFragment(); 
-    Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => { 
+    
+    // ترتيب بحيث يكون الشهر الحالي في البداية
+    const sortedMonths = Object.keys(groups).sort((a, b) => {
+        if (a === currentMonth) return -1;
+        if (b === currentMonth) return 1;
+        if (a === 'بدون تاريخ متوقع') return 1;
+        if (b === 'بدون تاريخ متوقع') return -1;
+        return b.localeCompare(a);
+    });
+
+    sortedMonths.forEach(month => { 
         const sepRow = document.createElement('tr'); 
         sepRow.className = 'month-separator'; 
         const isCurrentMonth = (month === currentMonth); 
-        const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; 
-        sepRow.innerHTML = `<td colspan="14"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> فرص شهر ${month}</div></td>`; 
+        // لون بنفسجي زاهي للشهر الحالي، وأزرق لبقية الفواصل
+        const sepStyle = isCurrentMonth 
+            ? 'background-color: #a855f7 !important; color:#fff !important; box-shadow: 0 2px 4px rgba(168,85,247,0.3);' 
+            : 'background-color: #3b82f6 !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);'; 
+        
+        const monthText = month === 'بدون تاريخ متوقع' ? month : `الفرص المتوقعة لشهر ${month}`;
+
+        sepRow.innerHTML = `<td colspan="14"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> ${monthText}</div></td>`; 
         fragment.appendChild(sepRow); 
         groups[month].forEach(item => { fragment.appendChild(item.row); if (item.subRow) fragment.appendChild(item.subRow); }); 
     }); 
     tbody.appendChild(fragment); 
+    updateAllDateColors(); // تشغيل تنبيهات ألوان التاريخ بعد الفرز
 }
 
 function updateStats() { 
