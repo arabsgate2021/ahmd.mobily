@@ -5,12 +5,11 @@ let currentActivePreview = null;
 let saveTimeout;
 let searchTimeout;
 
-// تم ضبط المفاتيح لتعمل بشكل مستقل تماماً على صفحة الفرص البيعية
 const STORAGE_KEY = 'asgate_opportunities_final_v31';
 const LOGS_KEY = 'asgate_opportunities_logs_v32';
 
 /* ==========================================================
-   2. الدالة الأساسية لبناء السطور (renderRow) 
+   2. الدالة الأساسية لبناء السطور المرحّلة (renderRow) 
    ========================================================== */
 function renderRow(v = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
@@ -25,7 +24,6 @@ function renderRow(v = {}, prepend = false) {
     subRow.style.display = 'none';
     const today = getTodayFormatted();
     
-    // استخدام oppDate المتوافق مع هيكل البيانات المرسل من صفحة الزيارات
     const oppDate = v.oppDate || today; 
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
@@ -97,7 +95,7 @@ function renderRow(v = {}, prepend = false) {
 }
 
 /* ==========================================================
-   3. دوال جدول المنتجات
+   3. دوال جدول المنتجات داخل الفرصة
    ========================================================== */
 function addProductRow(rowId, data = {}) {
     const subRow = document.getElementById('sub-' + rowId);
@@ -153,7 +151,7 @@ function toggleAllCheckboxes(source) { document.querySelectorAll('.select-check'
 
 async function handleBulkAction(action) {
     const selected = document.querySelectorAll('.select-check:checked');
-    if (selected.length === 0) { Swal.fire({icon: 'info', text: 'يرجى تحديد صف واحد على الأثل', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; }
+    if (selected.length === 0) { Swal.fire({icon: 'info', text: 'يرجى تحديد صف واحد على الأقل', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; }
     if (action === 'حذف') {
         const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: "سيتم حذف الفرص المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء' });
         if (result.isConfirmed) {
@@ -256,7 +254,6 @@ function hideStatusTooltip() { const tooltip = document.getElementById('status-c
 /* ==========================================================
    6. العمليات التشغيلية وتحديث التواريخ
    ========================================================== */
-function insertNewRow() { renderRow({}, true); const firstRow = document.getElementById('tableBody').querySelector('.main-row'); if (firstRow) updateEditDateField(firstRow); saveAllDataSilently(); const wrapper = document.querySelector('.table-wrapper'); if (wrapper) wrapper.scrollTop = 0; }
 function updateEditDateField(row) {
     if (!row) return; const dateFormatted = getTodayFormatted(); const time24 = getTimeFormatted(); const fullDateTime = `${dateFormatted} ${time24}`;
     const mainContainer = row.querySelector('.edit-date-container-main'); const hiddenInput = row.querySelector('.edit-date-val');
