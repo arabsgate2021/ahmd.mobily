@@ -22,7 +22,7 @@
 
     <div class="main-content">
         <div class="action-bar">
-            <button class="btn-top btn-add" onclick="insertNewRow()"><i class="fas fa-plus"></i> إضافة فرصة جديدة</button>
+            <!-- الاعتماد الآن كلياً على البحث والإحصائيات والترحيل التلقائي منعاً للفوضى -->
             <div class="search-wrapper">
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="debouncedFilterTable()">
             </div>
@@ -72,7 +72,6 @@
             </table>
         </div>
 
-        <!-- تم تحديث هذا الجزء إلى سجل نشاط الفرص البيعية -->
         <div id="activityLogSection" class="activity-log-section">
             <div class="activity-log-header-container">
                 <div class="activity-log-title"><i class="fas fa-history"></i> سجل نشاط الفرص البيعية</div>
@@ -83,7 +82,6 @@
     </div>
 </div>
 
-<!-- النافذة المنبثقة لسجل ملاحظات الفرصة -->
 <div id="noteModal" class="modal-notes">
     <div class="modal-notes-content">
         <div style="font-weight: 800; color: #1e293b; font-size:14px; margin-bottom: 15px; display:flex; align-items:center; gap:8px;">
