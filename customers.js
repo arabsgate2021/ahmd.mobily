@@ -4,7 +4,7 @@
 let currentActivePreview = null;
 let saveTimeout;
 let searchTimeout;
-const STORAGE_KEY = 'asgate_customers_final_v31';
+const STORAGE_KEY = 'asgate_customers_final_v32';
 const LOGS_KEY = 'asgate_customers_logs_v32';
 const OPPORTUNITIES_KEY = 'asgate_opportunities_final_v31';
 
@@ -26,28 +26,28 @@ function renderRow(v = {}, prepend = false) {
     const visitDate = v.visitDate || today;
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
-    const editDateHTML = parseEditDateHTML(v.editDate || '');
 
     mainRow.innerHTML = `
         <td class="col-select">
             <input type="checkbox" class="select-check">
             <span class="toggle-arrow" onclick="toggleSubTable('${rowId}')"><i class="fas fa-caret-left"></i></span>
+            <input type="hidden" class="opp-value-input" value="${v.oppValue || ''}">
+            <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
+        <td><input type="text" class="excel-input" value="${v.clientId || ''}" data-old="${v.clientId || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('ID', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
+        <td><input type="text" class="excel-input" value="${v.facilityName || ''}" data-old="${v.facilityName || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('اسم المنشأة', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
-        <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
-        <td><input type="text" class="excel-input" value="${v.mgr || ''}" data-old="${v.mgr || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المسؤول', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
+        <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
+        <td><input type="text" class="excel-input" value="${v.record || ''}" data-old="${v.record || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); debouncedSaveAllData();" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr'));" onblur="addToActivityLog('السجل الرئيسي', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
+        <td><input type="text" class="excel-input" value="${v.mgr || ''}" data-old="${v.mgr || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشخص المسؤول', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td>
             <div class="phone-cell-container">
                 <a class="whatsapp-icon-btn" onclick="openWhatsAppChat(this)" title="مراسلة عبر واتساب"><i class="fa-brands fa-whatsapp"></i></a>
-                <input type="text" class="excel-input" value="${v.mob || ''}" data-old="${v.mob || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); debouncedSaveAllData();" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr'));" onblur="addToActivityLog('رقم التواصل', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;">
+                <input type="text" class="excel-input" value="${v.mob || ''}" data-old="${v.mob || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); debouncedSaveAllData();" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr'));" onblur="addToActivityLog('رقم التواصل', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;">
             </div>
         </td>
-        <td><input type="text" class="excel-input" value="${v.email || ''}" data-old="${v.email || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الإيميل', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
-        <td><input type="text" class="excel-input" value="${v.record || ''}" data-old="${v.record || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); debouncedSaveAllData();" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr'));" onblur="addToActivityLog('السجل', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
-        <td><input type="text" class="excel-input readonly-input" value="${visitDate}" style="color:var(--text-muted); font-weight:700;" readonly><input type="hidden" class="visit-date-val" value="${visitDate}"></td>
-        <td><input type="text" class="excel-input cur-serv-val" value="${v.curServ || ''}" data-old="${v.curServ || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الخدمة', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;" onmouseenter="showStatusTooltip(this)" onmouseleave="hideStatusTooltip()"></td>
-        <td><input type="number" class="excel-input opp-value-input readonly-input" value="${v.oppValue || ''}" readonly style="color:var(--accent-blue); font-weight:800; cursor:not-allowed; background: transparent;"></td>
-        <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notesJson.replace(/'/g, "&apos;")}' id="preview-${Date.now()}">${lastNoteText}</div></td>
+        <td><input type="text" class="excel-input" value="${v.email || ''}" data-old="${v.email || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('البريد الإلكتروني', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
+        <td><input type="text" class="excel-input" value="${v.category || ''}" data-old="${v.category || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('التصنيف', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;" onmouseenter="showStatusTooltip(this)" onmouseleave="hideStatusTooltip()"></td>
         <td>
             <select class="excel-input status-select" data-old="${v.status || ''}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
                 <option value="" ${v.status === '' ? 'selected' : ''}>-</option>
@@ -57,11 +57,9 @@ function renderRow(v = {}, prepend = false) {
                 <option value="فقدان" ${v.status === 'فقدان' ? 'selected' : ''}>فقدان</option>
             </select>
         </td>
-        <td>
-            <div class="edit-date-container-main" style="line-height:1.2; display:flex; flex-direction:column; align-items:center;">${editDateHTML}</div>
-            <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
-        </td>
-        <td><input type="text" class="excel-input" value="${v.owner || ''}" data-old="${v.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المالك', this.dataset.old, this.value, this.closest('tr').cells[1].querySelector('input').value); this.dataset.old=this.value;"></td>
+        <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notesJson.replace(/'/g, "&apos;")}' id="preview-${Date.now()}">${lastNoteText}</div></td>
+        <td><input type="text" class="excel-input readonly-input visit-date-val" value="${visitDate}" style="color:var(--text-muted); font-weight:700;" readonly></td>
+        <td><input type="text" class="excel-input" value="${v.owner || ''}" data-old="${v.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المالك', this.dataset.old, this.value, this.closest('tr').cells[3].querySelector('input').value); this.dataset.old=this.value;"></td>
     `;
 
     subRow.innerHTML = `
@@ -154,7 +152,7 @@ async function handleBulkAction(action) {
     if (action === 'حذف') {
         const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: "سيتم حذف بيانات العملاء المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء' });
         if (result.isConfirmed) {
-            selected.forEach(chk => { const row = chk.closest('tr'); const id = row.id; addToActivityLog('إجراء', 'حذف العميل', '', row.cells[1].querySelector('input').value); row.remove(); if(document.getElementById('sub-' + id)) document.getElementById('sub-' + id).remove(); });
+            selected.forEach(chk => { const row = chk.closest('tr'); const id = row.id; addToActivityLog('إجراء', 'حذف العميل', '', row.cells[3].querySelector('input').value); row.remove(); if(document.getElementById('sub-' + id)) document.getElementById('sub-' + id).remove(); });
             saveAllDataSilently(); updateStats(); reorderRows(); Swal.fire({icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1500});
         }
     } else if (action === 'تصدير') {
@@ -162,17 +160,17 @@ async function handleBulkAction(action) {
     } else if (action === 'طباعة') {
         printSelected(selected); addToActivityLog('إجراء', 'طباعة بيانات', '', 'مجموعة محددة');
     } else { 
-        selected.forEach(chk => { const row = chk.closest('tr'); addToActivityLog('إجراء', action, '', row.cells[1].querySelector('input').value); });
+        selected.forEach(chk => { const row = chk.closest('tr'); addToActivityLog('إجراء', action, '', row.cells[3].querySelector('input').value); });
         Swal.fire({icon: 'success', title: 'تم', text: 'تم تنفيذ الإجراء على ' + selected.length + ' صف', showConfirmButton: false, timer: 1500});
     }
 }
 
 function exportToExcel(selectedRows) {
-    let csvContent = "\uFEFFالشركة,العنوان,المسؤول,رقم التواصل,الإيميل,السجل,تاريخ الإضافة,الخدمة,القيمة,الحالة,المالك\n";
+    let csvContent = "\uFEFFID,اسم المنشأة,الشركة,العنوان,السجل الرئيسي,الشخص المسؤول,رقم التواصل,البريد الإلكتروني,التصنيف,الحالة,تاريخ الإنشاء,المالك\n";
     selectedRows.forEach(chk => {
         const row = chk.closest('tr');
         const getVal = (idx) => { const inp = row.cells[idx].querySelector('input, select'); return `"${inp ? inp.value.replace(/"/g, '""') : ''}"`; };
-        csvContent += [getVal(1), getVal(2), getVal(3), getVal(4), getVal(5), getVal(6), getVal(7), getVal(8), getVal(9), getVal(11), getVal(13)].join(",") + "\n";
+        csvContent += [getVal(1), getVal(2), getVal(3), getVal(4), getVal(5), getVal(6), getVal(7), getVal(8), getVal(9), getVal(10), getVal(12), getVal(13)].join(",") + "\n";
     });
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "تقرير_العملاء_" + getTodayFormatted() + ".csv";
@@ -181,8 +179,8 @@ function exportToExcel(selectedRows) {
 
 function printSelected(selectedRows) {
     let printWindow = window.open('', '_blank');
-    let html = `<html dir="rtl"><head><title>تقرير العملاء المحددين</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"><style>body { font-family: 'Cairo', sans-serif; padding: 20px; color: #0f172a; } h2 { text-align: center; color: #4c1d95; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th { background-color: #f1f5f9; color: #1e293b; padding: 10px; border: 1px solid #cbd5e1; font-weight: 700; } td { padding: 8px; border: 1px solid #cbd5e1; text-align: center; } tr:nth-child(even) { background-color: #f8fafc; } .footer { margin-top: 30px; text-align: left; font-size: 10px; color: #64748b; }</style></head><body><h2>تقرير العملاء (ASGate CRM)</h2><table><thead><tr><th>الشركة</th><th>المسؤول</th><th>رقم التواصل</th><th>الخدمة</th><th>تاريخ الإضافة</th><th>الحالة</th></tr></thead><tbody>`;
-    selectedRows.forEach(chk => { const row = chk.closest('tr'); const getVal = (idx) => row.cells[idx].querySelector('input, select')?.value || ''; html += `<tr><td><strong>${getVal(1)}</strong></td><td>${getVal(3)}</td><td dir="ltr">${getVal(4)}</td><td>${getVal(8)}</td><td>${getVal(7)}</td><td>${getVal(11)}</td></tr>`; });
+    let html = `<html dir="rtl"><head><title>تقرير العملاء المحددين</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"><style>body { font-family: 'Cairo', sans-serif; padding: 20px; color: #0f172a; } h2 { text-align: center; color: #4c1d95; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th { background-color: #f1f5f9; color: #1e293b; padding: 10px; border: 1px solid #cbd5e1; font-weight: 700; } td { padding: 8px; border: 1px solid #cbd5e1; text-align: center; } tr:nth-child(even) { background-color: #f8fafc; } .footer { margin-top: 30px; text-align: left; font-size: 10px; color: #64748b; }</style></head><body><h2>تقرير العملاء (ASGate CRM)</h2><table><thead><tr><th>الشركة</th><th>الشخص المسؤول</th><th>رقم التواصل</th><th>التصنيف</th><th>تاريخ الإنشاء</th><th>الحالة</th></tr></thead><tbody>`;
+    selectedRows.forEach(chk => { const row = chk.closest('tr'); const getVal = (idx) => row.cells[idx].querySelector('input, select')?.value || ''; html += `<tr><td><strong>${getVal(3)}</strong></td><td>${getVal(6)}</td><td dir="ltr">${getVal(7)}</td><td>${getVal(9)}</td><td>${getVal(12)}</td><td>${getVal(10)}</td></tr>`; });
     html += `</tbody></table><div class="footer">تاريخ الطباعة: ${getTodayFormatted()}</div></body></html>`;
     printWindow.document.write(html); printWindow.document.close();
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
@@ -192,7 +190,7 @@ function debouncedFilterTable() { clearTimeout(searchTimeout); searchTimeout = s
 function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     document.querySelectorAll('.main-row').forEach(row => {
-        const text = Array.from(row.cells).slice(1, 7).map(c => c.querySelector('input')?.value.toLowerCase() || '').join(' ');
+        const text = Array.from(row.cells).slice(1, 10).map(c => c.querySelector('input')?.value.toLowerCase() || '').join(' ');
         const subRow = document.getElementById('sub-' + row.id);
         if (text.includes(q)) { row.style.display = 'table-row'; } else { row.style.display = 'none'; if(subRow) subRow.style.display = 'none'; }
     });
@@ -256,8 +254,7 @@ function hideStatusTooltip() { const tooltip = document.getElementById('status-c
 function insertNewRow() { renderRow({}, true); const firstRow = document.getElementById('tableBody').querySelector('.main-row'); if (firstRow) updateEditDateField(firstRow); saveAllDataSilently(); const wrapper = document.querySelector('.table-wrapper'); if (wrapper) wrapper.scrollTop = 0; }
 function updateEditDateField(row) {
     if (!row) return; const dateFormatted = getTodayFormatted(); const time24 = getTimeFormatted(); const fullDateTime = `${dateFormatted} ${time24}`;
-    const mainContainer = row.querySelector('.edit-date-container-main'); const hiddenInput = row.querySelector('.edit-date-val');
-    if (mainContainer) mainContainer.innerHTML = `<span class="edit-date-d">${dateFormatted}</span><span class="edit-date-t">${time24}</span>`;
+    const hiddenInput = row.querySelector('.edit-date-val');
     if (hiddenInput) hiddenInput.value = fullDateTime;
     const subRow = document.getElementById('sub-' + row.id);
     if (subRow) { const subContainer = subRow.querySelector('.edit-date-container-sub'); if (subContainer) subContainer.innerHTML = `<span class="edit-date-d">${dateFormatted}</span><span class="edit-date-t">${time24}</span>`; }
@@ -270,14 +267,14 @@ function toggleLogExpansion() { const logSection = document.getElementById('acti
    7. دمج الحالة والانتقال للفرص
    ========================================================== */
 async function handleStatusChange(selectEl, rowId) {
-    const newVal = selectEl.value; const oldVal = selectEl.dataset.old; const companyName = selectEl.closest('tr').cells[1].querySelector('input').value;
+    const newVal = selectEl.value; const oldVal = selectEl.dataset.old; const companyName = selectEl.closest('tr').cells[3].querySelector('input').value;
     if (newVal === "تأهيل لفرصة") { const result = await Swal.fire({ title: 'نقل إلى الفرص البيعية؟', text: "سيتم تحويل هذا العميل إلى صفحة الفرص البيعية.", icon: 'question', showCancelButton: true, confirmButtonColor: '#3b82f6', cancelButtonColor: '#94a3b8', confirmButtonText: 'نعم، انقله', cancelButtonText: 'إلغاء' }); if (result.isConfirmed) { transferToOpportunities(rowId); return; } else { selectEl.value = oldVal; applyStatusColor(selectEl); return; } }
     applyStatusColor(selectEl); addToActivityLog('الحالة', oldVal, newVal, companyName); updateEditDateField(selectEl.closest('tr')); saveAllDataSilently(); updateStats(); reorderRows(); selectEl.dataset.old = newVal;
 }
 function transferToOpportunities(rowId) {
     const row = document.getElementById(rowId); const subRow = document.getElementById('sub-' + rowId); const products = [];
     if(subRow) { subRow.querySelectorAll('.product-body tr').forEach(pRow => { const inputs = pRow.querySelectorAll('input, select'); products.push({ type: inputs[0].value, desc: inputs[1].value, qty: inputs[2].value, sub: inputs[3].value, total: inputs[4].value }); }); }
-    const visitData = { comp: row.cells[1].querySelector('input').value, address: row.cells[2].querySelector('input').value, mgr: row.cells[3].querySelector('input').value, mob: row.cells[4].querySelector('input').value, email: row.cells[5].querySelector('input').value, record: row.cells[6].querySelector('input').value, oppDate: getTodayFormatted(), curServ: row.cells[8].querySelector('input').value, oppValue: row.cells[9].querySelector('input').value, notes: row.cells[10].querySelector('.notes-preview').getAttribute('data-full-notes') || '[]', status: "مهتم", editDate: row.querySelector('.edit-date-val').value, owner: row.cells[13].querySelector('input').value, products: products };
+    const visitData = { comp: row.cells[3].querySelector('input').value, address: row.cells[4].querySelector('input').value, mgr: row.cells[6].querySelector('input').value, mob: row.cells[7].querySelector('input').value, email: row.cells[8].querySelector('input').value, record: row.cells[5].querySelector('input').value, oppDate: getTodayFormatted(), curServ: row.cells[9].querySelector('input').value, oppValue: row.querySelector('.opp-value-input')?.value || '', notes: row.cells[11].querySelector('.notes-preview').getAttribute('data-full-notes') || '[]', status: "مهتم", editDate: row.querySelector('.edit-date-val').value, owner: row.cells[13].querySelector('input').value, products: products };
     let opps = JSON.parse(localStorage.getItem(OPPORTUNITIES_KEY) || '[]'); opps.unshift(visitData); localStorage.setItem(OPPORTUNITIES_KEY, JSON.stringify(opps));
     addToActivityLog('إجراء', 'تأهيل ونقل الفرصة البيعية', '', visitData.comp); row.remove(); if(subRow) subRow.remove(); saveAllDataSilently(); updateStats(); reorderRows(); Swal.fire({icon: 'success', title: 'تم النقل', text: 'تم نقل العميل بنجاح', showConfirmButton: false, timer: 1500});
 }
@@ -289,7 +286,7 @@ function saveAllDataSilently() {
     const data = Array.from(document.querySelectorAll('#tableBody .main-row')).map(row => {
         const subRow = document.getElementById('sub-' + row.id); const products = [];
         if (subRow) { subRow.querySelectorAll('.product-body tr').forEach(pRow => { const inputs = pRow.querySelectorAll('input, select'); if (inputs.length >= 5) products.push({ type: inputs[0].value, desc: inputs[1].value, qty: inputs[2].value, sub: inputs[3].value, total: inputs[4].value }); }); }
-        return { comp: row.cells[1].querySelector('input').value, address: row.cells[2].querySelector('input').value, mgr: row.cells[3].querySelector('input').value, mob: row.cells[4].querySelector('input').value, email: row.cells[5].querySelector('input').value, record: row.cells[6].querySelector('input').value, visitDate: row.querySelector('.visit-date-val').value, curServ: row.cells[8].querySelector('input').value, oppValue: row.cells[9].querySelector('input').value, notes: row.cells[10].querySelector('.notes-preview').getAttribute('data-full-notes'), status: row.cells[11].querySelector('select').value, editDate: row.querySelector('.edit-date-val')?.value || '', owner: row.cells[13].querySelector('input').value, products: products };
+        return { clientId: row.cells[1].querySelector('input').value, facilityName: row.cells[2].querySelector('input').value, comp: row.cells[3].querySelector('input').value, address: row.cells[4].querySelector('input').value, record: row.cells[5].querySelector('input').value, mgr: row.cells[6].querySelector('input').value, mob: row.cells[7].querySelector('input').value, email: row.cells[8].querySelector('input').value, category: row.cells[9].querySelector('input').value, status: row.cells[10].querySelector('select').value, notes: row.cells[11].querySelector('.notes-preview').getAttribute('data-full-notes'), visitDate: row.querySelector('.visit-date-val').value, owner: row.cells[13].querySelector('input').value, editDate: row.querySelector('.edit-date-val')?.value || '', oppValue: row.querySelector('.opp-value-input')?.value || '', products: products };
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -300,7 +297,7 @@ function getTimeFormatted() { const d = new Date(); return String(d.getHours()).
 function getLastNoteOnlyFromJSON(jsonStr) { try { const arr = JSON.parse(jsonStr); return arr.length > 0 ? arr[arr.length - 1].text : "أضف ملاحظة..."; } catch(e) { return "أضف ملاحظة..."; } }
 function applyStatusColor(selectEl) { if (!selectEl) return; const val = selectEl.value; const parentCell = selectEl.closest('td'); const mainRow = selectEl.closest('.main-row'); if (!parentCell) return; parentCell.classList.remove('status-yellow', 'status-red'); selectEl.classList.remove('status-yellow', 'status-red'); if (mainRow) mainRow.classList.remove('lost-row'); if (val === 'عرض سعر') selectEl.classList.add('status-yellow'); else if (val === 'فقدان') { selectEl.classList.add('status-red'); if (mainRow) mainRow.classList.add('lost-row'); } }
 function reorderRows() { const tbody = document.getElementById('tableBody'); if (!tbody) return; const rows = Array.from(tbody.querySelectorAll('.main-row')); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); const rowsData = rows.map(row => ({ row: row, subRow: document.getElementById('sub-' + row.id), date: row.querySelector('.visit-date-val')?.value || '9999-12-31' })); rowsData.sort((a, b) => b.date.localeCompare(a.date)); const groups = {}; rowsData.forEach(item => { const month = item.date.substring(0, 7); if (!groups[month]) groups[month] = []; groups[month].push(item); }); tbody.innerHTML = ''; const fragment = document.createDocumentFragment(); Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => { const sepRow = document.createElement('tr'); sepRow.className = 'month-separator'; const isCurrentMonth = (month === currentMonth); const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; sepRow.innerHTML = `<td colspan="14"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> عملاء شهر ${month}</div></td>`; fragment.appendChild(sepRow); groups[month].forEach(item => { fragment.appendChild(item.row); if (item.subRow) fragment.appendChild(item.subRow); }); }); tbody.appendChild(fragment); }
-function updateStats() { const rows = document.querySelectorAll('#tableBody .main-row'); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); let total = rows.length, tDay = 0, tMonth = 0, valTotal = 0, valMonth = 0; rows.forEach(row => { const dateInput = row.querySelector('.visit-date-val'); const visitValInput = row.querySelector('.opp-value-input'); const visitVal = visitValInput ? parseFloat(visitValInput.value) || 0 : 0; valTotal += visitVal; if (dateInput) { const date = dateInput.value; if (date === today) tDay++; if (date.startsWith(currentMonth)) { tMonth++; valMonth += visitVal; } } }); if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total; if (document.getElementById('stat-today')) document.getElementById('stat-today').innerText = tDay; if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = tMonth; if (document.getElementById('stat-value-total')) document.getElementById('stat-value-total').innerText = valTotal.toLocaleString() + ' ر.س'; if (document.getElementById('stat-value-month')) document.getElementById('stat-value-month').innerText = valMonth.toLocaleString() + ' ر.س'; }
+function updateStats() { const rows = document.querySelectorAll('#tableBody .main-row'); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); let total = rows.length, tDay = 0, tMonth = 0; rows.forEach(row => { const dateInput = row.querySelector('.visit-date-val'); if (dateInput) { const date = dateInput.value; if (date === today) tDay++; if (date.startsWith(currentMonth)) tMonth++; } }); if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total; if (document.getElementById('stat-today')) document.getElementById('stat-today').innerText = tDay; if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = tMonth; }
 function addToActivityLog(fieldName, oldVal, newVal, companyName) { 
     if (oldVal === newVal) return; 
     const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']; 
