@@ -28,12 +28,9 @@
             </div>
             
             <div class="stats-bar-visit">
-                <div class="stat-item">الكل: <span id="stat-total" class="stat-val">0</span></div>
-                <div class="stat-item">هذا الشهر: <span id="stat-month" class="stat-val">0</span></div>
-                <div class="stat-item">اليوم: <span id="stat-today" class="stat-val">0</span></div>
-                <div class="stat-divider">|</div>
-                <div class="stat-item">القيمة الإجمالية: <span id="stat-value-total" class="stat-val" style="color: #059669; background: #ecfdf5;">0</span></div>
-                <div class="stat-item">قيمة الشهر: <span id="stat-value-month" class="stat-val" style="color: #059669; background: #ecfdf5;">0</span></div>
+                <div class="stat-item">إجمالي العملاء: <span id="stat-total" class="stat-val">0</span></div>
+                <div class="stat-item">عملاء الشهر: <span id="stat-month" class="stat-val">0</span></div>
+                <div class="stat-item">عملاء اليوم: <span id="stat-today" class="stat-val">0</span></div>
             </div>
 
             <div class="bulk-action-wrapper">
@@ -53,18 +50,18 @@
                 <thead>
                     <tr>
                         <th class="col-select"><input type="checkbox" onclick="toggleAllCheckboxes(this)"></th>
+                        <th class="col-id">ID</th>
+                        <th class="col-facility">اسم المنشأة</th>
                         <th class="col-company">الشركة</th>
-                        <th class="col-address">العنوان</th> 
-                        <th class="col-manager">المسؤول</th>
+                        <th class="col-address">العنوان</th>
+                        <th class="col-record">السجل الرئيسي</th>
+                        <th class="col-manager">الشخص المسؤول</th>
                         <th class="col-mobile">رقم التواصل</th>
-                        <th class="col-email">الإيميل</th>
-                        <th class="col-record">السجل</th>
-                        <th class="col-date">تاريخ الإضافة</th>
-                        <th class="col-service">الخدمة</th>
-                        <th class="col-val">القيمة</th>
-                        <th class="col-notes">الملاحظات</th>
+                        <th class="col-email">البريد الإلكتروني</th>
+                        <th class="col-category">التصنيف</th>
                         <th class="col-status">الحالة</th>
-                        <th class="col-edit">آخر تعديل</th>
+                        <th class="col-notes">سجل المتابعة</th>
+                        <th class="col-date">تاريخ الإنشاء</th>
                         <th class="col-owner">المالك</th>
                     </tr>
                 </thead>
