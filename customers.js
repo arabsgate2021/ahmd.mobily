@@ -22,14 +22,11 @@ function renderRow(v = {}, prepend = false) {
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
     
-    // توليد المعرف التلقائي في حال عدم وجوده
     const idValue = v.clientId || generateClientID();
 
     mainRow.innerHTML = `
         <td class="col-select">
             <input type="checkbox" class="select-check">
-            <span class="toggle-arrow" onclick="toggleSubTable('${rowId}')"><i class="fas fa-caret-left"></i></span>
-            <input type="hidden" class="opp-value-input" value="${v.oppValue || ''}">
             <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
         <td>
@@ -47,7 +44,15 @@ function renderRow(v = {}, prepend = false) {
         </td>
         <td><input type="text" class="excel-input" value="${v.email || ''}" data-old="${v.email || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('البريد الإلكتروني', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.record || ''}" data-old="${v.record || ''}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); debouncedSaveAllData();" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr'));" onblur="addToActivityLog('السجل الرئيسي', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
-        <td><input type="text" class="excel-input" value="${v.category || ''}" data-old="${v.category || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('التصنيف', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;" onmouseenter="showStatusTooltip(this)" onmouseleave="hideStatusTooltip()"></td>
+        <td>
+            <select class="excel-input" data-old="${v.category || ''}" onfocus="this.dataset.old=this.value" onchange="addToActivityLog('التصنيف', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); updateEditDateField(this.closest('tr')); debouncedSaveAllData(); this.dataset.old=this.value;">
+                <option value="" ${v.category === '' ? 'selected' : ''}>-</option>
+                <option value="حكومي" ${v.category === 'حكومي' ? 'selected' : ''}>حكومي</option>
+                <option value="مهم" ${v.category === 'مهم' ? 'selected' : ''}>مهم</option>
+                <option value="متوسط" ${v.category === 'متوسط' ? 'selected' : ''}>متوسط</option>
+                <option value="عادي" ${v.category === 'عادي' ? 'selected' : ''}>عادي</option>
+            </select>
+        </td>
         <td>
             <select class="excel-input status-select" data-old="${v.status || ''}" onfocus="this.dataset.old=this.value" onchange="handleStatusChange(this, '${rowId}')">
                 <option value="" ${v.status === '' ? 'selected' : ''}>-</option>
@@ -60,37 +65,9 @@ function renderRow(v = {}, prepend = false) {
         <td><input type="text" class="excel-input" value="${v.owner || ''}" data-old="${v.owner || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('المالك', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
     `;
 
-    const subRow = document.createElement('tr');
-    subRow.className = 'sub-table-row';
-    subRow.id = 'sub-' + rowId;
-    subRow.style.display = 'none';
-    subRow.innerHTML = `
-        <td colspan="13" style="padding:15px 10px; background:#f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,.02);">
-            <div style="display: flex; gap: 15px; align-items: stretch;">
-                <div class="sub-table-container" style="flex: 0 0 50%; padding: 0;">
-                    <table class="inner-table" style="width: 100%;">
-                        <thead>
-                            <tr>
-                                <th>المنتج</th><th>التفاصيل</th><th>العدد</th><th>الاشتراك</th><th>الإجمالي</th>
-                                <th style="width:75px"><button class="header-plus-btn" onclick="addProductRow('${rowId}')" title="إضافة منتج"><i class="fas fa-plus"></i></button></th>
-                            </tr>
-                        </thead>
-                        <tbody class="product-body"></tbody>
-                    </table>
-                </div>
-                <div style="width: 250px; background: white; border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,.05);">
-                    <div style="font-weight:bold; color:#2e1065; margin-bottom:10px; font-size:12px;">تفاصيل التعديل والوقت:</div>
-                    <div class="edit-date-container-sub" style="display:flex; flex-direction:column; align-items:center;">${parseEditDateHTML(v.editDate || '')}</div>
-                </div>
-            </div>
-        </td>
-    `;
-
-    if (prepend && tbody.firstChild) { tbody.insertBefore(subRow, tbody.firstChild); tbody.insertBefore(mainRow, tbody.firstChild); } 
-    else { tbody.appendChild(mainRow); tbody.appendChild(subRow); }
+    if (prepend && tbody.firstChild) { tbody.insertBefore(mainRow, tbody.firstChild); } 
+    else { tbody.appendChild(mainRow); }
     applyStatusColor(mainRow.querySelector('.status-select'));
-    if (v.products && v.products.length > 0) v.products.forEach(p => addProductRow(rowId, p)); else addProductRow(rowId);
-    calculateMainVisitValue(rowId);
 }
 
 function generateClientID() {
@@ -107,44 +84,7 @@ function generateClientID() {
 }
 
 /* ==========================================================
-   3. دوال جدول المنتجات
-   ========================================================== */
-function addProductRow(rowId, data = {}) {
-    const subRow = document.getElementById('sub-' + rowId);
-    if (!subRow) return;
-    const tbody = subRow.querySelector('.product-body');
-    const row = tbody.insertRow();
-    row.innerHTML = `
-        <td><select onchange="updateEditDateField(this.closest('.sub-table-row').previousElementSibling); debouncedSaveAllData();"><option value="">-</option><option value="جوال" ${data.type === 'جوال' ? 'selected' : ''}>جوال</option><option value="بيانات" ${data.type === 'بيانات' ? 'selected' : ''}>بيانات</option><option value="هاتف" ${data.type === 'هاتف' ? 'selected' : ''}>هاتف</option><option value="فايبر نت" ${data.type === 'فايبر نت' ? 'selected' : ''}>فايبر نت</option><option value="DIA" ${data.type === 'DIA' ? 'selected' : ''}>DIA</option><option value="IPVPN" ${data.type === 'IPVPN' ? 'selected' : ''}>IPVPN</option><option value="SIP" ${data.type === 'SIP' ? 'selected' : ''}>SIP</option></select></td>
-        <td><input type="text" value="${data.desc || ''}" onkeyup="updateEditDateField(this.closest('.sub-table-row').previousElementSibling); debouncedSaveAllData();"></td>
-        <td><input type="number" class="prod-qty" min="0" value="${data.qty || ''}" onkeyup="updateEditDateField(this.closest('.sub-table-row').previousElementSibling); calculateMainVisitValue('${rowId}')" oninput="calculateMainVisitValue('${rowId}')"></td>
-        <td><input type="number" class="prod-sub" min="0" value="${data.sub || ''}" onkeyup="updateEditDateField(this.closest('.sub-table-row').previousElementSibling); calculateMainVisitValue('${rowId}')" oninput="calculateMainVisitValue('${rowId}')"></td>
-        <td><input type="number" class="prod-total readonly-input" value="${data.total || ''}" readonly style="color:var(--text-muted); font-weight:700; cursor:not-allowed;"></td>
-        <td><div style="display:flex; justify-content:center;"><button class="sub-action-btn" title="حذف" onclick="if(this.closest('tbody').rows.length > 1) { const main = this.closest('.sub-table-row').previousElementSibling; updateEditDateField(main); this.closest('tr').remove(); calculateMainVisitValue('${rowId}'); }"><i class="fas fa-trash-alt" style="font-size:10px;"></i></button></div></td>
-    `;
-}
-
-function calculateMainVisitValue(rowId) {
-    const subRow = document.getElementById('sub-' + rowId);
-    if (!subRow) return;
-    let grandTotal = 0;
-    subRow.querySelectorAll('.product-body tr').forEach(pRow => {
-        const qty = parseFloat(pRow.querySelector('.prod-qty').value) || 0;
-        const sub = parseFloat(pRow.querySelector('.prod-sub').value) || 0;
-        const rowTotal = qty * sub;
-        pRow.querySelector('.prod-total').value = rowTotal > 0 ? rowTotal : '';
-        grandTotal += rowTotal;
-    });
-    const mainRow = document.getElementById(rowId);
-    if (mainRow) {
-        const oppVal = mainRow.querySelector('.opp-value-input');
-        if (oppVal) oppVal.value = grandTotal > 0 ? grandTotal : '';
-    }
-    debouncedSaveAllData();
-}
-
-/* ==========================================================
-   4. الإجراءات الجماعية والبحث والفرز
+   3. الإجراءات الجماعية والبحث والفرز
    ========================================================== */
 function toggleDropdown(e, btn) {
     e.stopPropagation();
@@ -167,7 +107,7 @@ async function handleBulkAction(action) {
     if (action === 'حذف') {
         const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: "سيتم حذف بيانات العملاء المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء' });
         if (result.isConfirmed) {
-            selected.forEach(chk => { const row = chk.closest('tr'); const id = row.id; addToActivityLog('إجراء', 'حذف العميل', '', row.cells[2].querySelector('input').value); row.remove(); if(document.getElementById('sub-' + id)) document.getElementById('sub-' + id).remove(); });
+            selected.forEach(chk => { const row = chk.closest('tr'); addToActivityLog('إجراء', 'حذف العميل', '', row.cells[2].querySelector('input').value); row.remove(); });
             saveAllDataSilently(); updateStats(); reorderRows(); Swal.fire({icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1500});
         }
     } else if (action === 'تصدير') {
@@ -205,14 +145,13 @@ function debouncedFilterTable() { clearTimeout(searchTimeout); searchTimeout = s
 function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     document.querySelectorAll('.main-row').forEach(row => {
-        const text = Array.from(row.cells).slice(1, 10).map(c => c.querySelector('input')?.value.toLowerCase() || '').join(' ');
-        const subRow = document.getElementById('sub-' + row.id);
-        if (text.includes(q)) { row.style.display = 'table-row'; } else { row.style.display = 'none'; if(subRow) subRow.style.display = 'none'; }
+        const text = Array.from(row.cells).slice(1, 10).map(c => c.querySelector('input, select')?.value.toLowerCase() || '').join(' ');
+        if (text.includes(q)) { row.style.display = 'table-row'; } else { row.style.display = 'none'; }
     });
 }
 
 /* ==========================================================
-   5. إدارة الملاحظات وتلميحات الحالة
+   4. إدارة الملاحظات وتلميحات الحالة
    ========================================================== */
 function openNote(el) {
     currentActivePreview = el;
@@ -260,26 +199,20 @@ function saveNote() {
 }
 
 function closeNote() { document.getElementById('noteModal').style.display = "none"; }
-function showStatusTooltip(el) { const val = el.value || "فارغ"; let tooltip = document.getElementById('status-custom-tooltip'); if(!tooltip) { tooltip = document.createElement('div'); tooltip.id = 'status-custom-tooltip'; Object.assign(tooltip.style, {position:'absolute', background:'#1e293b', color:'#fff', padding:'5px 10px', borderRadius:'4px', fontSize:'11px', zIndex:'3000', pointerEvents:'none'}); document.body.appendChild(tooltip); } tooltip.innerText = val; tooltip.style.display = 'block'; const rect = el.getBoundingClientRect(); tooltip.style.top = (rect.top + window.scrollY - tooltip.offsetHeight - 6) + 'px'; tooltip.style.left = (rect.left + window.scrollX + (rect.width/2) - (tooltip.offsetWidth/2)) + 'px'; }
-function hideStatusTooltip() { const tooltip = document.getElementById('status-custom-tooltip'); if(tooltip) tooltip.style.display = 'none'; }
 
 /* ==========================================================
-   6. العمليات التشغيلية وتحديث التواريخ
+   5. العمليات التشغيلية وتحديث التواريخ
    ========================================================== */
 function insertNewRow() { renderRow({}, true); const firstRow = document.getElementById('tableBody').querySelector('.main-row'); if (firstRow) updateEditDateField(firstRow); saveAllDataSilently(); const wrapper = document.querySelector('.table-wrapper'); if (wrapper) wrapper.scrollTop = 0; }
 function updateEditDateField(row) {
     if (!row) return; const dateFormatted = getTodayFormatted(); const time24 = getTimeFormatted(); const fullDateTime = `${dateFormatted} ${time24}`;
     const hiddenInput = row.querySelector('.edit-date-val');
     if (hiddenInput) hiddenInput.value = fullDateTime;
-    const subRow = document.getElementById('sub-' + row.id);
-    if (subRow) { const subContainer = subRow.querySelector('.edit-date-container-sub'); if (subContainer) subContainer.innerHTML = `<span class="edit-date-d">${dateFormatted}</span><span class="edit-date-t">${time24}</span>`; }
 }
-function parseEditDateHTML(fullDateTime) { if (!fullDateTime || !fullDateTime.includes(' ')) return `<span class="edit-date-d">${fullDateTime || ''}</span><span class="edit-date-t"></span>`; const parts = fullDateTime.split(' '); return `<span class="edit-date-d">${parts[0]}</span><span class="edit-date-t">${parts[1]}</span>`; }
-function toggleSubTable(rowId) { const sub = document.getElementById('sub-' + rowId); const arrows = document.querySelectorAll(`#${rowId} .toggle-arrow i`); if (!sub) return; const isOpen = sub.style.display === 'table-row'; sub.style.display = isOpen ? 'none' : 'table-row'; arrows.forEach(arrow => arrow.className = isOpen ? 'fas fa-caret-left' : 'fas fa-caret-down'); }
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
 
 /* ==========================================================
-   7. دمج الحالة
+   6. دمج الحالة
    ========================================================== */
 async function handleStatusChange(selectEl, rowId) {
     const newVal = selectEl.value; 
@@ -293,12 +226,10 @@ async function handleStatusChange(selectEl, rowId) {
 }
 
 /* ==========================================================
-   8. حفظ واسترجاع وعمليات مساعدة
+   7. حفظ واسترجاع وعمليات مساعدة
    ========================================================== */
 function saveAllDataSilently() {
     const data = Array.from(document.querySelectorAll('#tableBody .main-row')).map(row => {
-        const subRow = document.getElementById('sub-' + row.id); const products = [];
-        if (subRow) { subRow.querySelectorAll('.product-body tr').forEach(pRow => { const inputs = pRow.querySelectorAll('input, select'); if (inputs.length >= 5) products.push({ type: inputs[0].value, desc: inputs[1].value, qty: inputs[2].value, sub: inputs[3].value, total: inputs[4].value }); }); }
         return { 
             clientId: row.cells[1].querySelector('.client-id-input').value, 
             comp: row.cells[2].querySelector('input').value, 
@@ -307,18 +238,19 @@ function saveAllDataSilently() {
             mob: row.cells[5].querySelector('input').value, 
             email: row.cells[6].querySelector('input').value, 
             record: row.cells[7].querySelector('input').value, 
-            category: row.cells[8].querySelector('input').value, 
+            category: row.cells[8].querySelector('select').value, 
             status: row.cells[9].querySelector('select').value, 
             notes: row.cells[10].querySelector('.notes-preview').getAttribute('data-full-notes'), 
             visitDate: row.querySelector('.visit-date-val').value, 
             owner: row.cells[12].querySelector('input').value, 
             editDate: row.querySelector('.edit-date-val')?.value || '', 
-            oppValue: row.querySelector('.opp-value-input')?.value || '', 
-            products: products 
+            oppValue: '', 
+            products: [] 
         };
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
+
 function debouncedSaveAllData() { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveAllDataSilently(); updateStats(); }, 600); }
 function loadSavedData() { const rawData = localStorage.getItem(STORAGE_KEY); const tbody = document.getElementById('tableBody'); if (!tbody) return; tbody.innerHTML = ''; if (rawData) { JSON.parse(rawData).forEach(v => renderRow(v, false)); } reorderRows(); updateStats(); renderActivityLog(); }
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
@@ -333,8 +265,29 @@ function applyStatusColor(selectEl) {
     else if (val === 'غير نشط') selectEl.classList.add('status-inactive'); 
 }
 
-function reorderRows() { const tbody = document.getElementById('tableBody'); if (!tbody) return; const rows = Array.from(tbody.querySelectorAll('.main-row')); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); const rowsData = rows.map(row => ({ row: row, subRow: document.getElementById('sub-' + row.id), date: row.querySelector('.visit-date-val')?.value || '9999-12-31' })); rowsData.sort((a, b) => b.date.localeCompare(a.date)); const groups = {}; rowsData.forEach(item => { const month = item.date.substring(0, 7); if (!groups[month]) groups[month] = []; groups[month].push(item); }); tbody.innerHTML = ''; const fragment = document.createDocumentFragment(); Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => { const sepRow = document.createElement('tr'); sepRow.className = 'month-separator'; const isCurrentMonth = (month === currentMonth); const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; sepRow.innerHTML = `<td colspan="13"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> عملاء شهر ${month}</div></td>`; fragment.appendChild(sepRow); groups[month].forEach(item => { fragment.appendChild(item.row); if (item.subRow) fragment.appendChild(item.subRow); }); }); tbody.appendChild(fragment); }
+function reorderRows() { 
+    const tbody = document.getElementById('tableBody'); if (!tbody) return; 
+    const rows = Array.from(tbody.querySelectorAll('.main-row')); 
+    const today = getTodayFormatted(), currentMonth = today.substring(0, 7); 
+    const rowsData = rows.map(row => ({ row: row, date: row.querySelector('.visit-date-val')?.value || '9999-12-31' })); 
+    rowsData.sort((a, b) => b.date.localeCompare(a.date)); 
+    const groups = {}; 
+    rowsData.forEach(item => { const month = item.date.substring(0, 7); if (!groups[month]) groups[month] = []; groups[month].push(item); }); 
+    tbody.innerHTML = ''; 
+    const fragment = document.createDocumentFragment(); 
+    Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => { 
+        const sepRow = document.createElement('tr'); sepRow.className = 'month-separator'; 
+        const isCurrentMonth = (month === currentMonth); 
+        const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; 
+        sepRow.innerHTML = `<td colspan="13"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> عملاء شهر ${month}</div></td>`; 
+        fragment.appendChild(sepRow); 
+        groups[month].forEach(item => { fragment.appendChild(item.row); }); 
+    }); 
+    tbody.appendChild(fragment); 
+}
+
 function updateStats() { const rows = document.querySelectorAll('#tableBody .main-row'); const today = getTodayFormatted(), currentMonth = today.substring(0, 7); let total = rows.length, tDay = 0, tMonth = 0; rows.forEach(row => { const dateInput = row.querySelector('.visit-date-val'); if (dateInput) { const date = dateInput.value; if (date === today) tDay++; if (date.startsWith(currentMonth)) tMonth++; } }); if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total; if (document.getElementById('stat-today')) document.getElementById('stat-today').innerText = tDay; if (document.getElementById('stat-month')) document.getElementById('stat-month').innerText = tMonth; }
+
 function addToActivityLog(fieldName, oldVal, newVal, companyName) { 
     if (oldVal === newVal) return; 
     const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']; 
@@ -360,5 +313,7 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
     localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100))); 
     renderActivityLog(); 
 }
+
 function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.join(''); }
+
 function openWhatsAppChat(el) { const inputEl = el.closest('.phone-cell-container').querySelector('input'); let rawPhone = inputEl.value.trim(); if (!rawPhone) { Swal.fire({icon: 'warning', title: 'تنبيه', text: 'يرجى إدخال رقم الجوال أولاً', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; } let cleanNumber = rawPhone.replace(/\D/g, ''); if (cleanNumber.startsWith('00966')) cleanNumber = cleanNumber.substring(2); else if (cleanNumber.startsWith('05')) cleanNumber = '966' + cleanNumber.substring(1); else if (cleanNumber.startsWith('5') && cleanNumber.length === 9) cleanNumber = '966' + cleanNumber; window.open("https://wa.me/" + cleanNumber, '_blank'); }
