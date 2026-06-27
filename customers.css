@@ -7,7 +7,6 @@
     --white: #ffffff;
     --accent-blue: #3b82f6;
     --accent-blue-hover: #2563eb;
-    --accent-green-active: #22c55e;
     --border-soft: #e2e8f0;
     --text-dark: #0f172a;
     --text-muted: #64748b;
@@ -76,30 +75,9 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 .month-separator td { padding: 5px !important; border: none !important; background: #fff !important; }
 .sep-text { width: max-content; padding: 0 20px; margin: 0 auto; color: #047857; font-weight: 800; font-size: 11px; background-color: #dcfce7; border-radius: 20px; text-align: center; height: 26px; line-height: 26px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
 
-.sub-table-row { display: none; background-color: #f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,.02); }
-.sub-table-container { padding: 12px 10% 15px 5%; }
-.inner-table { width: 70%; background: white; border: 1px solid var(--border-soft); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,.05); overflow: hidden; }
-.inner-table th { background: #334155; color: #fff; height: 28px; font-size: 9.5px; border-left: 1px solid rgba(255,255,255,.1); border-bottom: none; }
-.inner-table td { height: 32px; border: 1px solid #edf2f7; padding: 0; }
-.inner-table input, .inner-table select { width: 100%; height: 100%; border: none; text-align: center; font-family: 'Cairo'; font-size: 10.5px; outline: none; background: transparent; transition: .2s; }
-.inner-table input:focus, .inner-table select:focus { background: #eff6ff; }
-
-.header-plus-btn { background: #22c55e; color: white; border: none; border-radius: 4px; width: 20px; height: 20px; font-size: 14px; font-weight: bold; cursor: pointer; margin-right: 5px; display: inline-flex; align-items: center; justify-content: center; transition: .2s; }
-.header-plus-btn:hover { background: #16a34a; transform: scale(1.1); }
-.sub-action-btn { width: 24px; height: 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: .2s; background: #fee2e2; color: #ef4444; }
-.sub-action-btn:hover { background: #fecaca; transform: scale(1.05); }
-
-.toggle-arrow { cursor: pointer; font-size: 12px; color: #94a3b8; margin-right: 5px; display: inline-block; transition: transform .2s, color .2s; vertical-align: middle; background: #f1f5f9; width: 20px; height: 20px; line-height: 20px; border-radius: 4px; text-align: center; }
-.toggle-arrow:hover { color: var(--accent-blue); background: #e0f2fe; }
-.arrow-open { transform: rotate(90deg); color: var(--accent-blue); background: #e0f2fe; }
-
 .excel-input { width: 96%; border: 1px solid transparent; border-radius: 4px; text-align: center; font-family: 'Cairo'; outline: none; background: transparent; font-size: 11px; color: inherit; font-weight: inherit; height: 90%; margin: 1.5% 2%; overflow: hidden; text-overflow: ellipsis; transition: all .2s; }
 .excel-input:focus { border-color: var(--accent-blue); background: #fff; box-shadow: 0 0 0 2px rgba(59,130,246,.1); }
 .readonly-input:focus { border-color: transparent; background: transparent; box-shadow: none; }
-
-.edit-date-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; line-height: 1.3; }
-.edit-date-d { font-size: 10.5px; font-weight: 700; color: var(--text-dark); }
-.edit-date-t { font-size: 9px; font-weight: 700; color: var(--text-muted); }
 
 .select-check { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent-blue); vertical-align: middle; margin-left: 4px; }
 
@@ -117,7 +95,6 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 .notes-preview { width: 95%; height: 26px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #f8fafc; font-family: 'Cairo'; font-size: 10.5px; text-align: center; cursor: pointer; color: var(--accent-blue); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; margin: 0 auto; line-height: 26px; transition: .2s; position: relative; z-index: 10; }
 .notes-preview:hover { background: #eff6ff; border-color: var(--accent-blue); transform: scale(1.02); }
 
-/* --- تعديلات ارتفاع سجل النشاط --- */
 .activity-log-section {
     margin: 0; padding: 6px 20px; background: #ffffff; border-radius: 10px;
     border: 1px solid var(--border-soft); box-shadow: 0 2px 8px rgba(0,0,0,.04);
@@ -144,7 +121,6 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 .note-area { height: 100px; width: 100%; border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px; font-family: 'Cairo'; resize: none; outline: none; font-size: 11.5px; text-align: right; box-sizing: border-box; transition: .2s; }
 .note-area:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
 
-/* --- عرض الأعمدة الجديد ليصبح المجموع 100% --- */
 .col-select { width: 3%; }
 .col-id { width: 6%; }
 .col-company { width: 11%; }
