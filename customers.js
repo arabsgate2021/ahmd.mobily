@@ -1,15 +1,9 @@
-/* ==========================================================
-   1. المتغيرات والتعريفات الأساسية
-   ========================================================== */
 let currentActivePreview = null;
 let saveTimeout;
 let searchTimeout;
 const STORAGE_KEY = 'asgate_customers_final_v32';
 const LOGS_KEY = 'asgate_customers_logs_v32';
 
-/* ==========================================================
-   2. الدالة الأساسية لبناء السطور (renderRow) 
-   ========================================================== */
 function renderRow(v = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
@@ -21,7 +15,6 @@ function renderRow(v = {}, prepend = false) {
     const visitDate = v.visitDate || today;
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
-    
     const idValue = v.clientId || generateClientID();
 
     mainRow.innerHTML = `
@@ -30,13 +23,10 @@ function renderRow(v = {}, prepend = false) {
             <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
         <td>
-            <a href="customer-details.html?id=${idValue}" class="client-id-link" target="_blank" title="عرض تفاصيل العميل">${idValue}</a>
+            <a href="customer-details.html?id=${idValue}" target="_blank" title="عرض تفاصيل العميل" style="color:var(--accent-blue); font-weight:700; text-decoration:none;">${idValue}</a>
             <input type="hidden" class="client-id-input excel-input" value="${idValue}">
         </td>
-        <td style="display: flex; align-items: center; gap: 8px;">
-            <a href="customer-details.html?id=${idValue}" target="_blank" title="عرض تفاصيل العميل">
-                <i class="fas fa-external-link-alt" style="color:var(--accent-blue); font-size:12px;"></i>
-            </a>
+        <td>
             <input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;">
         </td>
         <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
@@ -88,9 +78,6 @@ function generateClientID() {
     return yearStr + String(maxId + 1).padStart(5, '0');
 }
 
-/* ==========================================================
-   3. الإجراءات الجماعية والبحث والفرز
-   ========================================================== */
 function toggleDropdown(e, btn) {
     e.stopPropagation();
     const menu = btn.nextElementSibling;
@@ -126,7 +113,7 @@ async function handleBulkAction(action) {
 }
 
 function exportToExcel(selectedRows) {
-    let csvContent = "\uFEFFID,الشركة,العنوان,الشخص المسؤول,رقم التواصل,البريد الإلكتروني,السجل الرئيسي,التصنيف,الحالة,تاريخ الإنشاء,المالك\n";
+    let csvContent = "\uFEFFرقم العميل,الشركة,العنوان,الشخص المسؤول,رقم التواصل,البريد الإلكتروني,السجل الرئيسي,التصنيف,الحالة,تاريخ الإنشاء,المالك\n";
     selectedRows.forEach(chk => {
         const row = chk.closest('tr');
         const getVal = (idx) => { const inp = row.cells[idx].querySelector('input, select'); return `"${inp ? inp.value.replace(/"/g, '""') : ''}"`; };
@@ -155,9 +142,6 @@ function filterTable() {
     });
 }
 
-/* ==========================================================
-   4. إدارة الملاحظات وتلميحات الحالة
-   ========================================================== */
 function openNote(el) {
     currentActivePreview = el;
     let arr = []; try { arr = JSON.parse(el.getAttribute('data-full-notes') || "[]"); } catch(e) {}
@@ -205,9 +189,6 @@ function saveNote() {
 
 function closeNote() { document.getElementById('noteModal').style.display = "none"; }
 
-/* ==========================================================
-   5. العمليات التشغيلية وتحديث التواريخ
-   ========================================================== */
 function insertNewRow() { renderRow({}, true); const firstRow = document.getElementById('tableBody').querySelector('.main-row'); if (firstRow) updateEditDateField(firstRow); saveAllDataSilently(); const wrapper = document.querySelector('.table-wrapper'); if (wrapper) wrapper.scrollTop = 0; }
 function updateEditDateField(row) {
     if (!row) return; const dateFormatted = getTodayFormatted(); const time24 = getTimeFormatted(); const fullDateTime = `${dateFormatted} ${time24}`;
@@ -216,9 +197,6 @@ function updateEditDateField(row) {
 }
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
 
-/* ==========================================================
-   6. دمج الحالة
-   ========================================================== */
 async function handleStatusChange(selectEl, rowId) {
     const newVal = selectEl.value; 
     const oldVal = selectEl.dataset.old; 
@@ -230,9 +208,6 @@ async function handleStatusChange(selectEl, rowId) {
     selectEl.dataset.old = newVal;
 }
 
-/* ==========================================================
-   7. حفظ واسترجاع وعمليات مساعدة
-   ========================================================== */
 function saveAllDataSilently() {
     const data = Array.from(document.querySelectorAll('#tableBody .main-row')).map(row => {
         return { 
