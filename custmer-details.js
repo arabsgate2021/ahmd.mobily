@@ -1,82 +1,189 @@
-// دالة التنقل بين التبويبات (المرفقات / سجل الطلبات / سجل الزيارات)
-function switchTab(tabName) {
-    // 1. إزالة التفعيل من جميع الأزرار
-    const buttons = document.querySelectorAll('.compact-tab-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
+const urlParams = new URLSearchParams(window.location.search);
+// جلب رقم العميل من الرابط
+const clientId = urlParams.get('id');
+let clientName = ""; 
+
+function goBackAndFocus() {
+    if(clientId) sessionStorage.setItem('last_viewed_client', clientId);
+    window.location.href = 'customers.html';
+}
+
+function getTodayDateFormatted() {
+    const d = new Date();
+    return d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear();
+}
+
+function getFullDateTimePattern() {
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const d = new Date();
+    const dayName = days[d.getDay()];
+    const dateStr = getTodayDateFormatted();
+    let hours = d.getHours();
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `👤 (المستخدم)  🗓️ ${dayName}  ${dateStr}  ${hours.toString().padStart(2, '0')}:${minutes} ${ampm} ➡️ :`;
+}
+
+function addToClientActivityLog(actionText) {
+    const timePart = getFullDateTimePattern();
+    const fullLogHTML = `<span class="activity-time-part">${timePart}</span> <span class="activity-text-part">${actionText}</span>`;
     
-    // 2. إخفاء جميع محتويات التبويبات
-    const contents = document.querySelectorAll('.tab-content');
-    contents.forEach(content => content.style.display = 'none');
-    
-    // 3. تفعيل الزر المختار وإظهار المحتوى الخاص به
-    if (tabName === 'attachments') {
-        document.getElementById('attachmentsTab').style.display = 'block';
-        buttons[0].classList.add('active');
-    } else if (tabName === 'orders') {
-        document.getElementById('ordersTab').style.display = 'block';
-        buttons[1].classList.add('active');
-    } else if (tabName === 'visits') {
-        document.getElementById('visitsTab').style.display = 'block';
-        buttons[2].classList.add('active');
+    let logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v2') || '[]');
+    logs.unshift(fullLogHTML);
+    if(logs.length > 100) logs.pop();
+    localStorage.setItem('asgate_activity_logs_v2', JSON.stringify(logs));
+    renderClientActivityLog();
+}
+
+function renderClientActivityLog() {
+    const list = document.getElementById('activityList');
+    if (!list) return;
+    const logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v2') || '[]');
+    list.innerHTML = logs.map(log => `<div class="activity-item">${log}</div>`).join('');
+}
+
+function handleMainSelection(checkbox) {
+    if (checkbox.checked) {
+        const allChecks = document.querySelectorAll('.main-check');
+        allChecks.forEach(cb => {
+            if (cb !== checkbox) cb.checked = false;
+        });
+        const selectedRow = checkbox.closest('tr');
+        const mgrInput = selectedRow.querySelector('.mgr-input');
+        const mgrName = mgrInput ? mgrInput.value.trim() : "غير محدد";
+        addToClientActivityLog(`تحديد المسؤول (${mgrName}) كمسؤول رئيسي للمنشأة  ( ${clientName || 'شركة غير محددة'} )`);
     }
+    saveManagersToLocalStorage();
 }
 
-// تشغيل ميزة النقر المباشر على اختيار الملف المخفي
-function triggerFileUpload() {
-    document.getElementById('hiddenFileInput').click();
-}
-
-// معالجة الملف المرفوع وتوليد البيانات الثابتة
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // طلب اسم المرفق من المستخدم عبر نافذة منبثقة
-    const customFileName = prompt("الرجاء إدخال اسم المرفق لتوثيقه في النظام:", file.name);
+function loadClientData() {
+    if(!clientId) return;
     
-    // التحقق من أن المستخدم لم يضغط إلغاء أو يترك الحقل فارغاً
-    if (!customFileName || customFileName.trim() === "") {
-        alert("تم إلغاء الإرفاق لأنك لم تقم بكتابة اسم للمرفق.");
-        event.target.value = ''; // تفريغ الحقل
+    // التعديل هنا: جلب البيانات من نفس قاعدة البيانات المستخدمة في صفحة العملاء
+    const data = JSON.parse(localStorage.getItem('asgate_customers_final_v32') || '[]');
+    
+    // البحث بالرقم التعريفي id بدلاً من الاسم
+    const client = data.find(c => String(c.clientId) === String(clientId));
+    
+    if(client) {
+        clientName = client.comp; // حفظ اسم العميل للاستخدام في الجداول الأخرى
+        document.title = `${client.comp} | تفصيل العميل`;
+        document.getElementById('c-name').innerText = client.comp || 'غير محدد';
+        document.getElementById('c-cr').innerText = client.record || '0000000'; // استخدام record كما هو محفوظ
+        document.getElementById('c-addr').innerText = client.address || 'غير محدد';
+        document.getElementById('c-source').innerText = client.category || 'غير محدد';
+        document.getElementById('c-owner').innerText = client.owner || 'غير محدد';
+        
+        loadManagersData();
+        openTab('o-history');
+    } else {
+        document.getElementById('c-name').innerText = "العميل غير موجود بالبيانات";
+    }
+    renderClientActivityLog();
+}
+
+function addNewManagerRow() {
+    const tbody = document.getElementById('managerTableBody');
+    const row = tbody.insertRow();
+    const todayStr = getTodayDateFormatted();
+    row.innerHTML = `
+        <td><input type="checkbox" class="main-check" onchange="handleMainSelection(this)"></td>
+        <td><input type="text" class="mgr-input" placeholder="الاسم..."></td>
+        <td><input type="text" class="mgr-input" placeholder="رقم التواصل..."></td>
+        <td><input type="text" class="mgr-input" placeholder="رقم آخر..."></td>
+        <td><input type="email" class="mgr-input" placeholder="الايميل..."></td>
+        <td><input type="text" class="mgr-input" placeholder="الوظيفة..."></td>
+        <td><input type="text" class="mgr-input" value="${todayStr}" disabled style="color: #64748b;"></td>
+        <td><button class="btn-save-row" onclick="lockAndSaveManagerRow(this)">حفظ</button></td>
+    `;
+}
+
+function lockAndSaveManagerRow(btn) {
+    const row = btn.closest('tr');
+    const inputs = row.querySelectorAll('.mgr-input');
+    
+    if(!inputs[0].value.trim()) {
+        alert("يرجى إدخال اسم المسؤول أولاً.");
+        inputs[0].focus();
         return;
     }
 
-    // توليد البيانات الثابتة اللحظية (تاريخ وساعة الرفع الحالية)
-    const currentOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-    const uploadDate = new Date().toLocaleString('ar-SA', currentOptions);
+    alert("لن تتمكن من الحذف أو التعديل بعد ذلك (باستثناء تحديد المسؤول الرئيسي)");
     
-    // اسم المستخدم الحالي (سيتم ربطه بـ Firebase Authentication لاحقاً)
-    const currentSystemUser = "المستخدم الحالي"; 
-
-    // إرسال البيانات لعرضها في حاوية المرفقات
-    addNewAttachmentToDOM(customFileName.trim(), uploadDate, currentSystemUser);
-
-    // تفريغ المدخلات لكي يقبل رفع ملفات أخرى متتالية دون مشاكل
-    event.target.value = '';
+    const savedName = inputs[0].value.trim();
+    inputs.forEach(input => input.disabled = true);
+    btn.parentElement.innerHTML = `<span class="btn-locked-status">🔒 محفوظ ومقفل</span>`;
+    
+    saveManagersToLocalStorage();
+    addToClientActivityLog(`إضافة وقفل بيانات المسؤول الجديد: ${savedName}  ( ${clientName || 'شركة غير محددة'} )`);
 }
 
-// دالة طباعة وبناء بطاقة المرفق في واجهة المستخدم
-function addNewAttachmentToDOM(name, date, user) {
-    const container = document.getElementById('attachmentsContainer');
-    
-    // إزالة رسالة "لا توجد مرفقات حالياً" إذا كانت موجودة عند أول رفع
-    const emptyMsg = container.querySelector('.empty-message');
-    if (emptyMsg) {
-        emptyMsg.remove();
+function saveManagersToLocalStorage() {
+    if (!clientName) return;
+    const tbody = document.getElementById('managerTableBody');
+    const managersList = [];
+    tbody.querySelectorAll('tr').forEach(row => {
+        const inputs = row.querySelectorAll('.mgr-input');
+        const mainCheckbox = row.querySelector('.main-check');
+        if (inputs.length > 0 && inputs[0].disabled) {
+            managersList.push({
+                isMain: mainCheckbox.checked,
+                name: inputs[0].value.trim(),
+                phone1: inputs[1].value.trim(),
+                phone2: inputs[2].value.trim(),
+                email: inputs[3].value.trim(),
+                job: inputs[4].value.trim(),
+                date: inputs[5].value.trim()
+            });
+        }
+    });
+    const allManagersData = JSON.parse(localStorage.getItem('asgate_client_managers_db') || '{}');
+    allManagersData[clientName] = managersList;
+    localStorage.setItem('asgate_client_managers_db', JSON.stringify(allManagersData));
+}
+
+function loadManagersData() {
+    if (!clientName) return;
+    const tbody = document.getElementById('managerTableBody');
+    tbody.innerHTML = '';
+    const allManagersData = JSON.parse(localStorage.getItem('asgate_client_managers_db') || '{}');
+    const currentClientManagers = allManagersData[clientName] || [];
+    currentClientManagers.forEach(mgr => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td><input type="checkbox" class="main-check" ${mgr.isMain ? 'checked' : ''} onchange="handleMainSelection(this)"></td>
+            <td><input type="text" class="mgr-input" value="${mgr.name || ''}" disabled></td>
+            <td><input type="text" class="mgr-input" value="${mgr.phone1 || ''}" disabled></td>
+            <td><input type="text" class="mgr-input" value="${mgr.phone2 || ''}" disabled></td>
+            <td><input type="email" class="mgr-input" value="${mgr.email || ''}" disabled></td>
+            <td><input type="text" class="mgr-input" value="${mgr.job || ''}" disabled></td>
+            <td><input type="text" class="mgr-input" value="${mgr.date || ''}" disabled></td>
+            <td><span class="btn-locked-status">🔒 محفوظ ومقفل</span></td>
+        `;
+    });
+}
+
+function openTab(tab) {
+    const title = document.getElementById('frame-title');
+    const content = document.getElementById('table-content');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if(tab === 'o-history') {
+        document.getElementById('btn-o').classList.add('active');
+        title.innerText = "🛒 سجل طلبات العميل";
+        content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد طلبات سابقة مسجلة.</p>`;
+    } else if(tab === 'attachments') {
+        document.getElementById('btn-a').classList.add('active');
+        title.innerText = "📁 المرفقات والملفات";
+        content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد ملفات مرفقة.</p>`;
+    } else if(tab === 'v-history') {
+        document.getElementById('btn-v').classList.add('active');
+        title.innerText = "📅 سجل الزيارات الميدانية";
+        const visits = JSON.parse(localStorage.getItem('asgate_visits_final_v21') || '[]').filter(v => v.comp === clientName);
+        content.innerHTML = visits.length > 0 ? `
+            <table>
+                <thead><tr><th>التاريخ</th><th>الحالة</th><th>الملاحظات</th></tr></thead>
+                <tbody>${visits.map(v => `<tr><td>${v.visitDate}</td><td>${v.status || 'مكتملة'}</td><td>${v.notes || '-'}</td></tr>`).join('')}</tbody>
+            </table>` : `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد سجلات زيارات حالياً.</p>`;
     }
-    
-    // بناء عنصر بطاقة المرفق الجديد
-    const card = document.createElement('div');
-    card.className = 'attachment-card';
-    
-    card.innerHTML = `
-        <div class="attachment-title">📄 ${name}</div>
-        <div class="attachment-meta">
-            <span>📅 تاريخ الإرفاق: ${date}</span>
-            <span>👤 بواسطة: ${user}</span>
-        </div>
-    `;
-    
-    // وضع المرفق الأحدث في الأعلى دائماً
-    container.prepend(card);
 }
