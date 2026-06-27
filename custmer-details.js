@@ -59,21 +59,26 @@ function handleMainSelection(checkbox) {
 function loadClientData() {
     if(!clientId) return; // التأكد من وجود رقم العميل في الرابط
 
-    // التعديل: جلب البيانات من نفس قاعدة بيانات صفحة العملاء
     const data = JSON.parse(localStorage.getItem('asgate_customers_final_v32') || '[]');
-    // التعديل: البحث عن العميل بواسطة رقم العميل (clientId)
-    const client = data.find(c => String(c.clientId) === String(clientId));
+    
+    // التعديل: البحث بمرونة عن مفتاح رقم العميل سواء كان clientId أو "رقم العميل"
+    const client = data.find(c => 
+        String(c.clientId) === String(clientId) || 
+        String(c['رقم العميل']) === String(clientId) || 
+        String(c.id) === String(clientId)
+    );
 
     if(client) {
-        clientName = client.comp; // تحديث اسم الشركة لاستخدامه لاحقاً
+        // جلب اسم الشركة (قد يكون محفوظاً باسم comp أو الشركة أو اسم العميل)
+        clientName = client.comp || client['الشركة'] || client['اسم العميل'] || 'غير محدد'; 
         document.title = `${clientName} | تفصيل العميل`;
         
-        // ربط الحقول بما يقابلها في قاعدة بيانات العملاء
-        document.getElementById('c-name').innerText = clientName || 'غير محدد';
-        document.getElementById('c-cr').innerText = client.record || '0000000'; // السجل التجاري
-        document.getElementById('c-addr').innerText = client.address || 'غير محدد';
-        document.getElementById('c-source').innerText = client.category || 'غير محدد'; // تصنيف العميل
-        document.getElementById('c-owner').innerText = client.owner || 'غير محدد';
+        // ربط الحقول مع مراعاة التسميات العربية والإنجليزية في قاعدة البيانات
+        document.getElementById('c-name').innerText = clientName;
+        document.getElementById('c-cr').innerText = client.record || client['السجل التجاري'] || '0000000'; 
+        document.getElementById('c-addr').innerText = client.address || client['العنوان'] || 'غير محدد';
+        document.getElementById('c-source').innerText = client.category || client['التصنيف'] || client['تصنيف العميل'] || 'غير محدد'; 
+        document.getElementById('c-owner').innerText = client.owner || client['المالك'] || client['المسؤول'] || 'غير محدد';
         
         loadManagersData();
         openTab('o-history');
@@ -82,7 +87,6 @@ function loadClientData() {
     }
     renderClientActivityLog();
 }
-
 function addNewManagerRow() {
     const tbody = document.getElementById('managerTableBody');
     const row = tbody.insertRow();
