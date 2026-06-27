@@ -1,6 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
-// جلب رقم العميل من الرابط
 const clientId = urlParams.get('id');
+const clientNameParam = urlParams.get('name'); // استقبال معامل الاسم لزيادة مستويات التوافق والأمان لروابط الصفحات القديمة
 let clientName = ""; 
 
 function goBackAndFocus() {
@@ -22,7 +22,7 @@ function getFullDateTimePattern() {
     const minutes = d.getMinutes().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12;
-    return `👤 (المستخدم)  🗓️ ${dayName}  ${dateStr}  ${hours.toString().padStart(2, '0')}:${minutes} ${ampm} ➡️ :`;
+    return `👤 (أحمد)  🗓️ ${dayName}  ${dateStr}  ${hours.toString().padStart(2, '0')}:${minutes} ${ampm} ➡️ :`;
 }
 
 function addToClientActivityLog(actionText) {
@@ -57,28 +57,45 @@ function handleMainSelection(checkbox) {
     saveManagersToLocalStorage();
 }
 
+// دالة آمنة لحقن النصوص في عناصر الـ HTML دون التسبب بانهيار السكريبت في حال اختلاف أسماء معرّفات الـ IDs
+function setElementText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.innerText = value || 'غير محدد';
+    }
+}
+
 function loadClientData() {
-    if(!clientId) return;
-    
-    // التعديل هنا: جلب البيانات من نفس قاعدة البيانات المستخدمة في صفحة العملاء
     const data = JSON.parse(localStorage.getItem('asgate_customers_final_v32') || '[]');
     
-    // البحث بالرقم التعريفي id بدلاً من الاسم
-    const client = data.find(c => String(c.clientId) === String(clientId));
+    // آلية البحث الفائقة: يبحث بالرقم أولاً، وإن تعذر (بسبب بيانات قديمة) يطابق بالاسم كخيار احتياطي محكم
+    const client = data.find(c => 
+        (clientId && String(c.clientId) === String(clientId)) || 
+        (clientNameParam && String(c.comp) === String(clientNameParam)) ||
+        (clientId && String(c.comp) === String(clientId))
+    );
     
     if(client) {
-        clientName = client.comp; // حفظ اسم العميل للاستخدام في الجداول الأخرى
+        clientName = client.comp; 
         document.title = `${client.comp} | تفصيل العميل`;
-        document.getElementById('c-name').innerText = client.comp || 'غير محدد';
-        document.getElementById('c-cr').innerText = client.record || '0000000'; // استخدام record كما هو محفوظ
-        document.getElementById('c-addr').innerText = client.address || 'غير محدد';
-        document.getElementById('c-source').innerText = client.category || 'غير محدد';
-        document.getElementById('c-owner').innerText = client.owner || 'غير محدد';
+        
+        // تعبئة البيانات الأساسية بأمان تام لحماية تدفق الكود
+        setElementText('c-name', client.comp);
+        setElementText('c-cr', client.record);
+        setElementText('c-addr', client.address);
+        
+        // حماية ودعم كافة المسميات المحتملة لمعرف تصنيف العميل في الـ HTML
+        setElementText('c-source', client.category);
+        setElementText('c-category', client.category);
+        setElementText('c-type', client.category);
+        
+        setElementText('c-owner', client.owner);
         
         loadManagersData();
         openTab('o-history');
     } else {
-        document.getElementById('c-name').innerText = "العميل غير موجود بالبيانات";
+        const nameEl = document.getElementById('c-name');
+        if (nameEl) nameEl.innerText = "العميل غير موجود بالبيانات";
     }
     renderClientActivityLog();
 }
@@ -167,17 +184,21 @@ function loadManagersData() {
 function openTab(tab) {
     const title = document.getElementById('frame-title');
     const content = document.getElementById('table-content');
+    if (!title || !content) return;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     if(tab === 'o-history') {
-        document.getElementById('btn-o').classList.add('active');
+        const btnO = document.getElementById('btn-o');
+        if (btnO) btnO.classList.add('active');
         title.innerText = "🛒 سجل طلبات العميل";
         content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد طلبات سابقة مسجلة.</p>`;
     } else if(tab === 'attachments') {
-        document.getElementById('btn-a').classList.add('active');
+        const btnA = document.getElementById('btn-a');
+        if (btnA) btnA.classList.add('active');
         title.innerText = "📁 المرفقات والملفات";
         content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد ملفات مرفقة.</p>`;
     } else if(tab === 'v-history') {
-        document.getElementById('btn-v').classList.add('active');
+        const btnV = document.getElementById('btn-v');
+        if (btnV) btnV.classList.add('active');
         title.innerText = "📅 سجل الزيارات الميدانية";
         const visits = JSON.parse(localStorage.getItem('asgate_visits_final_v21') || '[]').filter(v => v.comp === clientName);
         content.innerHTML = visits.length > 0 ? `
