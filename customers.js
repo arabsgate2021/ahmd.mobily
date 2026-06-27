@@ -331,4 +331,16 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
             <span class="log-divider">|</span>
             <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayName} ${yyyy}-${mm}-${dd} ${timeStr}</span>
             <span class="log-divider">|</span>
-            
+            <span class="log-action">${actionText}</span>
+        </div>
+    `; 
+    
+    let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); 
+    logs.unshift(fullLogHTML); 
+    localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100))); 
+    renderActivityLog(); 
+}
+
+function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.join(''); }
+
+function openWhatsAppChat(el) { const inputEl = el.closest('.phone-cell-container').querySelector('input'); let rawPhone = inputEl.value.trim(); if (!rawPhone) { Swal.fire({icon: 'warning', title: 'تنبيه', text: 'يرجى إدخال رقم الجوال أولاً', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; } let cleanNumber = rawPhone.replace(/\D/g, ''); if (cleanNumber.startsWith('00966')) cleanNumber = cleanNumber.substring(2); else if (cleanNumber.startsWith('05')) cleanNumber = '966' + cleanNumber.substring(1); else if (cleanNumber.startsWith('5') && cleanNumber.length === 9) cleanNumber = '966' + cleanNumber; window.open("https://wa.me/" + cleanNumber, '_blank'); }
