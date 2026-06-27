@@ -33,7 +33,12 @@ function renderRow(v = {}, prepend = false) {
             <a href="customer-details.html?id=${idValue}" class="client-id-link" target="_blank" title="عرض تفاصيل العميل">${idValue}</a>
             <input type="hidden" class="client-id-input excel-input" value="${idValue}">
         </td>
-        <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
+        <td style="display: flex; align-items: center; gap: 8px;">
+            <a href="customer-details.html?id=${idValue}" target="_blank" title="عرض تفاصيل العميل">
+                <i class="fas fa-external-link-alt" style="color:var(--accent-blue); font-size:12px;"></i>
+            </a>
+            <input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;">
+        </td>
         <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.mgr || ''}" data-old="${v.mgr || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشخص المسؤول', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td>
