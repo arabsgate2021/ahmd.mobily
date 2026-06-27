@@ -1,7 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
-const clientId = urlParams.get('id');
-const clientNameParam = urlParams.get('name'); // استقبال معامل الاسم لزيادة مستويات التوافق والأمان لروابط الصفحات القديمة
-let clientName = ""; 
+const clientId = urlParams.get('id'); // التعديل: جلب رقم العميل (id) بدلاً من الاسم
+let clientName = ""; // متغير لتخزين اسم الشركة لاستخدامه في السجلات
 
 function goBackAndFocus() {
     if(clientId) sessionStorage.setItem('last_viewed_client', clientId);
@@ -57,45 +56,29 @@ function handleMainSelection(checkbox) {
     saveManagersToLocalStorage();
 }
 
-// دالة آمنة لحقن النصوص في عناصر الـ HTML دون التسبب بانهيار السكريبت في حال اختلاف أسماء معرّفات الـ IDs
-function setElementText(id, value) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.innerText = value || 'غير محدد';
-    }
-}
-
 function loadClientData() {
+    if(!clientId) return; // التأكد من وجود رقم العميل في الرابط
+
+    // التعديل: جلب البيانات من نفس قاعدة بيانات صفحة العملاء
     const data = JSON.parse(localStorage.getItem('asgate_customers_final_v32') || '[]');
-    
-    // آلية البحث الفائقة: يبحث بالرقم أولاً، وإن تعذر (بسبب بيانات قديمة) يطابق بالاسم كخيار احتياطي محكم
-    const client = data.find(c => 
-        (clientId && String(c.clientId) === String(clientId)) || 
-        (clientNameParam && String(c.comp) === String(clientNameParam)) ||
-        (clientId && String(c.comp) === String(clientId))
-    );
-    
+    // التعديل: البحث عن العميل بواسطة رقم العميل (clientId)
+    const client = data.find(c => String(c.clientId) === String(clientId));
+
     if(client) {
-        clientName = client.comp; 
-        document.title = `${client.comp} | تفصيل العميل`;
+        clientName = client.comp; // تحديث اسم الشركة لاستخدامه لاحقاً
+        document.title = `${clientName} | تفصيل العميل`;
         
-        // تعبئة البيانات الأساسية بأمان تام لحماية تدفق الكود
-        setElementText('c-name', client.comp);
-        setElementText('c-cr', client.record);
-        setElementText('c-addr', client.address);
-        
-        // حماية ودعم كافة المسميات المحتملة لمعرف تصنيف العميل في الـ HTML
-        setElementText('c-source', client.category);
-        setElementText('c-category', client.category);
-        setElementText('c-type', client.category);
-        
-        setElementText('c-owner', client.owner);
+        // ربط الحقول بما يقابلها في قاعدة بيانات العملاء
+        document.getElementById('c-name').innerText = clientName || 'غير محدد';
+        document.getElementById('c-cr').innerText = client.record || '0000000'; // السجل التجاري
+        document.getElementById('c-addr').innerText = client.address || 'غير محدد';
+        document.getElementById('c-source').innerText = client.category || 'غير محدد'; // تصنيف العميل
+        document.getElementById('c-owner').innerText = client.owner || 'غير محدد';
         
         loadManagersData();
         openTab('o-history');
     } else {
-        const nameEl = document.getElementById('c-name');
-        if (nameEl) nameEl.innerText = "العميل غير موجود بالبيانات";
+        document.getElementById('c-name').innerText = "العميل غير موجود";
     }
     renderClientActivityLog();
 }
@@ -137,9 +120,10 @@ function lockAndSaveManagerRow(btn) {
 }
 
 function saveManagersToLocalStorage() {
-    if (!clientName) return;
+    if (!clientId) return;
     const tbody = document.getElementById('managerTableBody');
     const managersList = [];
+    
     tbody.querySelectorAll('tr').forEach(row => {
         const inputs = row.querySelectorAll('.mgr-input');
         const mainCheckbox = row.querySelector('.main-check');
@@ -155,17 +139,21 @@ function saveManagersToLocalStorage() {
             });
         }
     });
+    
     const allManagersData = JSON.parse(localStorage.getItem('asgate_client_managers_db') || '{}');
-    allManagersData[clientName] = managersList;
+    // التعديل: استخدام رقم العميل (clientId) كمفتاح للحفظ بدلاً من الاسم لضمان عدم التداخل
+    allManagersData[clientId] = managersList;
     localStorage.setItem('asgate_client_managers_db', JSON.stringify(allManagersData));
 }
 
 function loadManagersData() {
-    if (!clientName) return;
+    if (!clientId) return;
     const tbody = document.getElementById('managerTableBody');
     tbody.innerHTML = '';
+    
     const allManagersData = JSON.parse(localStorage.getItem('asgate_client_managers_db') || '{}');
-    const currentClientManagers = allManagersData[clientName] || [];
+    const currentClientManagers = allManagersData[clientId] || []; // الجلب بواسطة رقم العميل
+    
     currentClientManagers.forEach(mgr => {
         const row = tbody.insertRow();
         row.innerHTML = `
@@ -184,22 +172,20 @@ function loadManagersData() {
 function openTab(tab) {
     const title = document.getElementById('frame-title');
     const content = document.getElementById('table-content');
-    if (!title || !content) return;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
     if(tab === 'o-history') {
-        const btnO = document.getElementById('btn-o');
-        if (btnO) btnO.classList.add('active');
+        document.getElementById('btn-o').classList.add('active');
         title.innerText = "🛒 سجل طلبات العميل";
         content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد طلبات سابقة مسجلة.</p>`;
     } else if(tab === 'attachments') {
-        const btnA = document.getElementById('btn-a');
-        if (btnA) btnA.classList.add('active');
+        document.getElementById('btn-a').classList.add('active');
         title.innerText = "📁 المرفقات والملفات";
         content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد ملفات مرفقة.</p>`;
     } else if(tab === 'v-history') {
-        const btnV = document.getElementById('btn-v');
-        if (btnV) btnV.classList.add('active');
+        document.getElementById('btn-v').classList.add('active');
         title.innerText = "📅 سجل الزيارات الميدانية";
+        // جلب الزيارات الخاصة بالشركة
         const visits = JSON.parse(localStorage.getItem('asgate_visits_final_v21') || '[]').filter(v => v.comp === clientName);
         content.innerHTML = visits.length > 0 ? `
             <table>
