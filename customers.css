@@ -64,11 +64,13 @@ td { border-bottom: 1px solid #f1f5f9; text-align: center; height: 38px; max-hei
 tbody tr.main-row:hover td { background-color: #f1f5f9; }
 tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 
-.status-yellow { background-color: #fef08a !important; color: #854d0e !important; font-weight: 800 !important; border-radius: 4px !important; }
-.status-red { background-color: #991b1b !important; color: #fff !important; font-weight: 800 !important; border-radius: 4px !important; }
-.lost-row td { height: 28px !important; max-height: 28px !important; font-size: 9.5px !important; opacity: .8; }
-.lost-row .excel-input { font-size: 10px !important; }
-.lost-row:hover td { opacity: 1; }
+/* ألوان الحالة الجديدة */
+.status-active { background-color: #dcfce7 !important; color: #166534 !important; font-weight: 800 !important; border-radius: 4px !important; }
+.status-inactive { background-color: #f1f5f9 !important; color: #475569 !important; font-weight: 800 !important; border-radius: 4px !important; }
+
+/* تنسيق رابط الـ ID */
+.client-id-link { color: var(--accent-blue); text-decoration: none; font-weight: 800; padding: 2px 6px; border-radius: 4px; transition: 0.2s; display: inline-block; }
+.client-id-link:hover { background: #eff6ff; text-decoration: underline; }
 
 .month-separator { height: 38px; }
 .month-separator td { padding: 5px !important; border: none !important; background: #fff !important; }
@@ -142,20 +144,19 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 .note-area { height: 100px; width: 100%; border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px; font-family: 'Cairo'; resize: none; outline: none; font-size: 11.5px; text-align: right; box-sizing: border-box; transition: .2s; }
 .note-area:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
 
-/* --- عرض الأعمدة الجديد --- */
+/* --- عرض الأعمدة الجديد ليصبح المجموع 100% --- */
 .col-select { width: 3%; }
-.col-id { width: 5%; }
-.col-facility { width: 9%; }
-.col-company { width: 9%; }
-.col-address { width: 8%; }
-.col-record { width: 7%; }
-.col-manager { width: 8%; }
-.col-mobile { width: 8%; }
-.col-email { width: 8%; }
-.col-category { width: 7%; }
+.col-id { width: 6%; }
+.col-company { width: 11%; }
+.col-address { width: 10%; }
+.col-manager { width: 9%; }
+.col-mobile { width: 9%; }
+.col-email { width: 9%; }
+.col-record { width: 9%; }
+.col-category { width: 8%; }
 .col-status { width: 8%; }
 .col-notes { width: 8%; }
 .col-date { width: 6%; }
-.col-owner { width: 5%; }
+.col-owner { width: 4%; }
 
 div:where(.swal2-container) { font-family: 'Cairo', sans-serif !important; }
