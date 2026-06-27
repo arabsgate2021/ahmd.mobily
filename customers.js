@@ -21,7 +21,7 @@ function renderRow(v = {}, prepend = false) {
     
     const idValue = v.clientId || generateClientID();
 
-    mainRow = document.createElement('tr');
+    const mainRow = document.createElement('tr');
     mainRow.className = 'main-row';
     mainRow.id = rowId;
 
@@ -253,7 +253,33 @@ function saveAllDataSilently() {
 }
 
 function debouncedSaveAllData() { clearTimeout(saveTimeout); saveTimeout = setTimeout(() => { saveAllDataSilently(); updateStats(); }, 600); }
-function loadSavedData() { const rawData = localStorage.getItem(STORAGE_KEY); const tbody = document.getElementById('tableBody'); if (!tbody) return; tbody.innerHTML = ''; if (rawData) { JSON.parse(rawData).forEach(v => renderRow(v, false)); } reorderRows(); updateStats(); renderActivityLog(); }
+
+function loadSavedData() { 
+    const rawData = localStorage.getItem(STORAGE_KEY); 
+    const tbody = document.getElementById('tableBody'); 
+    if (!tbody) return; 
+    tbody.innerHTML = ''; 
+    let needsSave = false;
+    if (rawData) { 
+        const parsed = JSON.parse(rawData);
+        parsed.forEach(v => {
+            // التحديث هنا: إذا كان هناك سجل قديم لا يحتوي على ID، نحدد أنه بحاجة لحفظ دائم
+            if (!v.clientId) {
+                needsSave = true;
+            }
+            renderRow(v, false);
+        }); 
+    } 
+    reorderRows(); 
+    updateStats(); 
+    renderActivityLog(); 
+    
+    // حفظ تلقائي فوري لتحديث قاعدة البيانات بالـ IDs الجديدة للعملاء القدامى
+    if (needsSave) {
+        saveAllDataSilently();
+    }
+}
+
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
 function getTimeFormatted() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0'); }
 function getLastNoteOnlyFromJSON(jsonStr) { try { const arr = JSON.parse(jsonStr); return arr.length > 0 ? arr[arr.length - 1].text : "أضف ملاحظة..."; } catch(e) { return "أضف ملاحظة..."; } }
@@ -297,7 +323,7 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
     const dayName = days[d.getDay()];
     const timeStr = getTimeFormatted();
     const cleanCompany = companyName || 'شركة غير مسماة'; 
-    let actionText = fieldName === 'إجراء' ? `${oldVal} لعميل شركة ( ${cleanCompany} )` : `تعديل ${fieldName} من [${oldVal || 'فارغ'}] إلى [${newVal || 'فارغ'}] للعميل ( ${cleanCompany} )`; 
+    let actionText = fieldName === 'إجراء' ? `${oldVal} לعميل شركة ( ${cleanCompany} )` : `تعديل ${fieldName} من [${oldVal || 'فارغ'}] إلى [${newVal || 'فارغ'}] للعميل ( ${cleanCompany} )`; 
     
     const fullLogHTML = `
         <div class="log-entry">
@@ -305,16 +331,4 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
             <span class="log-divider">|</span>
             <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayName} ${yyyy}-${mm}-${dd} ${timeStr}</span>
             <span class="log-divider">|</span>
-            <span class="log-action">${actionText}</span>
-        </div>
-    `; 
-    
-    let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); 
-    logs.unshift(fullLogHTML); 
-    localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100))); 
-    renderActivityLog(); 
-}
-
-function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.join(''); }
-
-function openWhatsAppChat(el) { const inputEl = el.closest('.phone-cell-container').querySelector('input'); let rawPhone = inputEl.value.trim(); if (!rawPhone) { Swal.fire({icon: 'warning', title: 'تنبيه', text: 'يرجى إدخال رقم الجوال أولاً', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; } let cleanNumber = rawPhone.replace(/\D/g, ''); if (cleanNumber.startsWith('00966')) cleanNumber = cleanNumber.substring(2); else if (cleanNumber.startsWith('05')) cleanNumber = '966' + cleanNumber.substring(1); else if (cleanNumber.startsWith('5') && cleanNumber.length === 9) cleanNumber = '966' + cleanNumber; window.open("https://wa.me/" + cleanNumber, '_blank'); }
+            
