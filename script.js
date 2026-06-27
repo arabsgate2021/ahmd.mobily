@@ -206,6 +206,27 @@ function searchCustomerInModal(el) {
     const filtered = customers.filter(c => (c.comp || "").toLowerCase().includes(query) || (c.mainRecord || "").includes(query));
     resDiv.innerHTML = filtered.map(c => `<div onclick="selectCustomer('${c.comp}', '${c.mainRecord}')"><i class="far fa-building"></i> ${c.comp} - ${c.mainRecord}</div>`).join('');
     resDiv.style.display = filtered.length ? 'block' : 'none';
+
+    function searchCustomerInModal(el) {
+    const query = el.value.toLowerCase().trim();
+    const resDiv = document.getElementById('mResults');
+    const customers = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
+    if (query.length < 1) { resDiv.style.display='none'; return; }
+    
+    // البحث في الشركة، السجل، أو كود العميل
+    const filtered = customers.filter(c => 
+        (c.comp || "").toLowerCase().includes(query) || 
+        (c.mainRecord || "").includes(query) || 
+        (c.customerCode || "").toLowerCase().includes(query)
+    );
+    
+    resDiv.innerHTML = filtered.map(c => 
+        `<div onclick="selectCustomer('${c.comp}', '${c.mainRecord}')">
+            <i class="far fa-building"></i> ${c.comp} | ${c.mainRecord} | كود: ${c.customerCode || '---'}
+        </div>`
+    ).join('');
+    resDiv.style.display = filtered.length ? 'block' : 'none';
+}
 }
 
 function selectCustomer(comp, cr) {
