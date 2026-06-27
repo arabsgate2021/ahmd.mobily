@@ -14,9 +14,6 @@ function renderRow(v = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
     const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
-    const mainRow = document.createElement('tr');
-    mainRow.className = 'main-row';
-    mainRow.id = rowId;
     const today = getTodayFormatted();
     const visitDate = v.visitDate || today;
     const notesJson = v.notes || "[]";
@@ -24,13 +21,17 @@ function renderRow(v = {}, prepend = false) {
     
     const idValue = v.clientId || generateClientID();
 
+    mainRow = document.createElement('tr');
+    mainRow.className = 'main-row';
+    mainRow.id = rowId;
+
     mainRow.innerHTML = `
         <td class="col-select">
             <input type="checkbox" class="select-check">
             <input type="hidden" class="edit-date-val" value="${v.editDate || ''}">
         </td>
         <td>
-            <a href="#" onclick="openCustomerDetails(this); return false;" class="client-id-link" title="عرض تفاصيل العميل">${idValue}</a>
+            <a href="custmer-details.html?id=${idValue}" class="client-id-link" target="_blank" title="عرض تفاصيل العميل">${idValue}</a>
             <input type="hidden" class="client-id-input excel-input" value="${idValue}">
         </td>
         <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="updateEditDateField(this.closest('tr')); debouncedSaveAllData();" onblur="addToActivityLog('الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
@@ -317,23 +318,3 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
 function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.join(''); }
 
 function openWhatsAppChat(el) { const inputEl = el.closest('.phone-cell-container').querySelector('input'); let rawPhone = inputEl.value.trim(); if (!rawPhone) { Swal.fire({icon: 'warning', title: 'تنبيه', text: 'يرجى إدخال رقم الجوال أولاً', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; } let cleanNumber = rawPhone.replace(/\D/g, ''); if (cleanNumber.startsWith('00966')) cleanNumber = cleanNumber.substring(2); else if (cleanNumber.startsWith('05')) cleanNumber = '966' + cleanNumber.substring(1); else if (cleanNumber.startsWith('5') && cleanNumber.length === 9) cleanNumber = '966' + cleanNumber; window.open("https://wa.me/" + cleanNumber, '_blank'); }
-
-/* ==========================================================
-   8. دوال توجيه الصفحات
-   ========================================================== */
-function openCustomerDetails(linkEl) {
-    const row = linkEl.closest('tr');
-    const companyName = row.cells[2].querySelector('input').value.trim();
-    
-    if (companyName) {
-        window.open(`custmer-details.html?name=${encodeURIComponent(companyName)}`, '_blank');
-    } else {
-        Swal.fire({
-            icon: 'warning', 
-            title: 'تنبيه', 
-            text: 'يرجى إدخال اسم الشركة أولاً قبل عرض التفاصيل', 
-            confirmButtonText: 'حسناً', 
-            confirmButtonColor: '#3b82f6'
-        });
-    }
-}
