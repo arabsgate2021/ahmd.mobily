@@ -1,87 +1,262 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تفصيل العميل | ASGate</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
-    <!-- الربط بملف التنسيق الجديد -->
-    <link rel="stylesheet" href="custmer-details.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل العميل | ASGate CRM</title>
+    <!-- تضمين مكتبة الأيقونات (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --accent-blue: #3b82f6;
+            --input-height: 45px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+        .details-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .page-header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-header h2 {
+            margin: 0;
+            color: var(--accent-blue);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .form-control {
+            width: 100%;
+            height: var(--input-height);
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f1f5f9; /* لون باهت للدلالة على أنها للقراءة فقط أو مستوردة */
+            color: var(--text-main);
+        }
+        /* تصميم خاص لزر توسيع تفاصيل المنتجات (المثلث) بجوار اسم الشركة */
+        .details-expander-btn {
+            position: absolute;
+            left: 10px; /* التموضع يسار الحقل في التخطيط العربي RTL */
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+        .details-expander-btn:hover {
+            color: #1d4ed8;
+            transform: scale(1.1);
+        }
+        /* قسم المنتجات الإضافي (مخفي افتراضياً) */
+        .products-section {
+            display: none;
+            grid-column: 1 / -1;
+            background-color: #f8fafc;
+            border: 1px dashed var(--accent-blue);
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        .products-section.active {
+            display: block;
+        }
+    </style>
 </head>
-<body onload="loadClientData()">
+<body>
 
-<nav class="navbar">
-    <a href="index.html">الرئيسية</a>
-    <a href="visits.html">الزيارات</a>
-    <a href="opportunities.html">الفرص البيعية</a>
-    <a href="customers.html" class="active-link">العملاء</a>
-    <a href="sales.html">المبيعات</a>
-</nav>
+    <div class="details-container">
+        <div class="page-header">
+            <h2><i class="fas fa-building"></i> ملف العميل</h2>
+            <button onclick="window.close()" style="padding: 8px 15px; background: #94a3b8; color: white; border: none; border-radius: 5px; cursor: pointer;">إغلاق</button>
+        </div>
 
-<div class="company-header-wrapper">
-    <div class="back-container">
-        <button class="back-btn" onclick="goBackAndFocus()">رجوع</button>
-    </div>
-    <div class="compact-section">
-        <div class="row-wrapper">
-            <div class="section-label">🏢 بيانات المنشأة:</div>
-            <div class="data-row-inline">
-                <div class="info-item"><label>الشركة:</label><span id="c-name">-</span></div>
-                <div class="info-item"><label>السجل:</label><span id="c-cr">-</span></div>
-                <div class="info-item"><label>العنوان:</label><span id="c-addr">-</span></div>
-                <div class="info-item"><label>منشأ العميل:</label><span id="c-source">-</span></div>
-                <div class="info-item"><label>مالك العميل:</label><span id="c-owner">-</span></div>
+        <div class="form-grid">
+            <!-- حقل اسم الشركة مع مثلث تفاصيل المنتجات في مكانه الصحيح -->
+            <div class="form-group">
+                <label>اسم المنشأة / الشركة</label>
+                <div class="input-wrapper">
+                    <input type="text" id="companyNameInput" class="form-control" readonly>
+                    <!-- المثلث بجوار اسم الشركة حصراً -->
+                    <button class="details-expander-btn" onclick="toggleProductsSection()" title="عرض تفاصيل المنتجات">
+                        <i class="fas fa-caret-down"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- حقل المالك (بشكل مستقل ومنفصل) -->
+            <div class="form-group">
+                <label>المالك</label>
+                <input type="text" id="customerOwnerInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>رقم العميل (ID)</label>
+                <input type="text" id="customerIdInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>الشخص المسؤول</label>
+                <input type="text" id="customerManagerInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>رقم التواصل</label>
+                <input type="text" id="customerMobileInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input type="text" id="customerEmailInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>العنوان</label>
+                <input type="text" id="customerAddressInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>السجل الرئيسي</label>
+                <input type="text" id="customerRecordInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>التصنيف</label>
+                <input type="text" id="customerCategoryInput" class="form-control" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>الحالة</label>
+                <input type="text" id="customerStatusInput" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>تاريخ الزيارة</label>
+                <input type="text" id="visitDateInput" class="form-control" readonly>
+            </div>
+
+            <!-- قسم المنتجات والتفاصيل الموسعة -->
+            <div class="products-section" id="productsSection">
+                <h4 style="margin-top: 0; color: var(--accent-blue);">تفاصيل المنتجات والفرص</h4>
+                <p style="color: var(--text-muted); font-size: 14px;">مساحة مخصصة لإدراج وتعديل تفاصيل المنتجات الخاصة بهذا العميل...</p>
+                <!-- يمكنك إضافة جداول أو حقول المنتجات هنا -->
             </div>
         </div>
     </div>
-</div>
 
-<div class="manager-header-wrapper">
-    <div class="compact-section">
-        <div class="manager-title-bar">
-            <div class="section-label" style="min-width: fit-content; margin-bottom: 0;">👤 الشخص المسؤول</div>
-            <button class="add-mgr-btn" onclick="addNewManagerRow()">+ إضافة مسؤول</button>
-        </div>
-        
-        <table class="mgr-table">
-            <thead>
-                <tr>
-                    <th style="width: 8%;">الرئيسي</th>
-                    <th style="width: 17%;">الاسم</th>
-                    <th style="width: 15%;">رقم التواصل</th>
-                    <th style="width: 15%;">رقم آخر</th>
-                    <th style="width: 18%;">الايميل</th>
-                    <th style="width: 12%;">الوظيفة</th>
-                    <th style="width: 15%;">التاريخ</th>
-                    <th style="width: 10%;">الإجراء</th>
-                </tr>
-            </thead>
-            <tbody id="managerTableBody"></tbody>
-        </table>
-    </div>
-</div>
+    <!-- مكتبة التنبيهات (SweetAlert2) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="full-width-container">
-    <div class="control-strip">
-        <button class="action-btn btn-green" onclick="alert('فتح نموذج طلب جديد')">🛒 طلب جديد</button>
-        <button class="action-btn btn-yellow" onclick="alert('فتح نموذج زيارة جديدة')">🚗 زيارة جديدة</button>
-        <div class="tabs-wrapper">
-            <button class="tab-btn active" id="btn-o" onclick="openTab('o-history')">سجل الطلبات</button>
-            <button class="tab-btn" id="btn-a" onclick="openTab('attachments')">المرفقات</button>
-            <button class="tab-btn" id="btn-v" onclick="openTab('v-history')">سجل الزيارات</button>
-        </div>
-    </div>
-    <div class="content-area" id="display-frame">
-        <b id="frame-title" style="font-size:12px; color:var(--nav-purple-dark); display:block; margin-bottom:10px;">🛒 سجل الطلبات</b>
-        <div id="table-content"></div>
-    </div>
-</div>
+    <script>
+        const STORAGE_KEY = 'asgate_customers_final_v32';
 
-<div class="activity-log-section">
-    <div class="activity-log-title">📋 سجل النشاط</div>
-    <div id="activityList" class="activity-list"></div>
-</div>
+        document.addEventListener('DOMContentLoaded', () => {
+            // استخراج اسم الشركة من الرابط (URL Parameter)
+            const urlParams = new URLSearchParams(window.location.search);
+            const companyName = urlParams.get('name');
 
-<!-- الربط بملف المنطق البرمجي الجديد -->
-<script src="custmer-details.js"></script>
+            if (companyName) {
+                loadCustomerData(companyName);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'رابط غير صالح',
+                    text: 'الرابط يفتقر إلى اسم الشركة. يرجى فتح الصفحة من جدول العملاء مباشرة.',
+                    confirmButtonText: 'إغلاق',
+                    confirmButtonColor: '#3b82f6'
+                });
+            }
+        });
+
+        // دالة لجلب وعرض بيانات العميل بناءً على اسمه
+        function loadCustomerData(targetName) {
+            const rawData = localStorage.getItem(STORAGE_KEY);
+            const customers = rawData ? JSON.parse(rawData) : [];
+            
+            // البحث عن العميل مطابقاً لاسم الشركة الممرر في الرابط
+            const customer = customers.find(c => c.comp === targetName);
+
+            if (customer) {
+                // تعبئة الحقول بالبيانات
+                document.getElementById('companyNameInput').value = customer.comp || 'غير متوفر';
+                document.getElementById('customerIdInput').value = customer.clientId || 'غير متوفر';
+                document.getElementById('customerOwnerInput').value = customer.owner || 'غير متوفر';
+                document.getElementById('customerManagerInput').value = customer.mgr || 'غير متوفر';
+                document.getElementById('customerMobileInput').value = customer.mob || 'غير متوفر';
+                document.getElementById('customerEmailInput').value = customer.email || 'غير متوفر';
+                document.getElementById('customerAddressInput').value = customer.address || 'غير متوفر';
+                document.getElementById('customerRecordInput').value = customer.record || 'غير متوفر';
+                document.getElementById('customerCategoryInput').value = customer.category || 'غير محدد';
+                document.getElementById('customerStatusInput').value = customer.status || 'غير محدد';
+                document.getElementById('visitDateInput').value = customer.visitDate || 'غير متوفر';
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'العميل غير موجود',
+                    text: `لم يتم العثور على بيانات للشركة: "${targetName}". قد يكون تم تغيير الاسم.`,
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#3b82f6'
+                });
+            }
+        }
+
+        // دالة لإظهار/إخفاء قسم تفاصيل المنتجات عند الضغط على المثلث
+        function toggleProductsSection() {
+            const section = document.getElementById('productsSection');
+            const icon = document.querySelector('.details-expander-btn i');
+            
+            section.classList.toggle('active');
+            
+            if (section.classList.contains('active')) {
+                icon.classList.remove('fa-caret-down');
+                icon.classList.add('fa-caret-up');
+            } else {
+                icon.classList.remove('fa-caret-up');
+                icon.classList.add('fa-caret-down');
+            }
+        }
+    </script>
 </body>
 </html>
