@@ -113,6 +113,11 @@ function applyStatusColor(selectEl) {
 
 function renderRow(c = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
+    const currentRowCount = tbody.querySelectorAll('.main-row').length;
+    
+    // إنشاء كود عميل من 5 أرقام
+    const generatedId = c.id ? String(c.id).padStart(5, '0') : String(currentRowCount + 1).padStart(5, '0');
+
     const rowId = 'cust-' + Date.now() + Math.random().toString(36).substr(2, 5);
     const mainRow = prepend ? tbody.insertRow(0) : tbody.insertRow();
     mainRow.className = 'main-row';
@@ -121,9 +126,7 @@ function renderRow(c = {}, prepend = false) {
     const notes = c.notes || '';
     const lastNoteText = getLastNoteOnly(notes);
     const createdAt = c.createdDate || getTodayFormatted();
-    const generatedId = c.id || Math.floor(1000 + Math.random() * 9000);
 
-    // تم تغيير الرابط هنا إلى customer-details.html بدلاً من customer-profile.html
     mainRow.innerHTML = `
         <td class="col-select"><input type="checkbox" class="select-check"></td>
         <td class="col-id"><a href="customer-details.html?id=${generatedId}" class="id-link" target="_blank">${generatedId}</a></td>
@@ -205,7 +208,7 @@ async function handleBulkAction(action) {
 
 function exportToExcel(selectedRows) {
     let csvContent = "\uFEFF"; 
-    csvContent += "رقم العميل,اسم المنشأة / الشركة,العنوان,السجل الرئيسي,الشخص المسؤول,رقم التواصل,البريد الإلكتروني,التصنيف,الحالة,تاريخ الإنشاء,المالك\n";
+    csvContent += "كود العميل,اسم المنشأة / الشركة,العنوان,السجل الرئيسي,الشخص المسؤول,رقم التواصل,البريد الإلكتروني,التصنيف,الحالة,تاريخ الإنشاء,المالك\n";
     
     selectedRows.forEach(chk => {
         const row = chk.closest('tr');
@@ -256,7 +259,7 @@ function printSelected(selectedRows) {
             <table>
                 <thead>
                     <tr>
-                        <th>رقم العميل</th><th>الشركة</th><th>المسؤول</th><th>رقم التواصل</th>
+                        <th>كود العميل</th><th>الشركة</th><th>المسؤول</th><th>رقم التواصل</th>
                         <th>التصنيف</th><th>الحالة</th>
                     </tr>
                 </thead>
