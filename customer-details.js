@@ -87,11 +87,11 @@ function addNewManagerRow() {
     const todayStr = getTodayDateFormatted();
     row.innerHTML = `
         <td><input type="checkbox" class="main-check" onchange="handleMainSelection(this)"></td>
-        <td><input type="text" class="mgr-input" placeholder="الاسم..."></td>
-        <td><input type="text" class="mgr-input" placeholder="رقم التواصل..."></td>
-        <td><input type="text" class="mgr-input" placeholder="رقم آخر..."></td>
-        <td><input type="email" class="mgr-input" placeholder="الايميل..."></td>
-        <td><input type="text" class="mgr-input" placeholder="الوظيفة..."></td>
+        <td><input type="text" class="mgr-input"></td>
+        <td><input type="text" class="mgr-input"></td>
+        <td><input type="text" class="mgr-input"></td>
+        <td><input type="email" class="mgr-input"></td>
+        <td><input type="text" class="mgr-input"></td>
         <td><input type="text" class="mgr-input" value="${todayStr}" disabled style="color: #64748b;"></td>
         <td><button class="btn-save-row" onclick="lockAndSaveManagerRow(this)">حفظ</button></td>
     `;
