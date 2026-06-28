@@ -10,7 +10,13 @@
     --border-color: #cbd5e1;
     --border-soft: #cbd5e1;
 }
-body { background-color: var(--bg); font-family: 'Cairo', sans-serif; margin: 0; line-height: 1.2; }
+body { 
+    background-color: var(--bg); 
+    font-family: 'Cairo', sans-serif; 
+    margin: 0; 
+    line-height: 1.2; 
+    padding-bottom: 45px; /* لحماية المحتوى من التغطية بسبب شريط النشاط السفلي */
+}
 
 .navbar { 
     background-color: var(--purple-mid); display: flex; align-items: center; padding: 0 20px; 
@@ -65,11 +71,22 @@ body { background-color: var(--bg); font-family: 'Cairo', sans-serif; margin: 0;
 .btn-locked-status { color: #64748b; font-size: 10px; font-weight: bold; }
 
 .full-width-container { width: 100%; padding: 10px 20px; box-sizing: border-box; }
-.control-strip { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 
-/* التبويبات كمربعات صغيرة متناسقة */
-.tabs-wrapper { display: flex; background: var(--purple-mid); padding: 4px; border-radius: 8px; gap: 4px; height: 32px; align-items: center; width: max-content; }
-.tab-btn { border: none; background: transparent; color: rgba(255,255,255,0.8); height: 28px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; font-size: 11px; border-radius: 6px; padding: 0 18px; }
+/* شريط سجل الطلبات ممتد مع خلفية خفيفة */
+.control-strip { 
+    display: flex; 
+    align-items: center; 
+    background: #e2e8f0; 
+    padding: 6px; 
+    border-radius: 8px; 
+    margin-bottom: 10px; 
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+/* أزرار التبويبات محتفظة بمربعها الصغير */
+.tabs-wrapper { display: flex; background: var(--purple-mid); padding: 4px; border-radius: 6px; gap: 4px; height: 32px; align-items: center; width: max-content; }
+.tab-btn { border: none; background: transparent; color: rgba(255,255,255,0.8); height: 28px; cursor: pointer; font-family: 'Cairo'; font-weight: bold; font-size: 11px; border-radius: 4px; padding: 0 18px; }
 .tab-btn.active { background: white; color: var(--purple-mid); }
 
 .content-area { background: white; border-radius: 10px; padding: 12px; min-height: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -77,20 +94,53 @@ table { width: 100%; border-collapse: collapse; font-size: 11px; }
 th { text-align: right; color: #64748b; padding: 8px; border-bottom: 2px solid #eee; }
 td { padding: 8px; border-bottom: 1px solid #eee; }
 
-.activity-log-section { 
-    margin: 15px 20px 10px 20px; 
-    padding: 12px 18px; 
-    background: #ffffff; 
-    border-radius: 10px; 
-    border: 1px solid var(--border-soft);
-    box-shadow: 0 -3px 10px rgba(0,0,0,0.03);
-    height: 140px; 
+/* تصميم سجل نشاط العملاء كشريط سفلي قابل للطي تماماً كصفحة العملاء */
+.activity-log-container {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #1e293b;
+    color: #cbd5e1;
+    height: 35px;
+    overflow: hidden;
+    transition: height 0.3s ease;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
+    border-top: 2px solid var(--purple-mid);
+}
+.log-header {
+    padding: 8px 20px;
+    font-weight: 800;
+    font-size: 12px;
+    color: #a78bfa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    height: 35px;
     box-sizing: border-box;
 }
-.activity-log-title { color: #c29103; font-size: 13.5px; font-weight: 800; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; flex-shrink: 0; }
-.activity-list { flex: 1; overflow-y: auto; font-size: 11.5px; line-height: 1.6; }
-.activity-item { margin-bottom: 4px; border-bottom: 1px dashed #f8fafc; padding-bottom: 4px; color: #475569; display: flex; align-items: center; }
-.activity-time-part { font-size: 10.5px; color: #64748b; }
-.activity-text-part { font-size: 11.5px; }
+.log-content {
+    padding: 10px 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+.activity-item {
+    margin-bottom: 5px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 5px;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+}
+.activity-time-part {
+    font-size: 10.5px;
+    color: #94a3b8;
+    margin-left: 10px;
+}
+.activity-text-part {
+    font-size: 11.5px;
+}
