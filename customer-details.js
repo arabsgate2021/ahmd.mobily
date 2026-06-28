@@ -69,9 +69,13 @@ function loadClientData() {
         clientName = client.comp; // تعيين الاسم لتعمل عليه بقية وظائف الصفحة
         
         document.title = `${client.comp} | تفاصيل العميل`;
+        
+        // ربط الحقول الجديدة
         document.getElementById('c-name').innerText = client.comp || 'غير محدد';
-        document.getElementById('c-cr').innerText = client.cr || client.record || '0000000';
-        document.getElementById('c-addr').innerText = client.address || 'غير محدد';
+        document.getElementById('c-cr1').innerText = client.cr1 || client.cr || client.record || '0000000';
+        document.getElementById('c-cr2').innerText = client.cr2 || 'غير محدد';
+        document.getElementById('c-city').innerText = client.city || client.address || 'غير محدد';
+        document.getElementById('c-district').innerText = client.district || 'غير محدد';
         document.getElementById('c-source').innerText = client.classification || client.source || 'نظام داخلي';
         document.getElementById('c-owner').innerText = client.owner || 'غير محدد';
         
