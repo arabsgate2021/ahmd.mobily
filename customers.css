@@ -65,9 +65,10 @@ td { border-bottom: 1px solid #f1f5f9; text-align: center; height: 38px; max-hei
 tbody tr.main-row:hover td { background-color: #f1f5f9; }
 tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 
-/* Status Colors */
+/* الألوان وحالات التصنيف */
 .status-active { background-color: #dcfce7 !important; color: #166534 !important; font-weight: 800 !important; border-radius: 4px !important; }
-.status-inactive { background-color: #f3f4f6 !important; color: #4b5563 !important; font-weight: 800 !important; border-radius: 4px !important; }
+/* تم تعديل لون غير نشط هنا ليصبح أحمر غامق فاخر مع خط أبيض بناءً على طلبك */
+.status-inactive { background-color: #991b1b !important; color: #ffffff !important; font-weight: 800 !important; border-radius: 4px !important; }
 .status-gov { background-color: #e0e7ff !important; color: #3730a3 !important; font-weight: 800 !important; border-radius: 4px !important; }
 .status-important { background-color: #fee2e2 !important; color: #991b1b !important; font-weight: 800 !important; border-radius: 4px !important; }
 .status-med { background-color: #fef08a !important; color: #854d0e !important; font-weight: 800 !important; border-radius: 4px !important; }
@@ -126,7 +127,7 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 .note-area { height: 100px; width: 100%; border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px; font-family: 'Cairo'; resize: none; outline: none; font-size: 11.5px; text-align: right; box-sizing: border-box; transition: .2s; }
 .note-area:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
 
-/* Column Widths */
+/* عرض الأعمدة الثابت */
 .col-select { width: 3%; }
 .col-code { width: 6%; }
 .col-company { width: 13%; }
