@@ -8,6 +8,18 @@ function goBackAndFocus() {
     window.location.href = 'customers.html';
 }
 
+function toggleActivityLog() {
+    const container = document.getElementById('activity-container');
+    const icon = document.getElementById('log-toggle-icon');
+    if(container.style.height === '250px') {
+        container.style.height = '35px';
+        icon.innerText = '▲';
+    } else {
+        container.style.height = '250px';
+        icon.innerText = '▼';
+    }
+}
+
 function getTodayDateFormatted() {
     const d = new Date();
     return d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear();
