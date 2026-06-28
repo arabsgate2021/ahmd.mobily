@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>تفاصيل العميل | ASGate</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="customer-details.css">
 </head>
 <body onload="loadClientData()">
@@ -26,29 +25,27 @@
             <div class="section-label">🏢 بيانات المنشأة:</div>
             <div class="data-row-inline">
                 <div class="info-item"><label>الشركة:</label><span id="c-name">-</span></div>
+                <div class="info-item"><label>السجل:</label><span id="c-cr">-</span></div>
                 <div class="info-item"><label>العنوان:</label><span id="c-addr">-</span></div>
-                <div class="info-item"><label>المسؤول:</label><span id="c-mgr">-</span></div>
-                <div class="info-item"><label>التواصل:</label><span id="c-mob" dir="ltr">-</span></div>
-                <div class="info-item"><label>الإيميل:</label><span id="c-email">-</span></div>
-                <div class="info-item"><label>الإنشاء:</label><span id="c-date">-</span></div>
-                <div class="info-item"><label>التصنيف:</label><span id="c-class">-</span></div>
-                <div class="info-item"><label>الحالة:</label><span id="c-status">-</span></div>
-                <div class="info-item"><label>المالك:</label><span id="c-owner">-</span></div>
+                <div class="info-item"><label>منشأ العميل:</label><span id="c-source">-</span></div>
+                <div class="info-item"><label>مالك العميل:</label><span id="c-owner">-</span></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="managers-block-wrapper">
-    <div class="block-title-strip">
-        <span>👥 قائمة المسؤولين وجهات الاتصال بالمنشأة</span>
-        <button class="add-mgr-btn" onclick="alert('فتح نموذج إضافة مسؤول جديد')"><i class="fas fa-plus-circle"></i> إضافة مسؤول</button>
-    </div>
-    <div class="table-container-fixed">
-        <table>
+<div class="manager-header-wrapper">
+    <div class="compact-section">
+        <div class="manager-title-bar">
+            <div class="section-label" style="min-width: fit-content; margin-bottom: 0;">👤 الشخص المسؤول</div>
+            <button class="add-mgr-btn" onclick="addNewManagerRow()">+ إضافة مسؤول</button>
+        </div>
+        
+        <table class="mgr-table">
             <thead>
                 <tr>
-                    <th style="width: 15%;">الاسم الكافي</th>
+                    <th style="width: 8%;">الرئيسي</th>
+                    <th style="width: 17%;">الاسم</th>
                     <th style="width: 15%;">رقم التواصل</th>
                     <th style="width: 15%;">رقم آخر</th>
                     <th style="width: 18%;">الايميل</th>
@@ -79,13 +76,10 @@
 </div>
 
 <div class="activity-log-section">
-    <div class="activity-log-title-container">
-        <i class="fas fa-history"></i> سجل نشاط العميل التفصيلي
-    </div>
-    <div id="clientActivityLog" class="activity-list-container"></div>
+    <div class="activity-log-title">📋 سجل النشاط</div>
+    <div id="activityList" class="activity-list"></div>
 </div>
 
 <script src="customer-details.js"></script>
-
 </body>
 </html>
