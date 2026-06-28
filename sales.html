@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- ربط ملف التنسيقات المحدث -->
     <link rel="stylesheet" href="sales.css">
 </head>
 <body onload="initPage()">
@@ -37,6 +38,7 @@
                 <div class="stat-item">مكتمل الشهر: <span id="month-completed" class="stat-val" style="color: #16a34a; background: #dcfce7;">0.00</span></div>
                 <div class="stat-item">معلق الشهر: <span id="month-pending" class="stat-val" style="color: #ea580c; background: #ffedd5;">0.00</span></div>
                 
+                <!-- زر العين لإخفاء/تشويش الإحصائيات -->
                 <button onclick="toggleStatsVisibility()" id="eyeToggleBtn" style="background:transparent; border:none; cursor:pointer; color:#64748b; font-size:15px; margin-right:auto; padding:0 5px;" title="إخفاء / إظهار الأرقام">
                     <i class="fas fa-eye"></i>
                 </button>
@@ -94,12 +96,15 @@
         </div>
         <div id="historyLog" class="history-log"></div>
         
+        <!-- حاوية عرض المرفق قبل الحفظ -->
         <div id="filePreviewContainer" style="display:none; font-size:10.5px; color:var(--accent-blue); margin-bottom:5px; font-weight:700;">
             <i class="fas fa-paperclip"></i> <span id="fileNameDisplay"></span> 
             <button onclick="removeAttachment()" style="border:none; background:none; color:var(--danger); cursor:pointer; font-weight:bold; padding:0 5px;" title="حذف المرفق">&times;</button>
         </div>
         
         <textarea id="modalTextArea" class="note-area" placeholder="أدخل تفاصيل الملاحظة هنا..."></textarea>
+        
+        <!-- إدخال مخفي للملفات -->
         <input type="file" id="modalFileAttachment" style="display:none;" onchange="handleFileSelect(this)">
         
         <div style="display:flex; justify-content: flex-end; gap:10px; margin-top:15px; align-items:center;">
@@ -142,6 +147,8 @@
     </div>
 </div>
 
+<!-- ربط ملف الجافاسكريبت المحدث -->
 <script src="sales.js"></script>
 </body>
 </html>
+

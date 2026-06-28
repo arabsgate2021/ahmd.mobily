@@ -1,7 +1,7 @@
 let currentActivePreview = null;
-let currentAttachmentName = null; 
+let currentAttachmentName = null; // لتخزين اسم المرفق مؤقتاً
 const LOGS_KEY = 'asgate_general_sales_logs';
-const CUSTOMERS_STORAGE_KEY = 'asgate_customers_final_v1'; 
+const CUSTOMERS_STORAGE_KEY = 'asgate_customers_final_v1'; // تم تحديث مفتاح الحفظ ليتطابق مع صفحة العملاء
 let saveTimeout;
 
 function getTodayFormatted() { return new Date().toISOString().split('T')[0]; }
@@ -194,6 +194,7 @@ function autoSave() {
     updateHeaderStats();
 }
 
+// Modal Orders Functions
 function openOrderModal() { document.getElementById('orderModal').style.display = 'flex'; }
 function closeOrderModal() { document.getElementById('orderModal').style.display = 'none'; document.getElementById('mSearchField').value = ''; document.getElementById('mType').value = ''; }
 
@@ -203,15 +204,17 @@ function searchCustomerInModal(el) {
     const customers = JSON.parse(localStorage.getItem(CUSTOMERS_STORAGE_KEY) || '[]');
     if (query.length < 1) { resDiv.style.display='none'; return; }
     
+    // تم التحديث هنا للبحث باستخدام c.record
     const filtered = customers.filter(c => (c.comp || "").toLowerCase().includes(query) || (c.record || "").includes(query));
     
+    // تم التحديث هنا لعرض النتائج وتمرير السجل بشكل صحيح
     resDiv.innerHTML = filtered.map(c => `<div onclick="selectCustomer('${c.comp || ''}', '${c.record || ''}')"><i class="far fa-building"></i> ${c.comp || 'بدون اسم'} - ${c.record || 'بدون سجل'}</div>`).join('');
     resDiv.style.display = filtered.length ? 'block' : 'none';
 }
 
-function selectCustomer(comp, record) { 
+function selectCustomer(comp, record) { // تم تغيير اسم المتغير إلى record
     document.getElementById('mComp').value = comp;
-    document.getElementById('mCr').value = record; 
+    document.getElementById('mCr').value = record; // تمرير قيمة السجل الصحيحة
     document.getElementById('mSearchField').value = comp;
     document.getElementById('mResults').style.display = 'none';
 }
@@ -235,6 +238,7 @@ function addOrderRow() {
     Swal.fire({icon: 'success', title: 'تم', text: 'تم إنشاء الطلب بنجاح', showConfirmButton: false, timer: 1500});
 }
 
+// Notes & Attachments Logic
 function getLastNoteOnly(jsonStr) {
     try { const arr = JSON.parse(jsonStr); return arr.length > 0 ? arr[arr.length - 1].text.split('\n')[0] : 'أضف ملاحظة...'; } 
     catch(e) { return 'أضف ملاحظة...'; }
@@ -264,7 +268,6 @@ function openNote(el) {
     document.getElementById('modalTextArea').focus();
 }
 
-/* إكمال الجزء المقتطوع وبناء مصفوفة الإضافة الذكية */
 function saveNote() {
     const txt = document.getElementById('modalTextArea').value.trim();
     
@@ -277,147 +280,70 @@ function saveNote() {
             finalNoteText += (txt ? '\n' : '') + `📁 مرفق: ${currentAttachmentName}`;
         }
 
-        const ownerName = currentActivePreview.closest('tr').cells[11].querySelector('input').value || 'أحمد';
-
-        arr.push({ 
-            user: ownerName,
-            date: getTodayFormatted(),
-            time: getTimeFormatted(),
-            text: finalNoteText
-        });
-
-        const updatedFullNotes = JSON.stringify(arr);
-        currentActivePreview.setAttribute('data-full-notes', updatedFullNotes);
-        currentActivePreview.innerText = txt ? txt.split('\n')[0] : `📁 مرفق: ${currentAttachmentName}`;
-        
+        arr.push({ user: currentActivePreview.closest('tr').cells[11].querySelector('input').value || "النظام", date: getTodayFormatted(), time: getTimeFormatted(), text: finalNoteText });
+        currentActivePreview.setAttribute('data-full-notes', JSON.stringify(arr));
+        currentActivePreview.innerText = finalNoteText.split('\n')[0]; // عرض السطر الأول فقط في المعاينة
         updateDateField(currentActivePreview);
-        autoSave();
+        debouncedSave();
     }
     closeNote();
 }
 
-function closeNote() {
-    document.getElementById('noteModal').style.display = "none";
-    document.getElementById('modalTextArea').value = "";
+function closeNote() { 
+    document.getElementById('noteModal').style.display = "none"; 
+    document.getElementById('modalTextArea').value = ""; 
     removeAttachment();
 }
 
-/* الدوال الإضافية اللازمة لتشغيل الواجهة والربط */
-function loadSalesFromStorage() {
-    const tbody = document.getElementById('salesBody');
-    tbody.innerHTML = '';
-    const saved = JSON.parse(localStorage.getItem('asgate_sales_db') || '[]');
-    saved.forEach(item => renderTableRow(item));
-    updateHeaderStats();
-    renderGeneralLogs();
-}
-
+// Table & Logs Functions
 function filterSalesTable() {
-    const query = document.getElementById('globalSearch').value.toLowerCase().trim();
-    const rows = document.querySelectorAll('#salesBody .main-row');
-    rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        if(text.includes(query)) row.style.style.display = '';
-        else row.style.display = 'none';
+    const q = document.getElementById('globalSearch').value.toLowerCase();
+    document.querySelectorAll('#salesBody .main-row').forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        const inputsText = Array.from(row.querySelectorAll('input, select')).map(i => i.value.toLowerCase()).join(' ');
+        row.style.display = (rowText.includes(q) || inputsText.includes(q)) ? "table-row" : "none";
     });
 }
 
-function toggleAllCheckboxes(master) {
-    const checkboxes = document.querySelectorAll('#salesBody .select-check');
-    checkboxes.forEach(cb => cb.checked = master.checked);
-}
+function toggleAllCheckboxes(master) { document.querySelectorAll('.select-check').forEach(c => c.checked = master.checked); }
+function toggleDropdown(e, btn) { e.stopPropagation(); const menu = btn.nextElementSibling; document.querySelectorAll('.dropdown-menu').forEach(m => { if(m !== menu) m.classList.remove('show'); }); menu.classList.toggle('show'); }
 
-function toggleDropdown(event, el) {
-    event.stopPropagation();
-    const menu = el.nextElementSibling;
-    menu.classList.toggle('show');
-}
-
-window.onclick = function(event) {
-    if (!event.target.matches('.btn-bulk-trigger')) {
-        const dropdowns = document.getElementsByClassName("dropdown-menu");
-        for (let i = 0; i < dropdowns.length; i++) {
-            let openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains('show')) openDropdown.classList.remove('show');
-        }
-    }
-}
-
-function handleBulkAction(action) {
-    const checkedBoxes = document.querySelectorAll('#salesBody .select-check:checked');
-    if (checkedBoxes.length === 0) {
-        Swal.fire({icon: 'warning', title: 'تنبيه', text: 'يرجى تحديد صفوف أولاً', confirmButtonColor: '#3b82f6'});
-        return;
-    }
+async function handleBulkAction(action) {
+    const selected = document.querySelectorAll('.select-check:checked');
+    if (selected.length === 0) { Swal.fire({icon: 'info', text: 'يرجى تحديد صف واحد على الأقل', confirmButtonColor: '#3b82f6'}); return; }
     
     if (action === 'حذف') {
-        Swal.fire({
-            title: 'هل أنت متأكد؟',
-            text: `سيتم حذف عدد ${checkedBoxes.length} طلبات نهائياً!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#cbd5e1',
-            confirmButtonText: 'نعم، احذف',
-            cancelButtonText: 'إلغاء'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                let saved = JSON.parse(localStorage.getItem('asgate_sales_db') || '[]');
-                checkedBoxes.forEach(cb => {
-                    const row = cb.closest('tr');
-                    const id = row.id.replace('row-', '');
-                    saved = saved.filter(item => String(item.id) !== String(id));
-                    row.remove();
-                });
-                localStorage.setItem('asgate_sales_db', JSON.stringify(saved));
-                addGeneralLog('إجراء جماعي', '', '', 'متعدد', `حذف عدد ${checkedBoxes.length} طلبات مبيعات`);
-                updateHeaderStats();
-                Swal.fire('تم الحذف!', 'تم حذف الصفوف المحددة.', 'success');
-            }
-        });
-    } else if (action === 'تغيير المالك') {
-        Swal.fire({
-            title: 'تغيير المالك',
-            input: 'text',
-            inputLabel: 'اسم المالك الجديد',
-            showCancelButton: true,
-            confirmButtonColor: '#3b82f6',
-            confirmButtonText: 'حفظ',
-            cancelButtonText: 'إلغاء'
-        }).then((result) => {
-            if (result.value) {
-                checkedBoxes.forEach(cb => {
-                    const row = cb.closest('tr');
-                    row.cells[11].querySelector('input').value = result.value;
-                    updateDateField(row.cells[11].querySelector('input'));
-                });
-                autoSave();
-                addGeneralLog('إجراء جماعي', '', result.value, 'متعدد', `تغيير المالك لعدد ${checkedBoxes.length} طلبات إلى ${result.value}`);
-            }
-        });
-    } else if (action === 'تصدير') {
-        addGeneralLog('إجراء جماعي', '', '', 'متعدد', 'تصدير الطلبات المحددة لملف Excel');
-        Swal.fire('تم التصدير', 'تم حفظ التصدير في السجل المعني بنجاح', 'success');
-    } else if (action === 'طباعة') {
-        addGeneralLog('إجراء جماعي', '', '', 'متعدد', 'طباعة قائمة المبيعات المحددة');
-        window.print();
+        const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: "سيتم حذف الطلبات المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'احذف', cancelButtonText: 'إلغاء' });
+        if (result.isConfirmed) {
+            selected.forEach(chk => { const row = chk.closest('tr'); addGeneralLog('إجراء', '', '', row.cells[4].querySelector('input').value, 'تم حذف الطلب'); row.remove(); });
+            autoSave(); Swal.fire({icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1500});
+        }
+    } else {
+        Swal.fire({icon: 'success', title: 'تم', text: `تم تنفيذ إجراء [${action}] على ${selected.length} صف`, showConfirmButton: false, timer: 1500});
     }
 }
 
-function addGeneralLog(fieldName, oldVal, newVal, comp, actionText) {
-    const d = new Date();
-    const headerHTML = `<span class="activity-header-part">👤 أحمد &nbsp;🗓️ ${getTodayFormatted()} &nbsp;<span class="activity-time-part">${getTimeFormatted()}</span></span>`;
-    const fullLogHTML = `<div class="activity-row-inline">${headerHTML} &nbsp; <span class="activity-text-part">${actionText} (الشركة: ${comp || 'بدون'})</span></div>`;
-    
-    let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+function addGeneralLog(field, old, newVal, comp, actionText) {
+    const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+    const d = new Date(); const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const fullLogHTML = `<span style="color: #94a3b8; font-size: 9px;"><i class="fas fa-clock"></i> ${days[d.getDay()]} ${getTodayFormatted()} ${getTimeFormatted()}</span> &nbsp;|&nbsp; <span style="color: #1e293b; font-weight: 700;">${actionText} ( ${comp} )</span>`;
     logs.unshift(fullLogHTML);
     localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100)));
     renderGeneralLogs();
 }
 
 function renderGeneralLogs() {
-    const list = document.getElementById('activityLogs');
-    if(!list) return;
     const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
-    list.innerHTML = logs.map(log => `<div class="activity-item">${log}</div>`).join('');
+    document.getElementById('activityLogs').innerHTML = logs.map(l => `<div class="activity-item">${l}</div>`).join('');
 }
+
+function loadSalesFromStorage() {
+    const saved = JSON.parse(localStorage.getItem('asgate_sales_db') || '[]');
+    document.getElementById('salesBody').innerHTML = "";
+    saved.forEach(item => renderTableRow(item));
+    updateHeaderStats();
+    renderGeneralLogs();
+}
+
+window.onclick = e => { if (!e.target.matches('.btn-bulk-trigger') && !e.target.matches('.fa-chevron-down')) document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show')); };
+
