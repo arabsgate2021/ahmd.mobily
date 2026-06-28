@@ -346,3 +346,4 @@ function loadSalesFromStorage() {
 }
 
 window.onclick = e => { if (!e.target.matches('.btn-bulk-trigger') && !e.target.matches('.fa-chevron-down')) document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show')); };
+
