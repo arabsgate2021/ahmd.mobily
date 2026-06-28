@@ -75,9 +75,12 @@
     </div>
 </div>
 
-<div class="activity-log-section">
-    <div class="activity-log-title">سجل نشاط تفاصيل العميل</div>
-    <div id="activityList" class="activity-list"></div>
+<div class="activity-log-container" id="activity-container">
+    <div class="log-header" onclick="toggleActivityLog()">
+        <span>📜 سجل نشاط تفاصيل العميل</span>
+        <span id="log-toggle-icon">▲</span>
+    </div>
+    <div class="log-content" id="activityList"></div>
 </div>
 
 <script src="customer-details.js"></script>
