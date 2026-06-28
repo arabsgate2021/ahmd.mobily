@@ -1,8 +1,13 @@
+/* ==========================================================
+   1. تعريف المتغيرات واستخراج المعاملات من الرابط
+   ========================================================== */
 const urlParams = new URLSearchParams(window.location.search);
-const clientName = urlParams.get('name');
+// قراءة كود العميل الخماسي الفريد بدلاً من قراءة الاسم لمنع أي تداخل
+const clientCode = urlParams.get('code'); 
+let clientName = ''; 
 
 function goBackAndFocus() {
-    if(clientName) sessionStorage.setItem('last_viewed_client', clientName);
+    if (clientCode) sessionStorage.setItem('last_viewed_client_code', clientCode);
     window.location.href = 'customers.html';
 }
 
@@ -24,155 +29,115 @@ function getFullDateTimePattern() {
 }
 
 function addToClientActivityLog(actionText) {
+    if (!clientName) return;
     const timePart = getFullDateTimePattern();
-    const fullLogHTML = `<span class="activity-time-part">${timePart}</span> <span class="activity-text-part">${actionText}</span>`;
-    
-    let logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v2') || '[]');
+    const fullLogHTML = `<div class="log-item" style="padding: 4px 0; border-bottom: 1px dashed #eee; font-size:11px;"><span class="activity-time-part" style="color:#64748b; font-weight:700;">${timePart}</span> <span class="activity-text-part" style="color:#0f172a; font-weight:600;">${actionText}</span></div>`;
+    let logs = JSON.parse(localStorage.getItem('asgate_customer_details_logs_' + clientName) || '[]');
     logs.unshift(fullLogHTML);
-    if(logs.length > 100) logs.pop();
-    localStorage.setItem('asgate_activity_logs_v2', JSON.stringify(logs));
+    localStorage.setItem('asgate_customer_details_logs_' + clientName, JSON.stringify(logs));
     renderClientActivityLog();
 }
 
 function renderClientActivityLog() {
-    const list = document.getElementById('activityList');
-    if (!list) return;
-    const logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v2') || '[]');
-    list.innerHTML = logs.map(log => `<div class="activity-item">${log}</div>`).join('');
-}
-
-function handleMainSelection(checkbox) {
-    if (checkbox.checked) {
-        const allChecks = document.querySelectorAll('.main-check');
-        allChecks.forEach(cb => {
-            if (cb !== checkbox) cb.checked = false;
-        });
-        const selectedRow = checkbox.closest('tr');
-        const mgrInput = selectedRow.querySelector('.mgr-input');
-        const mgrName = mgrInput ? mgrInput.value.trim() : "غير محدد";
-        addToClientActivityLog(`تحديد المسؤول (${mgrName}) كمسؤول رئيسي للمنشأة  ( ${clientName || 'شركة غير محددة'} )`);
+    const container = document.getElementById('clientActivityLog');
+    if (!container || !clientName) return;
+    let logs = JSON.parse(localStorage.getItem('asgate_customer_details_logs_' + clientName) || '[]');
+    container.innerHTML = logs.join('');
+    if(logs.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">لا توجد سجلات أنشطة سابقة</p>`;
     }
-    saveManagersToLocalStorage();
 }
 
+/* ==========================================================
+   2. دالة جلب العميل من خلال الكود الخماسي الفريد
+   ========================================================== */
 function loadClientData() {
-    if(!clientName) return;
-    const data = JSON.parse(localStorage.getItem('asgate_customers_data') || '[]');
-    const client = data.find(c => c.comp === clientName);
-    if(client) {
-        document.title = `${client.comp} | تفاصيل العميل`;
-        document.getElementById('c-name').innerText = client.comp;
-        document.getElementById('c-cr').innerText = client.cr || '0000000';
-        document.getElementById('c-addr').innerText = client.address || 'غير محدد';
-        document.getElementById('c-source').innerText = client.source || 'نظام داخلي';
-        document.getElementById('c-owner').innerText = client.owner || 'غير محدد';
-        loadManagersData();
-        openTab('o-history');
-    }
-    renderClientActivityLog();
-}
-
-function addNewManagerRow() {
-    const tbody = document.getElementById('managerTableBody');
-    const row = tbody.insertRow();
-    const todayStr = getTodayDateFormatted();
-    row.innerHTML = `
-        <td><input type="checkbox" class="main-check" onchange="handleMainSelection(this)"></td>
-        <td><input type="text" class="mgr-input" placeholder="الاسم..."></td>
-        <td><input type="text" class="mgr-input" placeholder="رقم التواصل..."></td>
-        <td><input type="text" class="mgr-input" placeholder="رقم آخر..."></td>
-        <td><input type="email" class="mgr-input" placeholder="الايميل..."></td>
-        <td><input type="text" class="mgr-input" placeholder="الوظيفة..."></td>
-        <td><input type="text" class="mgr-input" value="${todayStr}" disabled style="color: #64748b;"></td>
-        <td><button class="btn-save-row" onclick="lockAndSaveManagerRow(this)">حفظ</button></td>
-    `;
-}
-
-function lockAndSaveManagerRow(btn) {
-    const row = btn.closest('tr');
-    const inputs = row.querySelectorAll('.mgr-input');
+    const rawData = localStorage.getItem('asgate_customers_final_v2');
+    if (!rawData || !clientCode) return;
     
-    if(!inputs[0].value.trim()) {
-        alert("يرجى إدخال اسم المسؤول أولاً.");
-        inputs[0].focus();
-        return;
-    }
-
-    alert("لن تتمكن من الحذف أو التعديل بعد ذلك (باستثناء تحديد المسؤول الرئيسي)");
-    
-    const savedName = inputs[0].value.trim();
-    inputs.forEach(input => input.disabled = true);
-    btn.parentElement.innerHTML = `<span class="btn-locked-status">🔒 محفوظ ومقفل</span>`;
-    
-    saveManagersToLocalStorage();
-    addToClientActivityLog(`إضافة وقفل بيانات المسؤول الجديد: ${savedName}  ( ${clientName || 'شركة غير محددة'} )`);
-}
-
-function saveManagersToLocalStorage() {
-    if (!clientName) return;
-    const tbody = document.getElementById('managerTableBody');
-    const managersList = [];
-    tbody.querySelectorAll('tr').forEach(row => {
-        const inputs = row.querySelectorAll('.mgr-input');
-        const mainCheckbox = row.querySelector('.main-check');
-        if (inputs.length > 0 && inputs[0].disabled) {
-            managersList.push({
-                isMain: mainCheckbox.checked,
-                name: inputs[0].value.trim(),
-                phone1: inputs[1].value.trim(),
-                phone2: inputs[2].value.trim(),
-                email: inputs[3].value.trim(),
-                job: inputs[4].value.trim(),
-                date: inputs[5].value.trim()
-            });
+    try {
+        const customers = JSON.parse(rawData);
+        // البحث المطابق بواسطة كود العميل الفريد المتسلسل
+        const client = customers.find(c => c.code === clientCode);
+        
+        if (client) {
+            clientName = client.comp; // تهيئة الاسم للمفاتيح التابعة
+            
+            // حقن البيانات في واجهة المستخدم تلقائياً
+            if(document.getElementById('c-name')) document.getElementById('c-name').innerText = client.comp || '-';
+            if(document.getElementById('c-addr')) document.getElementById('c-addr').innerText = client.address || '-';
+            if(document.getElementById('c-mgr')) document.getElementById('c-mgr').innerText = client.mgr || '-';
+            if(document.getElementById('c-mob')) document.getElementById('c-mob').innerText = client.mob || '-';
+            if(document.getElementById('c-email')) document.getElementById('c-email').innerText = client.email || '-';
+            if(document.getElementById('c-date')) document.getElementById('c-date').innerText = client.creationDate || '-';
+            if(document.getElementById('c-class')) document.getElementById('c-class').innerText = client.classification || '-';
+            if(document.getElementById('c-status')) {
+                const statusEl = document.getElementById('c-status');
+                statusEl.innerText = client.status || '-';
+                // تطبيق تلوين أحمر داكن هنا أيضاً إذا كانت الحالة غير نشط بالتفاصيل
+                if(client.status === 'غير نشط') {
+                    statusEl.style.backgroundColor = '#991b1b';
+                    statusEl.style.color = '#ffffff';
+                    statusEl.style.padding = '2px 8px';
+                    statusEl.style.borderRadius = '4px';
+                    statusEl.style.fontWeight = '800';
+                }
+            }
+            if(document.getElementById('c-owner')) document.getElementById('c-owner').innerText = client.owner || '-';
+            
+            // تشغيل الوظائف المعتمدة على الاسم الفرعي للشركات والزيارات
+            loadManagerTable();
+            openTab('o-history');
+            renderClientActivityLog();
         }
-    });
-    const allManagersData = JSON.parse(localStorage.getItem('asgate_client_managers_db') || '{}');
-    allManagersData[clientName] = managersList;
-    localStorage.setItem('asgate_client_managers_db', JSON.stringify(allManagersData));
+    } catch(e) { 
+        console.error("Error loading client data:", e); 
+    }
 }
 
-function loadManagersData() {
-    if (!clientName) return;
+function loadManagerTable() {
     const tbody = document.getElementById('managerTableBody');
-    tbody.innerHTML = '';
-    const allManagersData = JSON.parse(localStorage.getItem('asgate_client_managers_db') || '{}');
-    const currentClientManagers = allManagersData[clientName] || [];
-    currentClientManagers.forEach(mgr => {
-        const row = tbody.insertRow();
-        row.innerHTML = `
-            <td><input type="checkbox" class="main-check" ${mgr.isMain ? 'checked' : ''} onchange="handleMainSelection(this)"></td>
-            <td><input type="text" class="mgr-input" value="${mgr.name || ''}" disabled></td>
-            <td><input type="text" class="mgr-input" value="${mgr.phone1 || ''}" disabled></td>
-            <td><input type="text" class="mgr-input" value="${mgr.phone2 || ''}" disabled></td>
-            <td><input type="email" class="mgr-input" value="${mgr.email || ''}" disabled></td>
-            <td><input type="text" class="mgr-input" value="${mgr.job || ''}" disabled></td>
-            <td><input type="text" class="mgr-input" value="${mgr.date || ''}" disabled></td>
-            <td><span class="btn-locked-status">🔒 محفوظ ومقفل</span></td>
-        `;
-    });
+    if (!tbody || !clientName) return;
+    let managers = JSON.parse(localStorage.getItem('asgate_managers_' + clientName) || '[]');
+    tbody.innerHTML = managers.map((m, idx) => `
+        <tr>
+            <td>${m.name || '-'}</td>
+            <td>${m.phone || '-'}</td>
+            <td>${m.phone2 || '-'}</td>
+            <td>${m.email || '-'}</td>
+            <td>${m.role || '-'}</td>
+            <td>${m.date || '-'}</td>
+            <td><button onclick="deleteManager(${idx})" style="background:none; border:none; color:var(--danger-red); cursor:pointer;"><i class="fas fa-trash"></i></button></td>
+        </tr>
+    `).join('');
+    if (managers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8;">لا يوجد مسؤولين مضافين حالياً</td></tr>`;
+    }
 }
 
 function openTab(tab) {
     const title = document.getElementById('frame-title');
     const content = document.getElementById('table-content');
+    if (!title || !content) return;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    if(tab === 'o-history') {
-        document.getElementById('btn-o').classList.add('active');
+    
+    if (tab === 'o-history') {
+        if (document.getElementById('btn-o')) document.getElementById('btn-o').classList.add('active');
         title.innerText = "🛒 سجل طلبات العميل";
         content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد طلبات سابقة مسجلة.</p>`;
-    } else if(tab === 'attachments') {
-        document.getElementById('btn-a').classList.add('active');
+    } else if (tab === 'attachments') {
+        if (document.getElementById('btn-a')) document.getElementById('btn-a').classList.add('active');
         title.innerText = "📁 المرفقات والملفات";
         content.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد ملفات مرفقة.</p>`;
-    } else if(tab === 'v-history') {
-        document.getElementById('btn-v').classList.add('active');
+    } else if (tab === 'v-history') {
+        if (document.getElementById('btn-v')) document.getElementById('btn-v').classList.add('active');
         title.innerText = "📅 سجل الزيارات الميدانية";
         const visits = JSON.parse(localStorage.getItem('asgate_visits_final_v21') || '[]').filter(v => v.comp === clientName);
         content.innerHTML = visits.length > 0 ? `
-            <table>
-                <thead><tr><th>التاريخ</th><th>الحالة</th><th>الملاحظات</th></tr></thead>
-                <tbody>${visits.map(v => `<tr><td>${v.visitDate}</td><td>${v.status || 'مكتملة'}</td><td>${v.notes || '-'}</td></tr>`).join('')}</tbody>
-            </table>` : `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد سجلات زيارات حالياً.</p>`;
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                <thead><tr style="background:#f1f5f9;"><th style="padding:8px; text-align:right;">التاريخ</th><th style="padding:8px; text-align:right;">الحالة</th><th style="padding:8px; text-align:right;">الملاحظات</th></tr></thead>
+                <tbody>${visits.map(v => `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">${v.visitDate}</td><td style="padding:8px;">${v.status || '-'}</td><td style="padding:8px;">${v.notes || '-'}</td></tr>`).join('')}</tbody>
+            </table>
+        ` : `<p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:20px;">لا توجد زيارات سابقة مسجلة.</p>`;
     }
 }
