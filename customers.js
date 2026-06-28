@@ -4,7 +4,7 @@
 let currentActivePreview = null;
 let saveTimeout;
 let searchTimeout;
-const STORAGE_KEY = 'asgate_customers_final_v2'; // تم تغيير المفتاح لعدم تعارض البيانات القديمة
+const STORAGE_KEY = 'asgate_customers_final_v2'; 
 const LOGS_KEY = 'asgate_customers_logs_v2';
 
 /* ==========================================================
@@ -23,11 +23,28 @@ function renderRow(v = {}, prepend = false) {
     const creationDate = v.creationDate || today;
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
-    const customerCode = v.code || Math.floor(10000 + Math.random() * 90000); // كود من 5 أرقام
+    
+    // نظام الترقيم التسلسلي الذكي المكون من 5 خانات ويبدأ من 00001
+    const customerCode = v.code || (() => {
+        const rawData = localStorage.getItem(STORAGE_KEY);
+        let maxNum = 0;
+        if (rawData) {
+            try {
+                const list = JSON.parse(rawData);
+                if (Array.isArray(list)) {
+                    list.forEach(c => {
+                        const num = parseInt(c.code, 10);
+                        if (!isNaN(num) && num > maxNum) maxNum = num;
+                    });
+                }
+            } catch(e) {}
+        }
+        return String(maxNum + 1).padStart(5, '0');
+    })();
 
     mainRow.innerHTML = `
         <td class="col-select"><input type="checkbox" class="select-check"></td>
-        <td><a href="customer_details.html?id=${customerCode}" class="code-link" target="_blank">${customerCode}</a><input type="hidden" class="code-val" value="${customerCode}"></td>
+        <td><a href="customer-details.html?code=${customerCode}" class="code-link" target="_blank">${customerCode}</a><input type="hidden" class="code-val" value="${customerCode}"></td>
         <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="debouncedSaveAllData();" onblur="addToActivityLog('اسم الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.mgr || ''}" data-old="${v.mgr || ''}" onfocus="this.dataset.old=this.value" onkeyup="debouncedSaveAllData();" onblur="addToActivityLog('المسؤول', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
@@ -132,7 +149,6 @@ function debouncedFilterTable() { clearTimeout(searchTimeout); searchTimeout = s
 function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     document.querySelectorAll('.main-row').forEach(row => {
-        // البحث في جميع الأعمدة المدخلة
         const text = Array.from(row.cells).slice(1, 8).map(c => {
             const input = c.querySelector('input');
             const link = c.querySelector('a');
