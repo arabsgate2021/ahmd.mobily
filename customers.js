@@ -44,7 +44,7 @@ function renderRow(v = {}, prepend = false) {
 
     mainRow.innerHTML = `
         <td class="col-select"><input type="checkbox" class="select-check"></td>
-        <td><a href="customer-details.html?code=${customerCode}" class="code-link" target="_blank">${customerCode}</a><input type="hidden" class="code-val" value="${customerCode}"></td>
+        <td><a href="customer-details.html?code=${customerCode}" class="code-link">${customerCode}</a><input type="hidden" class="code-val" value="${customerCode}"></td>
         <td><input type="text" class="excel-input" value="${v.comp || ''}" data-old="${v.comp || ''}" onfocus="this.dataset.old=this.value" onkeyup="debouncedSaveAllData();" onblur="addToActivityLog('اسم الشركة', this.dataset.old, this.value, this.value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.address || ''}" data-old="${v.address || ''}" onfocus="this.dataset.old=this.value" onkeyup="debouncedSaveAllData();" onblur="addToActivityLog('العنوان', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
         <td><input type="text" class="excel-input" value="${v.mgr || ''}" data-old="${v.mgr || ''}" onfocus="this.dataset.old=this.value" onkeyup="debouncedSaveAllData();" onblur="addToActivityLog('المسؤول', this.dataset.old, this.value, this.closest('tr').cells[2].querySelector('input').value); this.dataset.old=this.value;"></td>
