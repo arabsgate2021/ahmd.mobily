@@ -1,23 +1,11 @@
 // استخراج الكود الخماسي من الرابط
 const urlParams = new URLSearchParams(window.location.search);
 const clientCode = urlParams.get('code'); 
-let clientName = ''; // جعلنا الاسم متغيراً يتم جلبه آلياً لتستمر باقي الوظائف بالعمل بشكل طبيعي
+let clientName = ''; 
 
 function goBackAndFocus() {
     if(clientCode) sessionStorage.setItem('last_viewed_client_code', clientCode);
     window.location.href = 'customers.html';
-}
-
-function toggleActivityLog() {
-    const container = document.getElementById('activity-container');
-    const icon = document.getElementById('log-toggle-icon');
-    if(container.style.height === '250px') {
-        container.style.height = '35px';
-        icon.innerText = '▲';
-    } else {
-        container.style.height = '250px';
-        icon.innerText = '▼';
-    }
 }
 
 function getTodayDateFormatted() {
@@ -25,35 +13,56 @@ function getTodayDateFormatted() {
     return d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear();
 }
 
-function getFullDateTimePattern() {
-    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    const d = new Date();
-    const dayName = days[d.getDay()];
-    const dateStr = getTodayDateFormatted();
-    let hours = d.getHours();
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    return `👤 (أحمد)  🗓️ ${dayName}  ${dateStr}  ${hours.toString().padStart(2, '0')}:${minutes} ${ampm} ➡️ :`;
+/* === دوال سجل النشاط الجديدة (مطابقة لصفحة الزيارات) === */
+function toggleLogExpansion() { 
+    const logSection = document.getElementById('activityLogSection'); 
+    const toggleBtn = document.getElementById('toggleExpandBtn'); 
+    if (logSection.classList.contains('expanded')) { 
+        logSection.classList.remove('expanded'); 
+        toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; 
+    } else { 
+        logSection.classList.add('expanded'); 
+        toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; 
+    } 
 }
 
 function addToClientActivityLog(actionText) {
-    const timePart = getFullDateTimePattern();
-    const fullLogHTML = `<span class="activity-time-part">${timePart}</span> <span class="activity-text-part">${actionText}</span>`;
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']; 
+    const d = new Date(); 
+    let dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0'), yyyy = d.getFullYear(); 
+    const dayName = days[d.getDay()];
     
-    let logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v2') || '[]');
-    logs.unshift(fullLogHTML);
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const timeStr = String(hours).padStart(2, '0') + ":" + minutes + " " + ampm;
+    
+    const fullLogHTML = `
+        <div class="log-entry">
+            <span class="log-badge-user"><i class="fas fa-user-circle"></i> المستخدم</span>
+            <span class="log-divider">|</span>
+            <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayName} ${yyyy}-${mm}-${dd} ${timeStr}</span>
+            <span class="log-divider">|</span>
+            <span class="log-action">${actionText}</span>
+        </div>
+    `;
+    
+    // استخدمت مفتاح جديد (v3) لعدم تداخل التنسيق الجديد مع البيانات القديمة المخزنة
+    let logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v3') || '[]'); 
+    logs.unshift(fullLogHTML); 
     if(logs.length > 100) logs.pop();
-    localStorage.setItem('asgate_activity_logs_v2', JSON.stringify(logs));
+    localStorage.setItem('asgate_activity_logs_v3', JSON.stringify(logs)); 
     renderClientActivityLog();
 }
 
 function renderClientActivityLog() {
     const list = document.getElementById('activityList');
     if (!list) return;
-    const logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v2') || '[]');
-    list.innerHTML = logs.map(log => `<div class="activity-item">${log}</div>`).join('');
+    const logs = JSON.parse(localStorage.getItem('asgate_activity_logs_v3') || '[]');
+    list.innerHTML = logs.join('');
 }
+/* ====================================================== */
 
 function handleMainSelection(checkbox) {
     if (checkbox.checked) {
@@ -78,11 +87,9 @@ function loadClientData() {
     const client = data.find(c => c.code === clientCode);
     
     if(client) {
-        clientName = client.comp; // تعيين الاسم لتعمل عليه بقية وظائف الصفحة
-        
+        clientName = client.comp; 
         document.title = `${client.comp} | تفاصيل العميل`;
         
-        // ربط الحقول الجديدة
         document.getElementById('c-name').innerText = client.comp || 'غير محدد';
         document.getElementById('c-cr1').innerText = client.cr1 || client.cr || client.record || '0000000';
         document.getElementById('c-cr2').innerText = client.cr2 || 'غير محدد';
