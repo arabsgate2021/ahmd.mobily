@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>تفاصيل العميل | ASGate</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+    <!-- إضافة مكتبة الأيقونات لتعمل أيقونات سجل النشاط -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="customer-details.css">
 </head>
 <body onload="loadClientData()">
@@ -75,12 +77,15 @@
     </div>
 </div>
 
-<div class="activity-log-container" id="activity-container">
-    <div class="log-header" onclick="toggleActivityLog()">
-        <span>📜 سجل نشاط تفاصيل العميل</span>
-        <span id="log-toggle-icon">▲</span>
+<!-- سجل النشاط الجديد المطابق لصفحة الزيارات -->
+<div class="full-width-container" style="padding-top: 0;">
+    <div id="activityLogSection" class="activity-log-section">
+        <div class="activity-log-header-container">
+            <div class="activity-log-title"><i class="fas fa-history"></i> سجل نشاط تفاصيل العميل</div>
+            <button id="toggleExpandBtn" class="btn-toggle-expand" onclick="toggleLogExpansion()" title="توسيع / تقليص"><i class="fas fa-expand-alt"></i></button>
+        </div>
+        <div id="activityList" class="activity-list"></div>
     </div>
-    <div class="log-content" id="activityList"></div>
 </div>
 
 <script src="customer-details.js"></script>
