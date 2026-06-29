@@ -67,7 +67,6 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 
 /* الألوان وحالات التصنيف */
 .status-active { background-color: #dcfce7 !important; color: #166534 !important; font-weight: 800 !important; border-radius: 4px !important; }
-/* تم تعديل لون غير نشط هنا ليصبح أحمر غامق فاخر مع خط أبيض بناءً على طلبك */
 .status-inactive { background-color: #991b1b !important; color: #ffffff !important; font-weight: 800 !important; border-radius: 4px !important; }
 .status-gov { background-color: #e0e7ff !important; color: #3730a3 !important; font-weight: 800 !important; border-radius: 4px !important; }
 .status-important { background-color: #fee2e2 !important; color: #991b1b !important; font-weight: 800 !important; border-radius: 4px !important; }
@@ -142,4 +141,3 @@ tbody tr.main-row:nth-child(4n+1) { background-color: #fafafa; }
 .col-owner { width: 7%; }
 
 div:where(.swal2-container) { font-family: 'Cairo', sans-serif !important; }
-
