@@ -22,23 +22,25 @@
 
     <div class="main-content">
         <div class="action-bar">
-            <button class="btn-top btn-add" onclick="insertNewRow()"><i class="fas fa-plus"></i> إضافة عميل جديد</button>
+            <!-- تحديث الحدث للانتقال إلى صفحة التفاصيل مباشرة -->
+            <button class="btn-top btn-add" onclick="window.location.href='customer-details.html?code=new'"><i class="fas fa-plus"></i> إضافة عميل جديد</button>
             <div class="search-wrapper">
                 <input type="text" id="searchInput" class="search-input" placeholder="بحث 🔍" onkeyup="debouncedFilterTable()">
             </div>
             
             <div class="stats-bar-visit">
-                <div class="stat-item">إجمالي العملاء: <span id="stat-total" class="stat-val">0</span></div>
-                <div class="stat-divider">|</div>
-                <div class="stat-item">عملاء الشهر: <span id="stat-month" class="stat-val">0</span></div>
-                <div class="stat-divider">|</div>
-                <div class="stat-item">عملاء اليوم: <span id="stat-today" class="stat-val">0</span></div>
+                <div class="stat-total-wrapper" style="display: flex; gap: 15px; align-items: center;">
+                    <div class="stat-item">إجمالي العملاء: <span id="stat-total" class="stat-val">0</span></div>
+                    <div class="stat-divider">|</div>
+                    <div class="stat-item">عملاء الشهر: <span id="stat-month" class="stat-val">0</span></div>
+                    <div class="stat-divider">|</div>
+                    <div class="stat-item">عملاء اليوم: <span id="stat-today" class="stat-val">0</span></div>
+                </div>
             </div>
 
             <div class="bulk-action-wrapper">
                 <button class="btn-bulk-trigger" onclick="toggleDropdown(event, this)">إجراءات جماعية <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>
                 <div class="dropdown-menu">
-                    <button onclick="handleBulkAction('تغيير المالك')"><i class="fas fa-user-edit"></i> تغيير المالك</button>
                     <button onclick="handleBulkAction('تصدير')"><i class="fas fa-file-excel"></i> تصدير للإكسيل</button>
                     <button onclick="handleBulkAction('طباعة')"><i class="fas fa-print"></i> طباعة</button>
                     <hr style="border:none; border-top:1px solid #e2e8f0; margin: 4px 0;">
@@ -55,7 +57,7 @@
                         <th class="col-code">كود العميل</th>
                         <th class="col-company">اسم الشركة</th>
                         <th class="col-address">العنوان</th> 
-                        <th class="col-manager">المسؤول</th>
+                        <th class="col-manager">المسؤول الرئيسي / المفوض</th>
                         <th class="col-mobile">رقم التواصل</th>
                         <th class="col-email">البريد الالكتروني</th>
                         <th class="col-date">تاريخ الانشاء</th>
