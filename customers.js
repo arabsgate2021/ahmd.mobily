@@ -1,14 +1,8 @@
-/* ==========================================================
-   1. المتغيرات والتعريفات الأساسية
-   ========================================================== */
 let currentActivePreview = null;
 let searchTimeout;
 const STORAGE_KEY = 'asgate_customers_final_v2'; 
 const LOGS_KEY = 'asgate_customers_logs_v2';
 
-/* ==========================================================
-   2. الدالة الأساسية لبناء السطور المغلقة (renderRow) 
-   ========================================================== */
 function renderRow(v = {}, prepend = false) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
@@ -23,16 +17,11 @@ function renderRow(v = {}, prepend = false) {
     const notesJson = v.notes || "[]";
     const lastNoteText = getLastNoteOnlyFromJSON(notesJson);
     const customerCode = v.code || "00001";
+    const displayMgr = v.mgr || '-';
+    const displayMob = v.mob || '-';
+    const displayEmail = v.email || '-';
 
-    // ميزة الأولوية للمفوض: إذا جرى تحديد خيار الأولوية ووجود بيانات للمفوض، يتم عرضها بدلاً من المسؤول الرئيسي
-    const displayMgr = (v.delegatePriority && v.delegateName) ? v.delegateName : (v.mgr || '-');
-    const displayMob = (v.delegatePriority && v.delegateMob) ? v.delegateMob : (v.mob || '-');
-    const displayEmail = (v.delegatePriority && v.delegateEmail) ? v.delegateEmail : (v.email || '-');
-
-    // تحديد كلاس التلوين الخاص بالتصنيف والحالة
-    const classColorClass = getStyleClassForClassification(v.classification);
-    const statusColorClass = getStyleClassForStatus(v.status);
-
+    // تم التأكيد على أن الرابط ينقلك إلى صفحة تفاصيل العميل 
     mainRow.innerHTML = `
         <td class="col-select"><input type="checkbox" class="select-check"></td>
         <td>
@@ -41,7 +30,7 @@ function renderRow(v = {}, prepend = false) {
         </td>
         <td style="font-weight: 700; color: var(--text-dark);">${v.comp || '-'}</td>
         <td>${v.address || '-'}</td>
-        <td style="${v.delegatePriority ? 'color: #4c1d95; font-weight: 700;' : ''}">${displayMgr} ${v.delegatePriority ? '<small style="font-size:9px; background:#e0e7ff; padding:1px 4px; border-radius:3px;">مفوض</small>' : ''}</td>
+        <td>${displayMgr}</td>
         <td>
             <div class="phone-cell-container">
                 ${displayMob !== '-' ? `<a class="whatsapp-icon-btn" onclick="openWhatsAppChatForNumber('${displayMob}')" title="مراسلة عبر واتساب"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
@@ -50,13 +39,9 @@ function renderRow(v = {}, prepend = false) {
         </td>
         <td>${displayEmail}</td>
         <td><span style="color:var(--text-muted); font-weight:700;">${creationDate}</span></td>
-        <td>
-            <span class="excel-input ${classColorClass}" style="display: inline-block; width: auto; padding: 2px 8px; border-radius: 4px; line-height: 1.6; font-weight: 800;">${v.classification || '-'}</span>
-        </td>
+        <td><span class="excel-input" style="font-weight: 800;">${v.classification || 'جديد'}</span></td>
         <td><div class="notes-preview" onclick="openNote(this)" data-full-notes='${notesJson.replace(/'/g, "&apos;")}' id="preview-${Date.now()}">${lastNoteText}</div></td>
-        <td>
-            <span class="excel-input ${statusColorClass}" style="display: inline-block; width: auto; padding: 2px 8px; border-radius: 4px; line-height: 1.6; font-weight: 800;">${v.status || '-'}</span>
-        </td>
+        <td><span class="excel-input status-active" style="font-weight: 800;">${v.status || 'نشط'}</span></td>
         <td>${v.owner || '-'}</td>
     `;
 
@@ -64,22 +49,101 @@ function renderRow(v = {}, prepend = false) {
     else { tbody.appendChild(mainRow); }
 }
 
-function getStyleClassForClassification(val) {
-    if (val === 'حكومي') return 'status-gov';
-    if (val === 'مهم') return 'status-important';
-    if (val === 'متوسط') return 'status-med';
-    if (val === 'صغير') return 'status-small';
-    return '';
+/* ==========================================================
+   وظائف مربع "إضافة عميل جديد"
+   ========================================================== */
+function openAddCustomerModal() {
+    document.getElementById('addCustomerModal').style.display = 'flex';
+    
+    // مسح الحقول
+    document.getElementById('addComp').value = '';
+    document.getElementById('addCity').value = '';
+    document.getElementById('addAddress').value = '';
+    document.getElementById('addMainCR').value = '';
+    document.getElementById('addSubCR').value = '';
+    document.getElementById('addManager').value = '';
+    document.getElementById('addMob').value = '';
+    document.getElementById('addEmail').value = '';
+    document.getElementById('addCreator').value = '';
+    
+    // توليد الكود والتاريخ
+    document.getElementById('addCode').value = generateNextCode();
+    document.getElementById('addDate').value = getTodayFormatted();
 }
 
-function getStyleClassForStatus(val) {
-    if (val === 'نشط') return 'status-active';
-    if (val === 'غير نشط') return 'status-inactive';
-    return '';
+function closeAddCustomerModal() {
+    document.getElementById('addCustomerModal').style.display = 'none';
+}
+
+function generateNextCode() {
+    const rawData = localStorage.getItem(STORAGE_KEY);
+    let maxNum = 0;
+    if (rawData) {
+        try {
+            const list = JSON.parse(rawData);
+            list.forEach(c => {
+                const num = parseInt(c.code, 10);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+            });
+        } catch(e) {}
+    }
+    return String(maxNum + 1).padStart(5, '0');
+}
+
+function saveNewCustomer() {
+    const comp = document.getElementById('addComp').value.trim();
+    if(!comp) {
+        Swal.fire({icon: 'error', text: 'يرجى إدخال اسم الشركة', confirmButtonColor: '#3b82f6'});
+        return;
+    }
+
+    const mainCR = document.getElementById('addMainCR').value.trim();
+    const subCR = document.getElementById('addSubCR').value.trim();
+    
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) {}
+
+    // التحقق من تكرار السجل
+    if (mainCR || subCR) {
+        const isDup = list.find(c => 
+            (mainCR && (c.cr1 === mainCR || c.cr2 === mainCR)) || 
+            (subCR && (c.cr1 === subCR || c.cr2 === subCR))
+        );
+        if(isDup) {
+            Swal.fire({icon: 'error', text: 'العميل مسجل بالفعل', confirmButtonColor: '#3b82f6'});
+            return;
+        }
+    }
+
+    const newCust = {
+        code: document.getElementById('addCode').value,
+        creationDate: document.getElementById('addDate').value,
+        comp: comp,
+        city: document.getElementById('addCity').value.trim(),
+        address: document.getElementById('addAddress').value.trim(),
+        cr1: mainCR,
+        cr2: subCR,
+        mgr: document.getElementById('addManager').value.trim(),
+        mob: document.getElementById('addMob').value.trim(),
+        email: document.getElementById('addEmail').value.trim(),
+        owner: document.getElementById('addCreator').value.trim(),
+        classification: 'جديد',
+        status: 'نشط',
+        notes: '[]'
+    };
+
+    list.unshift(newCust);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    
+    addToActivityLog('إضافة', 'تم إنشاء العميل بنجاح', '', comp);
+    
+    closeAddCustomerModal();
+    loadSavedData();
+    Swal.fire({icon: 'success', title: 'تمت الإضافة بنجاح', showConfirmButton: false, timer: 1500});
 }
 
 /* ==========================================================
-   3. الإجراءات الجماعية والبحث والفرز
+   باقي وظائف النظام (الملاحظات، الجداول، إلخ)
    ========================================================== */
 function toggleDropdown(e, btn) {
     e.stopPropagation();
@@ -87,76 +151,12 @@ function toggleDropdown(e, btn) {
     document.querySelectorAll('.dropdown-menu').forEach(m => { if(m !== menu) m.classList.remove('show'); });
     menu.classList.toggle('show');
 }
-
 window.onclick = (e) => {
     if (!e.target.matches('.btn-bulk-trigger') && !e.target.matches('.fa-chevron-down')) {
         document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
     }
 };
-
 function toggleAllCheckboxes(source) { document.querySelectorAll('.select-check').forEach(chk => chk.checked = source.checked); }
-
-function deleteCustomerFromStorage(code) {
-    const rawData = localStorage.getItem(STORAGE_KEY);
-    if (!rawData) return;
-    try {
-        let list = JSON.parse(rawData);
-        list = list.filter(c => c.code !== code);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    } catch(e) {}
-}
-
-async function handleBulkAction(action) {
-    const selected = document.querySelectorAll('.select-check:checked');
-    if (selected.length === 0) { Swal.fire({icon: 'info', text: 'يرجى تحديد صف واحد على الأقل', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6'}); return; }
-    
-    if (action === 'حذف') {
-        const result = await Swal.fire({ title: 'تأكيد الحذف؟', text: "سيتم حذف بيانات العملاء المحددة نهائياً!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'نعم، احذف', cancelButtonText: 'إلغاء' });
-        if (result.isConfirmed) {
-            selected.forEach(chk => { 
-                const row = chk.closest('tr'); 
-                const code = row.cells[1].querySelector('.code-val').value;
-                const companyName = row.cells[2].textContent.trim();
-                addToActivityLog('إجراء', 'حذف العميل', '', companyName); 
-                deleteCustomerFromStorage(code);
-                row.remove(); 
-            });
-            updateStats(); reorderRows(); Swal.fire({icon: 'success', title: 'تم الحذف', showConfirmButton: false, timer: 1500});
-        }
-    } else if (action === 'تصدير') {
-        exportToExcel(selected); addToActivityLog('إجراء', 'تصدير بيانات للإكسيل', '', 'مجموعة محددة');
-    } else if (action === 'طباعة') {
-        printSelected(selected); addToActivityLog('إجراء', 'طباعة بيانات', '', 'مجموعة محددة');
-    }
-}
-
-function exportToExcel(selectedRows) {
-    let csvContent = "\uFEFFكود العميل,اسم الشركة,العنوان,تاريخ الانشاء,المالك\n";
-    selectedRows.forEach(chk => {
-        const row = chk.closest('tr');
-        const code = row.cells[1].querySelector('.code-val').value;
-        const comp = row.cells[2].textContent.trim();
-        const addr = row.cells[3].textContent.trim();
-        const date = row.cells[7].textContent.trim();
-        const owner = row.cells[11].textContent.trim();
-        csvContent += `"${code}","${comp}","${addr}","${date}","${owner}"\n`;
-    });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "تقرير_العملاء_" + getTodayFormatted() + ".csv";
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-}
-
-function printSelected(selectedRows) {
-    let printWindow = window.open('', '_blank');
-    let html = `<html dir="rtl"><head><title>تقرير العملاء</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"><style>body { font-family: 'Cairo', sans-serif; padding: 20px; color: #0f172a; } h2 { text-align: center; color: #4c1d95; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th { background-color: #f1f5f9; color: #1e293b; padding: 10px; border: 1px solid #cbd5e1; font-weight: 700; } td { padding: 8px; border: 1px solid #cbd5e1; text-align: center; } tr:nth-child(even) { background-color: #f8fafc; }</style></head><body><h2>تقرير العملاء (ASGate CRM)</h2><table><thead><tr><th>الكود</th><th>الشركة</th><th>العنوان</th><th>التاريخ</th><th>المالك</th></tr></thead><tbody>`;
-    selectedRows.forEach(chk => { 
-        const row = chk.closest('tr'); 
-        html += `<tr><td>${row.cells[1].querySelector('.code-val').value}</td><td><strong>${row.cells[2].textContent.trim()}</strong></td><td>${row.cells[3].textContent.trim()}</td><td>${row.cells[7].textContent.trim()}</td><td>${row.cells[11].textContent.trim()}</td></tr>`; 
-    });
-    html += `</tbody></table></body></html>`;
-    printWindow.document.write(html); printWindow.document.close();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-}
 
 function debouncedFilterTable() { clearTimeout(searchTimeout); searchTimeout = setTimeout(filterTable, 300); }
 function filterTable() {
@@ -167,9 +167,6 @@ function filterTable() {
     });
 }
 
-/* ==========================================================
-   4. إدارة الملاحظات وحفظها في التخزين المباشر لضمان عدم الفقد
-   ========================================================== */
 function openNote(el) {
     currentActivePreview = el;
     let arr = []; try { arr = JSON.parse(el.getAttribute('data-full-notes') || "[]"); } catch(e) {}
@@ -208,13 +205,10 @@ function saveNote() {
         const compName = mainRow.cells[2].textContent.trim();
 
         let arr = []; try { arr = JSON.parse(currentActivePreview.getAttribute('data-full-notes') || "[]"); } catch(e) {}
-        let username = "المستخدم";
-        const ownerText = mainRow.cells[11]?.textContent.trim();
-        if (ownerText && ownerText !== '-') username = ownerText;
+        let username = mainRow.cells[11]?.textContent.trim() || "المستخدم";
 
         arr.push({ user: username, date: getTodayFormatted(), time: getTimeFormatted(), text: txt });
         
-        // تحديث مصفوفة التخزين المحلي مباشرة دون الاعتماد على مسح الـ Inputs
         const rawData = localStorage.getItem(STORAGE_KEY);
         if (rawData) {
             try {
@@ -226,7 +220,6 @@ function saveNote() {
                 }
             } catch(e) {}
         }
-
         currentActivePreview.setAttribute('data-full-notes', JSON.stringify(arr)); 
         currentActivePreview.innerText = txt;
         addToActivityLog('الملاحظات', 'إضافة ملاحظة جديدة', txt, compName);
@@ -235,12 +228,7 @@ function saveNote() {
 }
 
 function closeNote() { document.getElementById('noteModal').style.display = "none"; }
-
-/* ==========================================================
-   5. العمليات التشغيلية والألوان المساعدة
-   ========================================================== */
 function toggleLogExpansion() { const logSection = document.getElementById('activityLogSection'); const toggleBtn = document.getElementById('toggleExpandBtn'); if (logSection.classList.contains('expanded')) { logSection.classList.remove('expanded'); toggleBtn.innerHTML = '<i class="fas fa-expand-alt"></i>'; } else { logSection.classList.add('expanded'); toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i>'; } }
-
 function loadSavedData() { 
     const rawData = localStorage.getItem(STORAGE_KEY); 
     const tbody = document.getElementById('tableBody'); 
@@ -269,7 +257,7 @@ function reorderRows() {
     Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(month => { 
         const sepRow = document.createElement('tr'); sepRow.className = 'month-separator'; 
         const isCurrentMonth = (month === currentMonth); 
-        const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important; box-shadow: 0 2px 4px rgba(59,130,246,0.3);' : ''; 
+        const sepStyle = isCurrentMonth ? 'background-color: var(--accent-blue) !important; color:#fff !important;' : ''; 
         sepRow.innerHTML = `<td colspan="12"><div class="sep-text" style="${sepStyle}"><i class="far fa-calendar-alt"></i> إضافات شهر ${month}</div></td>`; 
         fragment.appendChild(sepRow); 
         groups[month].forEach(item => { fragment.appendChild(item.row); }); 
@@ -301,7 +289,7 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
     let dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0'), yyyy = d.getFullYear(); 
     const dayName = days[d.getDay()]; const timeStr = getTimeFormatted();
     const cleanCompany = companyName || 'شركة غير مسماة'; 
-    let actionText = fieldName === 'إجراء' ? `${oldVal} ( ${cleanCompany} )` : `تعديل ${fieldName} للعميل ( ${cleanCompany} )`; 
+    let actionText = fieldName === 'إجراء' || fieldName === 'إضافة' ? `${oldVal} ( ${cleanCompany} )` : `تعديل ${fieldName} للعميل ( ${cleanCompany} )`; 
     
     const fullLogHTML = `
         <div class="log-entry">
@@ -318,7 +306,6 @@ function addToActivityLog(fieldName, oldVal, newVal, companyName) {
 }
 
 function renderActivityLog() { const list = document.getElementById('activityList'); if (!list) return; const logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); list.innerHTML = logs.join(''); }
-
 function openWhatsAppChatForNumber(rawPhone) {
     if (!rawPhone || rawPhone === '-') return;
     let cleanNumber = rawPhone.replace(/\D/g, '');
