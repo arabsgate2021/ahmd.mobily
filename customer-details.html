@@ -1,1 +1,107 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل العميل - ASGate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="customer-details.css">
+</head>
+<body onload="loadClientData()">
 
+<div class="navbar">
+    <div class="nav-container">
+        <div class="nav-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="customers.html">العملاء</a>
+        </div>
+        <button class="btn-back" onclick="goBackAndFocus()"><i class="fas fa-arrow-right"></i> عودة للقائمة</button>
+    </div>
+</div>
+
+<div class="main-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="section-title"><i class="fas fa-building"></i> معلومات المنشأة</h2>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-group">
+                    <label>الشركة / العميل</label>
+                    <span id="c-name" class="highlight-text">-</span>
+                </div>
+                <div class="info-group">
+                    <label>السجل التجاري الرئيسي</label>
+                    <span id="c-cr1" class="mono-text">-</span>
+                </div>
+                <div class="info-group">
+                    <label>الفرع / سجل فرعي</label>
+                    <span id="c-cr2" class="mono-text">-</span>
+                </div>
+                <div class="info-group">
+                    <label>المدينة / المنطقة</label>
+                    <span id="c-city">-</span>
+                </div>
+                <div class="info-group">
+                    <label>الحي</label>
+                    <span id="c-district">-</span>
+                </div>
+                <div class="info-group">
+                    <label>المصدر</label>
+                    <span id="c-source">-</span>
+                </div>
+                <div class="info-group">
+                    <label>المالك</label>
+                    <span id="c-owner">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول المسؤولين -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="section-title"><i class="fas fa-users"></i> جدول المسؤولين والمفوضين</h2>
+            <button class="btn-primary" onclick="addNewManagerRow()"><i class="fas fa-plus"></i> إضافة مسؤول</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">الرئيسي</th>
+                            <th style="width: 15%">الاسم</th>
+                            <th style="width: 15%">جوال 1</th>
+                            <th style="width: 15%">جوال 2</th>
+                            <th style="width: 20%">الإيميل</th>
+                            <th style="width: 15%">المنصب</th>
+                            <th style="width: 10%">تاريخ التسجيل</th>
+                            <th style="width: 5%">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="managerTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- سجل الطلبات والمرفقات -->
+    <div class="card tabs-card">
+        <div class="tabs-header">
+            <div class="tabs-wrapper">
+                <button id="btn-o" class="tab-btn active" onclick="openTab('o-history')">سجل الطلبات</button>
+                <button id="btn-a" class="tab-btn" onclick="openTab('attachments')">المرفقات</button>
+                <button id="btn-v" class="tab-btn" onclick="openTab('v-history')">سجل الزيارات</button>
+            </div>
+        </div>
+        <div class="tab-content-area">
+            <h3 id="frame-title" class="tab-content-title">🛒 سجل طلبات العميل</h3>
+            <div id="table-content"></div>
+        </div>
+    </div>
+</div>
+
+<script src="customer-details.js"></script>
+</body>
+</html>
