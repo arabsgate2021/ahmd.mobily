@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تفاصيل العميل - ASGate</title>
+    <title>إضافة عميل جديد - ASGate</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -73,30 +73,7 @@
             background-color: #f1f5f9;
             color: var(--text-muted);
             cursor: not-allowed;
-        }
-        .section-divider {
-            grid-column: span 2;
-            font-size: 13px;
             font-weight: 800;
-            color: #4c1d95;
-            margin-top: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed var(--border-soft);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        @media (max-width: 768px) {
-            .section-divider { grid-column: span 1; }
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #eff6ff;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px dashed var(--accent-blue);
         }
         .btn-actions {
             display: flex;
@@ -119,101 +96,71 @@
 
     <div class="form-container">
         <div class="form-header">
-            <i class="fas fa-user-edit"></i> <span id="pageTitle">تفاصيل العميل</span>
+            <i class="fas fa-user-plus"></i> <span id="pageTitle">إضافة عميل جديد</span>
         </div>
 
         <div class="form-grid">
-            <!-- القسم الأول: بيانات المنشأة -->
             <div class="form-group">
                 <label class="form-label">كود العميل</label>
                 <input type="text" id="custCode" class="form-input" readonly>
             </div>
             <div class="form-group">
-                <label class="form-label">تاريخ الإنشاء</label>
+                <label class="form-label">تاريخ الانشاء</label>
                 <input type="text" id="custDate" class="form-input" readonly>
             </div>
+
             <div class="form-group full-width">
-                <label class="form-label">اسم الشركة <span style="color:red;">*</span></label>
-                <input type="text" id="compName" class="form-input" placeholder="أدخل اسم الشركة الرسمي">
-            </div>
-            <div class="form-group full-width">
-                <label class="form-label">العنوان</label>
-                <input type="text" id="custAddress" class="form-input" placeholder="مثال: الرياض - حي السلي">
-            </div>
-            <div class="form-group">
-                <label class="form-label">تصنيف العميل</label>
-                <select id="custClassification" class="form-input">
-                    <option value="">-</option>
-                    <option value="حكومي">حكومي</option>
-                    <option value="مهم">مهم</option>
-                    <option value="متوسط">متوسط</option>
-                    <option value="صغير">صغير</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">حالة العميل</label>
-                <select id="custStatus" class="form-input">
-                    <option value="">-</option>
-                    <option value="نشط">نشط</option>
-                    <option value="غير نشط">غير نشط</option>
-                </select>
-            </div>
-            <div class="form-group full-width">
-                <label class="form-label">المالك</label>
-                <input type="text" id="custOwner" class="form-input" placeholder="اسم مسؤول الحساب">
+                <label class="form-label">اسم الشركة</label>
+                <input type="text" id="compName" class="form-input" placeholder="أدخل اسم الشركة">
             </div>
 
-            <!-- القسم الثاني: بيانات المسؤول الرئيسي -->
-            <div class="section-divider">
-                <i class="fas fa-user-tie"></i> بيانات المسؤول الرئيسي للمنشأة
+            <div class="form-group">
+                <label class="form-label">المدينة</label>
+                <input type="text" id="city" class="form-input" placeholder="المدينة">
             </div>
             <div class="form-group">
-                <label class="form-label">اسم المسؤول</label>
-                <input type="text" id="mainMgr" class="form-input" placeholder="الاسم الثنائي أو الثلاثي">
+                <label class="form-label">العنوان</label>
+                <input type="text" id="address" class="form-input" placeholder="العنوان التفصيلي">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">رقم السجل الرئيسي</label>
+                <input type="text" id="mainCR" class="form-input" placeholder="السجل الرئيسي" onblur="checkDuplicateCR()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">رقم السجل</label>
+                <input type="text" id="subCR" class="form-input" placeholder="رقم السجل الفرعي" onblur="checkDuplicateCR()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">المسؤول</label>
+                <input type="text" id="managerName" class="form-input" placeholder="اسم المسؤول">
             </div>
             <div class="form-group">
                 <label class="form-label">رقم التواصل</label>
-                <input type="text" id="mainMob" class="form-input" placeholder="05xxxxxxxx" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-            </div>
-            <div class="form-group full-width">
-                <label class="form-label">البريد الإلكتروني</label>
-                <input type="email" id="mainEmail" class="form-input" placeholder="example@domain.com">
+                <input type="text" id="contactNumber" class="form-input" placeholder="رقم الجوال" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
             </div>
 
-            <!-- القسم الثالث: بيانات المفوض -->
-            <div class="section-divider">
-                <i class="fas fa-user-shield"></i> بيانات المفوض (إن وجد)
-            </div>
-            <div class="form-group">
-                <label class="form-label">اسم المفوض</label>
-                <input type="text" id="delegateName" class="form-input" placeholder="اسم الشخص المفوض">
-            </div>
-            <div class="form-group">
-                <label class="form-label">رقم تواصل المفوض</label>
-                <input type="text" id="delegateMob" class="form-input" placeholder="05xxxxxxxx" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-            </div>
             <div class="form-group full-width">
-                <label class="form-label">البريد الإلكتروني للمفوض</label>
-                <input type="email" id="delegateEmail" class="form-input" placeholder="delegate@domain.com">
+                <label class="form-label">البريد الالكتروني</label>
+                <input type="email" id="email" class="form-input" placeholder="البريد الالكتروني">
             </div>
-            
-            <!-- خيار تفعيل الأولوية للمفوض -->
-            <div class="form-group full-width checkbox-group">
-                <input type="checkbox" id="delegatePriority" style="width:16px; height:16px; cursor:pointer;">
-                <label for="delegatePriority" class="form-label" style="cursor:pointer; margin:0; color:#1e3a8a;">منح المفوض الأولوية الكاملة في العرض على جدول صفحة العملاء الرئيسية</label>
+
+            <div class="form-group full-width">
+                <label class="form-label">انشأ بواسطة</label>
+                <input type="text" id="createdBy" class="form-input" placeholder="اسم المنشئ">
             </div>
         </div>
 
         <div class="btn-actions">
             <button onclick="window.location.href='customers.html'" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:10px 24px; border-radius:6px; cursor:pointer; font-family:Cairo; font-size:12px; font-weight:700;">إلغاء والعودة</button>
-            <button onclick="saveCustomerChanges()" style="background:var(--accent-blue); border:none; color:white; padding:10px 30px; border-radius:6px; cursor:pointer; font-family:Cairo; font-size:12px; font-weight:800; box-shadow: 0 2px 4px rgba(59,130,246,0.3);"><i class="fas fa-save"></i> حفظ التعديلات</button>
+            <button onclick="saveCustomerChanges()" style="background:var(--accent-blue); border:none; color:white; padding:10px 30px; border-radius:6px; cursor:pointer; font-family:Cairo; font-size:12px; font-weight:800; box-shadow: 0 2px 4px rgba(59,130,246,0.3);"><i class="fas fa-save"></i> حفظ البيانات</button>
         </div>
     </div>
 </div>
 
 <script>
     const STORAGE_KEY = 'asgate_customers_final_v2';
-    const LOGS_KEY = 'asgate_customers_logs_v2';
 
     let currentCode = '';
     let isEditMode = false;
@@ -231,7 +178,7 @@
             loadCustomerData(code);
         } else {
             isEditMode = false;
-            document.getElementById('pageTitle').innerText = 'إضافة عميل جديد للنظام';
+            document.getElementById('pageTitle').innerText = 'إضافة عميل جديد';
             currentCode = generateNextCode();
             document.getElementById('custCode').value = currentCode;
             creationDate = new Date().toISOString().split('T')[0];
@@ -256,6 +203,36 @@
         return String(maxNum + 1).padStart(5, '0');
     }
 
+    // دالة التحقق من تكرار السجل التجاري
+    function checkDuplicateCR() {
+        const mainCR = document.getElementById('mainCR').value.trim();
+        const subCR = document.getElementById('subCR').value.trim();
+        
+        if (!mainCR && !subCR) return false;
+
+        const rawData = localStorage.getItem(STORAGE_KEY);
+        if (rawData) {
+            const list = JSON.parse(rawData);
+            const isDuplicate = list.find(c => 
+                (c.code !== currentCode) && 
+                ((mainCR && (c.mainCR === mainCR || c.subCR === mainCR)) || 
+                 (subCR && (c.mainCR === subCR || c.subCR === subCR)))
+            );
+
+            if (isDuplicate) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'تنبيه',
+                    text: 'العميل مسجل بالفعل',
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#3b82f6'
+                });
+                return true;
+            }
+        }
+        return false;
+    }
+
     function loadCustomerData(code) {
         const rawData = localStorage.getItem(STORAGE_KEY);
         if (!rawData) return;
@@ -265,19 +242,14 @@
             if (cust) {
                 document.getElementById('custCode').value = cust.code;
                 document.getElementById('compName').value = cust.comp || '';
-                document.getElementById('custAddress').value = cust.address || '';
-                document.getElementById('custClassification').value = cust.classification || '';
-                document.getElementById('custStatus').value = cust.status || '';
-                document.getElementById('custOwner').value = cust.owner || '';
-                
-                document.getElementById('mainMgr').value = cust.mgr || '';
-                document.getElementById('mainMob').value = cust.mob || '';
-                document.getElementById('mainEmail').value = cust.email || '';
-                
-                document.getElementById('delegateName').value = cust.delegateName || '';
-                document.getElementById('delegateMob').value = cust.delegateMob || '';
-                document.getElementById('delegateEmail').value = cust.delegateEmail || '';
-                document.getElementById('delegatePriority').checked = !!cust.delegatePriority;
+                document.getElementById('city').value = cust.city || '';
+                document.getElementById('address').value = cust.address || '';
+                document.getElementById('mainCR').value = cust.mainCR || '';
+                document.getElementById('subCR').value = cust.subCR || '';
+                document.getElementById('managerName').value = cust.mgr || '';
+                document.getElementById('contactNumber').value = cust.mob || '';
+                document.getElementById('email').value = cust.email || '';
+                document.getElementById('createdBy').value = cust.owner || '';
                 
                 existingNotes = cust.notes || '[]';
                 creationDate = cust.creationDate || '';
@@ -287,9 +259,12 @@
     }
 
     function saveCustomerChanges() {
+        // التحقق من تكرار السجل قبل الحفظ
+        if (checkDuplicateCR()) return;
+
         const comp = document.getElementById('compName').value.trim();
         if (!comp) {
-            Swal.fire({ icon: 'error', text: 'يرجى إدخال اسم الشركة الأساسي لحفظ الملف', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6' });
+            Swal.fire({ icon: 'error', text: 'يرجى إدخال اسم الشركة', confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6' });
             return;
         }
 
@@ -299,68 +274,41 @@
             try { list = JSON.parse(rawData); } catch(e) {}
         }
 
+        // تم ربط الحقول بنفس المسميات التي يستخدمها كود (العملاء) للجدول
         const custData = {
             code: currentCode,
+            creationDate: creationDate,
             comp: comp,
-            address: document.getElementById('custAddress').value.trim(),
-            classification: document.getElementById('custClassification').value,
-            status: document.getElementById('custStatus').value,
-            owner: document.getElementById('custOwner').value.trim(),
-            mgr: document.getElementById('mainMgr').value.trim(),
-            mob: document.getElementById('mainMob').value.trim(),
-            email: document.getElementById('mainEmail').value.trim(),
-            delegateName: document.getElementById('delegateName').value.trim(),
-            delegateMob: document.getElementById('delegateMob').value.trim(),
-            delegateEmail: document.getElementById('delegateEmail').value.trim(),
-            delegatePriority: document.getElementById('delegatePriority').checked,
-            notes: existingNotes,
-            creationDate: creationDate
+            city: document.getElementById('city').value.trim(),
+            address: document.getElementById('address').value.trim(),
+            mainCR: document.getElementById('mainCR').value.trim(),
+            subCR: document.getElementById('subCR').value.trim(),
+            mgr: document.getElementById('managerName').value.trim(),
+            mob: document.getElementById('contactNumber').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            owner: document.getElementById('createdBy').value.trim(),
+            notes: existingNotes
         };
 
         if (isEditMode) {
             const idx = list.findIndex(c => c.code === currentCode);
             if (idx !== -1) {
                 list[idx] = custData;
-                addToActivityLog('إجراء', 'تعديل بيانات ملف العميل تفصيلياً', '', comp);
             }
         } else {
             list.unshift(custData);
-            addToActivityLog('إجراء', 'إنشاء ملف تفصيلي لعميل جديد', '', comp);
         }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
         
         Swal.fire({
             icon: 'success',
-            title: 'تم حفظ التعديلات بنجاح',
+            title: 'تم حفظ البيانات بنجاح',
             showConfirmButton: false,
             timer: 1300
         }).then(() => {
             window.location.href = 'customers.html';
         });
-    }
-
-    function addToActivityLog(fieldName, oldVal, newVal, companyName) {
-        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']; 
-        const d = new Date(); 
-        let dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0'), yyyy = d.getFullYear(); 
-        const dayName = days[d.getDay()];
-        const timeStr = String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0');
-        const cleanCompany = companyName || 'شركة غير مسماة'; 
-        let actionText = `${oldVal} ( ${cleanCompany} )`; 
-        
-        const fullLogHTML = `
-            <div class="log-entry">
-                <span class="log-badge-user"><i class="fas fa-user-circle"></i> المستخدم</span>
-                <span class="log-divider">|</span>
-                <span class="log-timestamp"><i class="fas fa-clock"></i> ${dayName} ${yyyy}-${mm}-${dd} ${timeStr}</span>
-                <span class="log-divider">|</span>
-                <span class="log-action">${actionText}</span>
-            </div>
-        `; 
-        let logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); 
-        logs.unshift(fullLogHTML); 
-        localStorage.setItem(LOGS_KEY, JSON.stringify(logs.slice(0, 100))); 
     }
 </script>
 
