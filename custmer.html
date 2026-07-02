@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASGate - العملاء</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="customers.css" />
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">AS</div>
+        <div class="brand-text">
+          <h1>ASGate</h1>
+          <span>إدارة العملاء</span>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <a href="customers.html" class="menu-item active">العملاء</a>
+        <a href="#" class="menu-item">الزيارات</a>
+        <a href="#" class="menu-item">الفرص البيعية</a>
+        <a href="#" class="menu-item">المبيعات</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h2>العملاء</h2>
+          <p>عرض وإدارة بيانات العملاء وسجل النشاط</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" id="addCustomerBtn">+ إضافة عميل</button>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <span>إجمالي العملاء</span>
+          <strong id="totalCustomers">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>عملاء الشهر</span>
+          <strong id="monthCustomers">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>عملاء اليوم</span>
+          <strong id="todayCustomers">0</strong>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>قائمة العملاء</h3>
+          <input type="search" id="searchInput" class="search-input" placeholder="بحث باسم الشركة أو الكود..." />
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>كود العميل</th>
+                <th>اسم الشركة</th>
+                <th>العنوان</th>
+                <th>المسؤول الرئيسي</th>
+                <th>رقم التواصل</th>
+                <th>البريد الإلكتروني</th>
+                <th>تاريخ الإنشاء</th>
+                <th>تصنيف العميل</th>
+                <th>الملاحظات</th>
+                <th>حالة العميل</th>
+                <th>المالك</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>سجل نشاط العملاء</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>العميل</th>
+                <th>النشاط</th>
+                <th>الملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody">
+              </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="customers.js"></script>
+</body>
+</html>
