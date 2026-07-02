@@ -1,101 +1,160 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="لوحة تحكم مبيعات ASGate">
     <title>ASGate - لوحة تحكم المبيعات</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
 
-<nav class="navbar">
-    <a href="index.html" class="active">الرئيسية</a>
-    <a href="visits.html">الزيارات</a>
-    <a href="opportunities.html">الفرص البيعية</a>
-    <a href="customers.html">العملاء</a>
-    <a href="sales.html">المبيعات</a>
-</nav>
+<header>
+    <nav class="navbar" aria-label="القائمة الرئيسية">
+        <a href="index.html" class="active" aria-current="page">الرئيسية</a>
+        <a href="visits.html">الزيارات</a>
+        <a href="opportunities.html">الفرص البيعية</a>
+        <a href="customers.html">العملاء</a>
+        <a href="sales.html">المبيعات</a>
+    </nav>
 
-<div class="employee-info-bar">
-    <div class="info-content">
-        <div class="info-item">الموظف: <span>محمد المنصور</span></div>
-        <div class="info-item">الرقم: <span>ASG-2026</span></div>
-        <div class="info-item">المشروع: <span>ASGate</span></div>
-    </div>
-</div>
-
-<div class="container">
-    <div class="dashboard-grid">
-        <div class="right-section">
-            <div class="content-box">
-                <h3>📅 سجل الأهداف والزيارات (2026)</h3>
-                <table class="yearly-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 22%;">الشهر</th>
-                            <th>هدف</th>
-                            <th>تم</th>
-                            <th class="thick-border">معلق</th>
-                            <th style="background:#eff6ff">زيارة</th>
-                            <th style="background:#f0fdf4">ناجحة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="monthsBody"></tbody>
-                </table>
-            </div>
+    <div class="employee-info-bar">
+        <div class="info-content">
+            <div class="info-item">الموظف: <span id="empName">محمد المنصور</span></div>
+            <div class="info-item">الرقم: <span id="empId">ASG-2026</span></div>
+            <div class="info-item">المشروع: <span id="empProject">ASGate</span></div>
         </div>
+    </div>
+</header>
 
-        <div class="left-section">
+<main class="container">
+    <div class="dashboard-grid">
+        
+        <section class="right-section" aria-labelledby="yearly-table-title">
+            <div class="content-box">
+                <h3 id="yearly-table-title">📅 سجل الأهداف والزيارات (2026)</h3>
+                <div style="overflow-x: auto;"> <table class="yearly-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 22%;">الشهر</th>
+                                <th>هدف</th>
+                                <th>تم</th>
+                                <th class="thick-border">معلق</th>
+                                <th style="background:#eff6ff">زيارة</th>
+                                <th style="background:#f0fdf4">ناجحة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthsBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="left-section" aria-label="أدوات التصفية والإحصائيات">
+            
             <div class="filters-grid">
-                <div class="filter-card"><label>السنة</label><select class="filter-input"><option>2026</option><option>الكل</option></select></div>
-                <div class="filter-card"><label>الشهر</label><select class="filter-input"><option>الكل</option></select></div>
-                <div class="filter-card"><label>المنطقة</label><select class="filter-input"><option>الكل</option></select></div>
-                <div class="filter-card"><label>المشرف</label><select class="filter-input"><option>الكل</option></select></div>
-                <div class="filter-card"><label>المندوب</label><select class="filter-input"><option>الكل</option></select></div>
+                <div class="filter-card">
+                    <label for="filter-year">السنة</label>
+                    <select id="filter-year" class="filter-input">
+                        <option value="2026">2026</option>
+                        <option value="all">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label for="filter-month">الشهر</label>
+                    <select id="filter-month" class="filter-input">
+                        <option value="all">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label for="filter-region">المنطقة</label>
+                    <select id="filter-region" class="filter-input">
+                        <option value="all">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label for="filter-supervisor">المشرف</label>
+                    <select id="filter-supervisor" class="filter-input">
+                        <option value="all">الكل</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label for="filter-rep">المندوب</label>
+                    <select id="filter-rep" class="filter-input">
+                        <option value="all">الكل</option>
+                    </select>
+                </div>
             </div>
             
             <div class="stats-cards">
-                <div class="stat-card bg-blue"><div class="label-text">الهدف السنوي</div><div class="value-text">180,000</div></div>
-                <div class="stat-card bg-green"><div class="label-text">المبيعات</div><div class="value-text" id="salesValue">14,210</div></div>
-                <div class="stat-card bg-yellow"><div class="label-text">المعلق</div><div class="value-text">790</div></div>
-                <div class="stat-card bg-purple" style="flex:0.6"><div class="label-text">الزيارات</div><div class="value-text" id="visitCount">0</div></div>
-                <div class="stat-card bg-orange" style="flex:0.6"><div class="label-text">الفرص</div><div class="value-text" id="oppCount">0</div></div>
+                <div class="stat-card bg-blue">
+                    <div class="label-text">الهدف السنوي</div>
+                    <div class="value-text" id="annualTargetValue">180,000</div>
+                </div>
+                <div class="stat-card bg-green">
+                    <div class="label-text">المبيعات</div>
+                    <div class="value-text" id="salesValue">14,210</div>
+                </div>
+                <div class="stat-card bg-yellow">
+                    <div class="label-text">المعلق</div>
+                    <div class="value-text" id="pendingTargetValue">790</div>
+                </div>
+                <div class="stat-card bg-purple" style="flex:0.6">
+                    <div class="label-text">الزيارات</div>
+                    <div class="value-text" id="visitCount">0</div>
+                </div>
+                <div class="stat-card bg-orange" style="flex:0.6">
+                    <div class="label-text">الفرص</div>
+                    <div class="value-text" id="oppCount">0</div>
+                </div>
             </div>
 
             <div class="content-box">
-                <h3>📈 تحليل الأداء الإجمالي</h3>
+                <h3 id="charts-title">📈 تحليل الأداء الإجمالي</h3>
                 <div class="charts-row">
                     <div class="chart-item-wrapper">
-                        <div class="chart-container-reduced"><canvas id="achievedChart"></canvas><div class="chart-percentage">82%</div></div>
+                        <div class="chart-container-reduced">
+                            <canvas id="achievedChart" aria-label="رسم بياني للمحقق" role="img"></canvas>
+                            <div class="chart-percentage" id="achievedPercentage">82%</div>
+                        </div>
                         <div class="chart-label">المحقق</div>
                     </div>
                     <div class="chart-item-wrapper" style="flex: 0.6;">
-                        <div class="gauge-container-reduced"><canvas id="gaugeChart"></canvas><div class="gauge-value">200%</div></div>
+                        <div class="gauge-container-reduced">
+                            <canvas id="gaugeChart" aria-label="مؤشر الإنجاز" role="img"></canvas>
+                            <div class="gauge-value" id="gaugePercentage">200%</div>
+                        </div>
                         <div class="chart-label" style="margin-top: 25px;">مؤشر الإنجاز</div>
                     </div>
                     <div class="chart-item-wrapper">
-                        <div class="chart-container-reduced"><canvas id="pendingChart"></canvas><div class="chart-percentage">18%</div></div>
+                        <div class="chart-container-reduced">
+                            <canvas id="pendingChart" aria-label="رسم بياني للمعلق" role="img"></canvas>
+                            <div class="chart-percentage" id="pendingPercentage">18%</div>
+                        </div>
                         <div class="chart-label">المعلق</div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 
-    <div class="content-box staff-performance-section">
-        <h3>👥 أداء فريق المبيعات (30 موظفاً)</h3>
+    <section class="content-box staff-performance-section" aria-labelledby="staff-performance-title">
+        <h3 id="staff-performance-title">👥 أداء فريق المبيعات (30 موظفاً)</h3>
         <div style="flex-grow: 1; position: relative; margin-top: 10px;">
-            <canvas id="staffChart"></canvas>
+            <canvas id="staffChart" aria-label="رسم بياني لأداء الموظفين" role="img"></canvas>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 
 <script src="main.js"></script>
 
 </body>
 </html>
-
